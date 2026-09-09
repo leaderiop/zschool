@@ -5,4 +5,9 @@ kind: journeys
 package: zschool
 infix: ZS
 # Populated in Phase 3 (journeys fan-out). One entry per JNY-ZS/JMP-ZS-owning file (journeys/0N-*.md).
-entries: []
+entries:
+  - id: "JMP-ZS-001..011"
+    file: "00-journey-map.md"
+    title: "End-to-End Journey Map"
+    status: "Draft"
+    origin: "PC-01..11"
