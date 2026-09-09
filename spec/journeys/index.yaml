@@ -16,3 +16,8 @@ entries:
     title: "Detailed Journeys: Si Abdellah, School Group Director (DIR)"
     status: "Draft"
     origin: "PJ-DIR-01..08"
+  - id: "JNY-ZS-011..021"
+    file: "02-secretary-cashier.md"
+    title: "Journey: Fatima, Primary School Secretary-Cashier (SEC)"
+    status: "Draft"
+    origin: "PJ-SEC-01..11"
