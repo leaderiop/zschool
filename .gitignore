@@ -4,6 +4,5 @@ dist/
 *.log
 .env
 .env.*
-!.env.example
 *.tsbuildinfo
 infra/remote-cache/.env.fly

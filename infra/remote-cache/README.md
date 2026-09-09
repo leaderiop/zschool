@@ -27,7 +27,7 @@ bump it there deliberately, don't float `latest`.
 
 ## Secrets on the Fly app
 
-Set via `flyctl secrets set -a zschool-turbo-cache ...` (see `.env.example` for
+Set via `flyctl secrets set -a zschool-turbo-cache ...` (see `env.example` for
 the full list: Tigris S3 credentials, `TURBO_TOKEN`, and
 `TURBO_REMOTE_CACHE_SIGNATURE_KEY`). Already provisioned; `flyctl secrets list
 -a zschool-turbo-cache` shows what's staged/deployed without exposing values.
