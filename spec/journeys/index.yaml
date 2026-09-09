@@ -21,3 +21,8 @@ entries:
     title: "Journey: Fatima, Primary School Secretary-Cashier (SEC)"
     status: "Draft"
     origin: "PJ-SEC-01..11"
+  - id: "JNY-ZS-031..039"
+    file: "03-head-supervisor.md"
+    title: "Detailed Journeys: Rachid, Head Supervisor (SUR)"
+    status: "Draft"
+    origin: "PJ-SUR-01..09"
