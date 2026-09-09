@@ -151,10 +151,18 @@ for f in "$SPEC_DIR"/behaviors/*.md; do
   [[ -f "$f" ]] || continue
   REQ_FAMILIES+=("behaviors/$(basename "$f"):BEH-ZS")
 done
+# The journey map (00-journey-map.md) owns JMP-ZS only; every other journeys/
+# file owns JNY-ZS only. Checking the family that structurally can't exist in
+# a given file produced 8 permanent "no requirements declared" SKIPs (which
+# --strict then counted as FAILs) -- fixed by scoping each file to its own
+# family instead of checking both against every file.
 for f in "$SPEC_DIR"/journeys/*.md; do
   [[ -f "$f" ]] || continue
-  REQ_FAMILIES+=("journeys/$(basename "$f"):JNY-ZS")
-  REQ_FAMILIES+=("journeys/$(basename "$f"):JMP-ZS")
+  if [[ "$(basename "$f")" == "00-journey-map.md" ]]; then
+    REQ_FAMILIES+=("journeys/$(basename "$f"):JMP-ZS")
+  else
+    REQ_FAMILIES+=("journeys/$(basename "$f"):JNY-ZS")
+  fi
 done
 any_req_family_file=0
 for entry in "${REQ_FAMILIES[@]}"; do
