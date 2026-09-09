@@ -1,0 +1,8 @@
+# Registry for spec/cross-cutting/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: cross-cutting
+package: zschool
+infix: ZS
+# Populated in Phase 4 (cross-cutting fan-out). One entry per PER/SEC/NFR/PAK/UX/INT/CNF-ZS-owning file.
+entries: []

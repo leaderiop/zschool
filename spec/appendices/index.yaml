@@ -1,0 +1,8 @@
+# Registry for spec/appendices/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: appendices
+package: zschool
+infix: ZS
+# Populated in Phase 1.5. Entries for appendices/00-project-baseline.md and appendices/01-review-history.md.
+entries: []

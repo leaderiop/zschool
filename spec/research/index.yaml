@@ -1,0 +1,8 @@
+# Registry for spec/research/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: research
+package: zschool
+infix: ZS
+# Populated in Phase 1.5. One entry per relocated research file (research/0N-*.md), content unchanged from prd/research/.
+entries: []

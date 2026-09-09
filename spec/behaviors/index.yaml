@@ -1,0 +1,8 @@
+# Registry for spec/behaviors/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: behaviors
+package: zschool
+infix: ZS
+# Populated in Phase 2 (module fan-out). One entry per BEH-ZS-owning file (behaviors/NN-*.md).
+entries: []

@@ -1,0 +1,8 @@
+# Registry for spec/journeys/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: journeys
+package: zschool
+infix: ZS
+# Populated in Phase 3 (journeys fan-out). One entry per JNY-ZS/JMP-ZS-owning file (journeys/0N-*.md).
+entries: []

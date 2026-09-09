@@ -1,0 +1,8 @@
+# Registry for spec/decisions/. Authoritative: every file in this directory must have
+# an entry here, and every entry here must correspond to a real file on disk.
+# verify-traceability.sh check 1 enforces this both directions.
+kind: decisions
+package: zschool
+infix: ZS
+# Populated in Phase 1.5 (decisions/ sub-phase). One entry per ADR-ZS-NNN file (decisions/NNN-*.md).
+entries: []
