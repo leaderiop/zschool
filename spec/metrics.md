@@ -1,0 +1,973 @@
+# ZSchool Metrics
+
+> **Document Control**
+>
+> | Property       | Value                                                        |
+> | -------------- | ------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-MET                                                    |
+> | Revision       | 1.0                                                            |
+> | Effective Date | 2026-09-09                                                     |
+> | Status         | Draft                                                          |
+> | Author         | ZSchool Product                                                |
+> | Classification | Planning                                                       |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/38-kpi-success-metrics.md` (v0.3, English translation); `KPI-NN` renamed `KPI-ZS-NNN`; review arbitrations ADR-ZS-041, ADR-ZS-045, ADR-ZS-056, ADR-ZS-061, ADR-ZS-062, ADR-ZS-065, ADR-ZS-042 carried over as-is (CCR-ZS pending) |
+
+---
+
+## 1. Purpose and scope
+
+This chapter answers point 8 of the baseline's chapter 18: defining the **MVP success indicators** — pilot adoption, daily roll-call rate, notification delay, collection rate, reduction of double data entry — and extending them into an operating measurement framework through the three-year horizon (ADR-ZS-008).
+
+For each indicator it sets: a **measurable definition**, the **product data source** that feeds it, its **measurement frequency**, its **targets by phase** (pilot validation, year 1, year 3), an internal **owner**, and its priority and version.
+
+**In scope**: ZSchool's internal indicators (product, experience, collections, efficiency, reliability, business) and their governance (an internal dashboard, a monthly review).
+
+**Out of scope**:
+
+- dashboards intended for schools and organizations (school leadership, student life, teacher, parent), carried by the RAP module in `prd/modules/20-dashboards-reporting.md` (baseline §7.11); this chapter defines only ZSchool's own management metrics;
+- named technical thresholds (SLOs, observability, backups), carried by `prd/cross-cutting/32-non-functional-requirements.md`: this chapter reuses them as measurement targets without redefining them;
+- the billing rules themselves (monthly active-student counting, consumable packs), carried by `prd/03-domain-data-model.md` (`Subscription`, `UsageMetric` entities) and `prd/cross-cutting/33-business-model-packaging.md`;
+- the delivery schedule, carried by `prd/cross-cutting/37-roadmap-mvp-v1-v2.md`; this chapter's "year 1" and "year 3" targets should be read alongside those milestones.
+
+## 2. Measurement principles and population definitions
+
+**P1 — Single sources.** Every indicator is computed exclusively from the domain entities and events listed in its table (`prd/03-domain-data-model.md` §7). Since every operational write is logged (INV-ZS-090), the audit trail serves as a cross-check source, never as a primary source.
+
+**P2 — Timestamps.** All measured events are timestamped in UTC and stored in the `Africa/Casablanca` time zone at permanent UTC+0 (correction #1 of `prd/research/00-baseline-corrections.md`; see OQ-ZS-361). "Day," "week," and "month" windows are evaluated in the school's local time.
+
+**P3 — Aggregation and privacy.** Indicators are aggregated and never tied to named individuals. No KPI measures or publishes the "productivity" of an identified person; individual activity records (logs, INV-ZS-090) feed only school- or cohort-level aggregates. Publishing a KPI that compares schools against each other is subject to a minimum cohort-size threshold (see OQ-ZS-363).
+
+**P4 — Consolidation without merging.** Per-school (tenant) measurements roll up to the organization (group) level without merging tenant data (INV-ZS-073); ADR-ZS-008's business targets are measured as a sum across active tenants.
+
+**P5 — Measurement by phase.** Four reference phases:
+
+| Phase | Window | Reference |
+|---|---|---|
+| Pilots | 2026-2027 school year: pilots onboarded mid-year from 01/02/2027 (RDM-ZS-001, MVP wave 1), then the year-end closing in June 2027 (RDM-ZS-003, MVP wave 2 — ADR-ZS-041), with 3 to 5 schools (§12 MVP) covering the 4 ADR-ZS-035 profiles | §12, ADR-ZS-035, Q-13; ADR-ZS-041 |
+| MVP at full load | 2027-2028 school year: pilots in full production (school-year start at full load, RDM-ZS-015; first complete first-semester closing, RDM-ZS-016), ahead of the MVP-to-V1 transition decision (RDM-ZS-002) | `prd/cross-cutting/37-roadmap-mvp-v1-v2.md` (RDM-ZS-015 to RDM-ZS-002) |
+| Year 1 | First year of commercial launch (V1 launch), target: 20 schools and 15,000 students | ADR-ZS-008 (confirmed, Q-09) |
+| Year 3 | End of the third year after commercial launch, target: 300 schools and 200,000 students | ADR-ZS-008 (confirmed, Q-09) |
+
+The "MVP at full load" phase's targets reuse the "Year 1" phase's targets for indicators measurable at MVP: the goal is to hold the service level at full load and to feed the MVP-to-V1 transition review (RDM-ZS-002), so that any drift in the decision timeline is caught early (OQ-ZS-361 of `prd/cross-cutting/37-roadmap-mvp-v1-v2.md`).
+
+**P6 — Shared population definitions.**
+
+| Population | Measurement definition | Source | References |
+|---|---|---|---|
+| Active school | A tenant whose subscription (`Subscription`) is in "active" status and that has at least one ACTIVE enrollment for the current school year | `Subscription`, `Enrollment` | ADR-ZS-004; `prd/03` §2.7, §3 |
+| Active student | An enrollment in ACTIVE status tied to an active school, counted for monthly billing from September to June per the single rule in `prd/cross-cutting/33-business-model-packaging.md` §3 (a snapshot on the 1st of the month; CANDIDATE, PRE-ENROLLED, SUSPENDED, CANCELLED, and terminal states not counted; a transferred student counted once, at the origin school, in the month of the transfer — ADR-ZS-061 (§20c); import-based activation counted starting the following month) | `Enrollment`, `UsageMetric` | ADR-ZS-024, ADR-ZS-009; `prd/33` §3; ADR-ZS-061 (OQ-ZS-362 resolved) |
+| Active teacher (weekly) | An account with an active teacher affiliation (`SchoolMembership`) that performed at least one write action within its assignment scope (`TeacherAssignment`) over the trailing 7 days: roll call, grade entry, class log, message to a parent | `SchoolMembership`, `TeacherAssignment`, the write log | INV-ZS-090; H-13 |
+| Active parent (weekly) | A parent account that, over the trailing 7 days, either opened a successful login session OR viewed an in-app notification for the measured school | Authentication sessions, `Notification` | ADR-ZS-022; H-11 |
+| School day | A day with at least one expected session (a declared session at MVP, BEH-ZS-070; drawn from the timetable at V1) on the school's calendar (schedule variants included: normal, Ramadan, exams), excluding official public holidays and vacations | The school's calendar, `Session` | INV-ZS-074; §2.4; ADR-ZS-045 |
+| Expected session | A tuple (course, date, declared time slot) requiring a roll call; declared sessions marked unfulfilled (BEH-ZS-071) are removed from the denominator | `Session`, `SessionNotHeld` event | ADR-ZS-045, ADR-ZS-046 |
+| Attendance rate | The single definition carried by BEH-ZS-241 (`prd/modules/20-dashboards-reporting.md`): (expected sessions − unexcused absences − excused absences) / expected sessions, with an "excluding excused absences" variant; no KPI redefines this calculation | `AttendanceRecord`, `Session` | ADR-ZS-065 (§24a) |
+
+**P8 — Measurement milestones (README arbitration D10, corrected by ADR-ZS-042).** Adoption and experience indicators (KPI-ZS-001 to KPI-ZS-002) are measured from each pilot's activation (RDM-ZS-001) onward and evaluated over a trailing three months; year-end closing indicators (KPI-ZS-003 to KPI-ZS-004) from the first MVP wave-2 closing onward (June 2027, RDM-ZS-003); commercial-launch indicators (KPI-ZS-005 to KPI-ZS-006, KPI-ZS-007, KPI-ZS-008) from the V1 transition decision onward (RDM-ZS-002), rather than from the RDM-ZS-019 milestone mistakenly cited in the README. Any "reduction" target (KPI-ZS-009, KPI-ZS-010, KPI-ZS-011, KPI-ZS-004) requires an initial measurement before activation (KPI-ZS-012, §5).
+
+**P7 — Percentage base.** Unless stated otherwise, adoption rates use the population defined in P6 as the denominator and that same population restricted to the measurement period as the numerator; experience rates use eligible events of the period as the denominator.
+
+## 3. Indicator catalogue
+
+Counter `KPI-ZS-NNN` starting at 01, a namespace exclusive to this file (conventions §2); KPI-ZS-013 to KPI-ZS-014, measurement instrumentation and governance requirements, are numbered in this same namespace (see OQ-ZS-367). Six families, followed by measurement governance (§5).
+
+### 3.1 Adoption family
+
+Measuring the §3.2 promise by stakeholder: a tool used every day by the school, by teachers, and followed by parents.
+
+#### KPI-ZS-001 — Daily roll-call rate per school
+
+| Attribute | Value |
+|---|---|
+| Description | Share of school days (P6) where **every** expected session (declared sessions at MVP, ADR-ZS-045; the timetable at V1) or planned half-day of the school has a validated roll call, with a configurable time threshold per school (default: validated before midday, consistent with the "families of absent students informed before 10 a.m." goal) |
+| Data source | Validated roll-call sessions from the student-life module (attendance entities); the school calendar; the `AbsenceRecorded` event as a trace of completed roll calls |
+| Frequency | Daily measurement; monthly review |
+| Pilot target (ADR-ZS-035) | Primary: ≥ 95%; middle/high school: ≥ 90%; multi-site group: ≥ 90% per site; trimester-based school: ≥ 90% |
+| Year 1 target | ≥ 90% per active school |
+| Year 3 target | ≥ 90% per active school, with no degradation during the school-year-start peak |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §18 point 8, §7.4, §10; JMP-ZS-005; URS-ZS-018, URS-ZS-027) |
+| Stakeholders | Student life, teachers, school leadership, ZSchool |
+
+#### KPI-ZS-015 — Share of teachers active each week
+
+| Attribute | Value |
+|---|---|
+| Description | Active teachers per P6, relative to the school's affiliated active teachers (averaged over the working weeks of the month). Part-time teachers working at several schools count at each one based on their local activity (H-13); no individual publication (P3) |
+| Data source | `SchoolMembership`, `TeacherAssignment`, the write log (INV-ZS-090) |
+| Frequency | Weekly; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 80% across all profiles; multi-site group: ≥ 75% |
+| Year 1 target | ≥ 75% |
+| Year 3 target | ≥ 75% |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §18 point 8, §3.2 (teacher), H-13; URS-ZS-026 to URS-ZS-028) |
+| Stakeholders | Teachers, school leadership, ZSchool |
+
+#### KPI-ZS-016 — Share of parents active each week, per school
+
+| Attribute | Value |
+|---|---|
+| Description | Active parents per P6, relative to the active (legal and financial) guardians of the school's ACTIVE enrollments, averaged over the month. Calibration: existing parent apps in Morocco see genuinely low adoption (about 1,000 downloads for most; 10,000 for the best-performing one, `prd/research/01-market-competition.md` §2 and §4); parent engagement is the baseline's stated differentiator (§3.3) |
+| Data source | Parent authentication sessions, `Notification` viewed in-app |
+| Frequency | Weekly; monthly review |
+| Pilot target (ADR-ZS-035) | Primary: ≥ 70%; middle/high school: ≥ 60%; multi-site group: ≥ 55%; trimester-based school: ≥ 60% |
+| Year 1 target | ≥ 60% |
+| Year 3 target | ≥ 70% |
+| Owner | Product |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §3.2 (parent), §3.3, §7.11, H-11; URS-ZS-034, URS-ZS-035, URS-ZS-037; JMP-ZS-004) |
+| Stakeholders | Parents, school leadership, ZSchool |
+
+#### KPI-ZS-017 — Active-student coverage (billing consistency)
+
+| Attribute | Value |
+|---|---|
+| Description | Consistency between the monthly active-student count (`UsageMetric`, September to June) and the ACTIVE-enrollment population per P6. Since the counting rule is deterministic (billed headcount = ACTIVE enrollments on the 1st of the month), the gap is **zero by construction**; any observed gap is an anomaly (a cross-count inconsistency, a processing delay) that triggers an investigation. The counting rule is the one in `prd/cross-cutting/33-business-model-packaging.md` §3, supplemented by ADR-ZS-061 (§20c) for transfers (OQ-ZS-362 resolved). Full coverage of this population is also the basis for MRR (ADR-ZS-024, ADR-ZS-009) |
+| Data source | `Enrollment` (states and transition dates), `UsageMetric` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Zero gap by construction across the 4 pilots, including the trimester-based school (offset closings); alert threshold: a gap over 0.5% |
+| Year 1 target | Zero gap by construction across the fleet; alert threshold: a gap over 0.5% |
+| Year 3 target | Zero gap by construction across the fleet; alert threshold: a gap over 0.5% |
+| Owner | Product (with internal finance) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-024, ADR-ZS-009; `prd/33` §3; ADR-ZS-061; §11) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-018 — Invitation activation rate (identity claiming)
+
+| Attribute | Value |
+|---|---|
+| Description | Share of invited parents (invitations issued when the record is created or during onboarding) who claim their identity (`IdentityClaimed`) and complete a first login session within 30 days of the invitation; journey JMP-ZS-004 |
+| Data source | Invitations issued, the `IdentityClaimed` event, authentication sessions |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≥ 90% across all profiles (close hands-on pilot support, JMP-ZS-003) |
+| Year 1 target | ≥ 85% |
+| Year 3 target | ≥ 85% |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §3.2 (parent), §12 (identities, invitations, and claiming); JMP-ZS-003, JMP-ZS-004; URS-ZS-034) |
+| Stakeholders | Parents, front office, ZSchool |
+
+#### KPI-ZS-019 — Feature depth at active schools
+
+| Attribute | Value |
+|---|---|
+| Description | Share of active schools using at least 3 MVP core modules within the month (any of: attendance, assessments, finance, communication, enrollment), then at least 4 modules by the year-3 horizon (V1: documents, timetable, Massar exports, organization) |
+| Data source | The per-module, per-tenant write log (INV-ZS-090), `ModuleActivation` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≥ 80% of pilots at 3 modules or more, measured over a trailing three months from each pilot's activation (RDM-ZS-001, window opening 01/02/2027; P8) |
+| Year 1 target | ≥ 70% of active schools at 3 modules or more |
+| Year 3 target | ≥ 70% at 4 modules or more |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §11 (single plan, all modules included), §12; URS-ZS-001) |
+| Stakeholders | School leadership, ZSchool |
+
+### 3.2 Experience family
+
+Measuring perceived quality for end users; calibration reference: connection reliability is the #1 complaint about existing parent apps on the market, including ministry apps (`prd/research/01-market-competition.md` §4).
+
+#### KPI-ZS-020 — Absence notification delay
+
+| Attribute | Value |
+|---|---|
+| Description | The interval between roll-call validation (the `AbsenceRecorded` event) and notification delivery to the channel carrier (`DeliveryLog` timestamped "delivered to carrier"; "delivered" status is tracked separately for diagnostics, since carrier acknowledgments are outside our control), measured per channel and in aggregate, on the **first absence of the day** for each student (subsequent ones are grouped in the evening summary, ADR-ZS-056 (§15a)); the 3-minute hold-back window (ADR-ZS-056 (§15b)) is included in the delay. Channels measured at MVP: in-app, SMS, and WhatsApp "utility" limited to attendance notifications (historical alias D1; ADR-ZS-062, ADR-ZS-066 §25c); push and full WhatsApp rollout in V1. The baseline's nominal requirement is a delay under 5 minutes (§10, carried by `prd/cross-cutting/32-non-functional-requirements.md`); the KPI measures the operational compliance rate |
+| Data source | `AbsenceRecorded`, `Notification`, `DeliveryLog` |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 99% of notifications under 5 minutes; median < 60 s, including at the school-year-start peak |
+| Year 1 target | ≥ 99% under 5 minutes |
+| Year 3 target | ≥ 99.5% under 5 minutes, across all channels |
+| Owner | Reliability (with Product) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §10 (notifications), §18 point 8, ADR-ZS-036; JMP-ZS-005; URS-ZS-019, URS-ZS-035; ADR-ZS-056, ADR-ZS-062; BEH-ZS-105, BEH-ZS-191) |
+| Stakeholders | Student life, parents, ZSchool |
+
+#### KPI-ZS-021 — Notification delivery rate
+
+| Attribute | Value |
+|---|---|
+| Description | "Delivered" notifications relative to "sent" notifications, per channel: in-app, SMS, and WhatsApp "utility" limited to attendance notifications from MVP onward (historical alias D1; ADR-ZS-062, ADR-ZS-066 §25c); full WhatsApp rollout and push in V1 (no push at MVP, ADR-ZS-062 (§21b)). A WhatsApp failure (or a push failure in V1) triggers the SMS fallback per the baseline's routing rules; the rate is measured on the final outcome after fallback, and per channel for diagnostics |
+| Data source | `Notification`, `DeliveryLog` (channel, status, cost) |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 98% on the final outcome; SMS ≥ 99%; in-app 100% (by construction) |
+| Year 1 target | ≥ 98% on the final outcome, across all channels |
+| Year 3 target | ≥ 99% on the final outcome, across all channels |
+| Owner | Reliability |
+| Priority | Must |
+| Version | MVP (in-app, SMS, WhatsApp utility for attendance — historical alias D1); V1 (full WhatsApp rollout, push) |
+| Traceability | (→ §10, ADR-ZS-036, ADR-ZS-023; H-11; JMP-ZS-005, JMP-ZS-011; URS-ZS-035) |
+| Stakeholders | Parents, teachers, ZSchool |
+
+#### KPI-ZS-022 — Notification read rate
+
+| Attribute | Value |
+|---|---|
+| Description | Share of in-app and push notifications viewed by their recipient within 72 hours; a dedicated read-tracking measure for summons (`SummonsIssued`) within 48 hours, used by school leadership |
+| Data source | `Notification` (issue and view timestamps), `DeliveryLog` |
+| Frequency | Weekly; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 60% within 72 h; summons ≥ 80% within 48 h |
+| Year 1 target | ≥ 60% within 72 h; summons ≥ 80% |
+| Year 3 target | ≥ 70% within 72 h; summons ≥ 85% |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP (in-app); V1 (push) |
+| Traceability | (→ §3.2 (parent), §7.8; H-11; JMP-ZS-011; URS-ZS-048) |
+| Stakeholders | Parents, school leadership, ZSchool |
+
+#### KPI-ZS-023 — Share of absences justified within 48 hours
+
+| Attribute | Value |
+|---|---|
+| Description | `JustificationSubmitted` received within 48 hours of the absence notification, relative to notified absences (excluding absences already justified in advance); measures the effectiveness of the absence-to-justification loop (journey JMP-ZS-005) |
+| Data source | `AbsenceRecorded`, `JustificationSubmitted`, `JustificationValidated` |
+| Frequency | Weekly; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 50%; middle/high school and group: ≥ 45% |
+| Year 1 target | ≥ 55% |
+| Year 3 target | ≥ 60% |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §7.4, §18 point 8; JMP-ZS-005; URS-ZS-020, URS-ZS-038) |
+| Stakeholders | Parents, student life |
+
+#### KPI-ZS-024 — Application crash rate
+
+| Attribute | Value |
+|---|---|
+| Description | Sessions ended by an incident (a blocking crash, an unrecoverable blank screen) relative to opened sessions, for the responsive web app and PWA (MVP), and native apps (V1, subject to OQ-ZS-363 of `prd/cross-cutting/37-roadmap-mvp-v1-v2.md`). Calibration reference: market complaints center on connection failures and blank screens in existing apps (`prd/research/01-market-competition.md` §4) |
+| Data source | Client-side error telemetry (observability, §10); crash reports |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | < 1% of sessions; blocking incidents < 0.5% |
+| Year 1 target | < 1% of sessions |
+| Year 3 target | < 0.5% of sessions, native apps included |
+| Owner | Reliability |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §10 (performance, observability, platforms); URS-ZS-017) |
+| Stakeholders | All users, ZSchool |
+
+#### KPI-ZS-002 — Volume of "login and access" complaints
+
+| Attribute | Value |
+|---|---|
+| Description | Support tickets categorized "login, access, delivery" per 1,000 monthly active users, broken down by school and by channel. Market reference: connection reliability is the #1 complaint about parent apps (Moutamadris rated 3.1/5 on about 7,060 reviews, with dominant complaints being login failures, blank screens, and unavailability — `prd/research/01-market-competition.md` §4). Goal: avoid repeating that flaw; any recurring pattern identified gets an action plan within 30 days |
+| Data source | The support-ticket database (categorization), monthly active users (P6) |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | < 5 tickets per 1,000 active users, zero recurring pattern left unaddressed beyond 30 days |
+| Year 1 target | < 3 tickets per 1,000 active users |
+| Year 3 target | < 2 tickets per 1,000 active users |
+| Owner | Support (with Product) |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §3.2 (parent), H-11; reference: `prd/research/01` §4; URS-ZS-017, URS-ZS-035) |
+| Stakeholders | All users, support, ZSchool |
+
+### 3.3 Collections family
+
+Measuring the financial value delivered to the school (§3.2: "improved collections"); the reference journeys are JMP-ZS-007 (collection and reminders) and JMP-ZS-008 (online payment).
+
+#### KPI-ZS-009 — Payment-schedule collection rate
+
+| Attribute | Value |
+|---|---|
+| Description | Amount collected (cash, cheque, transfer, online) relative to the amount billed and due for the period, at D+30 of each installment, plus the year-end (30 June) clearance rate. Discounts, scholarships, and exemptions are excluded from the billed base |
+| Data source | Payment schedules, `PaymentReceived`, finance-domain receivables |
+| Frequency | Monthly; a year-end measurement in June |
+| Pilot target (ADR-ZS-035) | ≥ 95% at D+30; ≥ 98% year-end clearance; improvement is judged against each pilot's initial measurement (KPI-ZS-012), with pilot targets stricter than year 1 reflecting the close hands-on support provided |
+| Year 1 target | ≥ 90% at D+30; ≥ 98% clearance |
+| Year 3 target | ≥ 92% at D+30; ≥ 98% clearance |
+| Owner | Customer Success (with Product Finance) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §18 point 8, §3.2 (school leadership), §7.7; JMP-ZS-007; URS-ZS-002, URS-ZS-012) |
+| Stakeholders | School leadership, front office/cashier, parents |
+
+#### KPI-ZS-010 — Share of monthly payments late at D+15
+
+| Attribute | Value |
+|---|---|
+| Description | Unpaid installments at D+15 of their due date, relative to installments due within the period; an operational complement to KPI-ZS-009 used to trigger graduated reminders (`ReminderSent`) |
+| Data source | Payment schedules, receivables, `InstallmentOverdue` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≤ 10% |
+| Year 1 target | ≤ 15% |
+| Year 3 target | ≤ 12% |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §7.7, §18 point 8; JMP-ZS-007; URS-ZS-002, URS-ZS-014) |
+| Stakeholders | School leadership, front office/cashier, parents |
+
+#### KPI-ZS-011 — Average time to collection
+
+| Attribute | Value |
+|---|---|
+| Description | Average gap in days between the due date and the actual collection date (`PaymentReceived`), on installments paid within the period; measures the speed of receivables conversion, across all payment methods |
+| Data source | Payment schedules, `PaymentReceived` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≤ 7 days |
+| Year 1 target | ≤ 10 days |
+| Year 3 target | ≤ 8 days |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §3.2 (school leadership), §7.7; JMP-ZS-007, JMP-ZS-008) |
+| Stakeholders | School leadership, front office/cashier, parents |
+
+#### KPI-ZS-025 — Reminder response rate
+
+| Attribute | Value |
+|---|---|
+| Description | Share of reminded guardians (at the 2nd reminder of a graduated series) who produce a "response" within 7 days: payment, a logged payment commitment, or a tracked contact with the school. The operational definition of "response" is still to be settled in review (see OQ-ZS-364) |
+| Data source | `ReminderSent`, `PaymentReceived`, tracked contacts and commitments (finance, communication) |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≥ 65% |
+| Year 1 target | ≥ 70% |
+| Year 3 target | ≥ 75% |
+| Owner | Customer Success |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §7.7, §7.8; JMP-ZS-007; URS-ZS-014, URS-ZS-002) |
+| Stakeholders | Parents, front office/cashier, school leadership |
+
+#### KPI-ZS-026 — Share of payments made via Fatourati
+
+| Attribute | Value |
+|---|---|
+| Description | Payments collected via Fatourati (Collect then Aggregator mode, with the school remaining the creditor, daily reconciliation) relative to total non-cash payments. ADR-ZS-031 makes Fatourati the primary rail from V1 onward; ramp-up is gradual after connection (JMP-ZS-008) |
+| Data source | `PaymentReceived` tagged with the Fatourati payment reference; the finance domain's daily reconciliation |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Not measurable at MVP (rail activated at V1); a baseline established in the first V1 quarter |
+| Year 1 target | ≥ 40% of non-cash payments |
+| Year 3 target | ≥ 60% of non-cash payments |
+| Owner | Product (payments) |
+| Priority | Should |
+| Version | V1 |
+| Traceability | (→ ADR-ZS-031; JMP-ZS-008; URS-ZS-040 (V1 in `prd/02-actors-personas.md`, aligned with ADR-ZS-031 — the earlier V2 tag mismatch resolved in review); integration `prd/cross-cutting/35-external-integrations.md`) |
+| Stakeholders | Parents, front office/cashier, school leadership, ZSchool |
+
+### 3.4 Operational Efficiency family
+
+Measuring the "less rekeying" promise and time saved for school teams (§3.2 school leadership and front office; §18 point 8: reducing double data entry).
+
+The express school-year-start journey (BEH-ZS-019, `prd/modules/10-administration-onboarding-subscription.md`) is tracked with its own module-level indicator: setup time before go-live, targeted under one day for a 300-student school; that measurement feeds KPI-ZS-004 (reduced administrative time) and the monthly review.
+
+#### KPI-ZS-003 — Year-end rollover preparation time
+
+| Attribute | Value |
+|---|---|
+| Description | The working-day span between launching the year-N-to-N+1 structure clone (INV-ZS-077) and publishing the N+1 classes with assignments, for a standard school; supplemented by a self-reported measure of school leadership's time spent (a pilot survey and an annual wave) |
+| Data source | The enrollment/academic module's workflow (rollover-step timestamps), a school-leadership survey |
+| Frequency | Annual (June campaign), with an interim check-in in spring |
+| Pilot target (ADR-ZS-035) | A baseline established at the pilots' first year-end closing in June 2027 (RDM-ZS-003, MVP wave 2 — ADR-ZS-041), including the group pilot (over 2,000 students); indicative target ≤ 3 working days for a single-site school, ≤ 7 days for the group |
+| Year 1 target | ≤ 2 working days for a single-site school; ≤ 5 days for a multi-site group |
+| Year 3 target | ≤ 1 working day for a single-site school; ≤ 3 days for a group |
+| Owner | Product |
+| Priority | Must |
+| Version | MVP (wave 2 — year-end closing, RDM-ZS-003; ADR-ZS-041) |
+| Traceability | (→ §3.2 (school leadership), §7.2, INV-ZS-077; JMP-ZS-002; URS-ZS-005, URS-ZS-016; BEH-ZS-041, BEH-ZS-057; ADR-ZS-041) |
+| Stakeholders | School leadership, front office |
+
+#### KPI-ZS-027 — Massar export/import preparation time
+
+| Attribute | Value |
+|---|---|
+| Description | Total time for the sequence "generating the export file in ZSchool (per subject, class, and period) + uploading it into the Massar module + resolving errors flagged on re-upload," measured per grading session and via a pilot survey. Generation inside ZSchool is measured automatically (target: ≤ 5 minutes per file); the end-to-end time is self-reported |
+| Data source | Export-generation timestamps (Massar module), a front-office/school-leadership survey |
+| Frequency | Per grading period (per semester; three times a year for the trimester-based school) |
+| Pilot target (ADR-ZS-035) | Measurable from the June 2027 closing onward (class-list and continuous-assessment exports BEH-ZS-263/04, MVP wave 2 — ADR-ZS-041); a baseline set on this first window, indicative target ≤ 45 minutes per file |
+| Year 1 target | ≤ 30 minutes per file (subject × class × period), with ZSchool generation ≤ 5 minutes |
+| Year 3 target | ≤ 20 minutes per file |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP (wave 2 — year-end closing, RDM-ZS-005/RDM-ZS-003; ADR-ZS-041) |
+| Traceability | (→ §7.12, H-04; JMP-ZS-006; URS-ZS-003; integration `prd/cross-cutting/35-external-integrations.md`; BEH-ZS-263, BEH-ZS-264; ADR-ZS-041) |
+| Stakeholders | School leadership, front office, ZSchool |
+
+#### KPI-ZS-028 — Massar re-upload error rate
+
+| Attribute | Value |
+|---|---|
+| Description | Export files rejected or corrected by the Massar module on re-upload, relative to files generated by ZSchool and uploaded; measures the robustness of export compliance (structure, subject coding, formats) in a context with no documented API (H-04) |
+| Data source | Exported-file counts; a re-upload error log (self-reported by pilots, structured via a feedback form) |
+| Frequency | Per grading period |
+| Pilot target (ADR-ZS-035) | Measurable from June 2027 onward (MVP wave 2); ≤ 10% of files requiring correction on the first window, with a systematic BEH-ZS-265 validation report |
+| Year 1 target | ≤ 5% of files requiring correction |
+| Year 3 target | ≤ 2% |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP (wave 2 — year-end closing; ADR-ZS-041) |
+| Traceability | (→ §7.12, H-04; JMP-ZS-006; URS-ZS-003, URS-ZS-008; BEH-ZS-265; ADR-ZS-041) |
+| Stakeholders | School leadership, front office, ZSchool |
+
+#### KPI-ZS-004 — Double data entry eliminated
+
+| Attribute | Value |
+|---|---|
+| Description | Continuous-assessment grading sessions (subject × class × period, relevant levels) covered by a ZSchool export re-uploaded into Massar with no manual rekeying, relative to all eligible grading sessions. A direct measure of the "stop double data entry" promise (§5.2, §18 point 8) |
+| Data source | Grade entries from the assessments module, generated exports (Massar module), a pilot survey |
+| Frequency | Per grading period |
+| Pilot target (ADR-ZS-035) | ≥ 80% of eligible sessions at the June 2027 closing (MVP wave 2), measured against the initial double-data-entry baseline recorded before activation (KPI-ZS-012) |
+| Year 1 target | ≥ 90% of eligible sessions |
+| Year 3 target | ≥ 95% of eligible sessions |
+| Owner | Product |
+| Priority | Must |
+| Version | MVP (wave 2 — year-end closing; ADR-ZS-041) |
+| Traceability | (→ §18 point 8, §5.2, §7.12, H-04; JMP-ZS-006; URS-ZS-003; KPI-ZS-012; ADR-ZS-041) |
+| Stakeholders | School leadership, teachers, front office |
+
+### 3.5 Reliability and Performance family
+
+Measuring ongoing compliance with the baseline's non-functional requirements (§10); detailed technical thresholds are carried by `prd/cross-cutting/32-non-functional-requirements.md`.
+
+#### KPI-ZS-029 — Monthly platform availability
+
+| Attribute | Value |
+|---|---|
+| Description | Monthly availability rate outside announced maintenance, across all interfaces (web, PWA), with maintenance windows placed outside the school-year-start and exam periods; measured by probes and server-side telemetry, broken down per tenant for diagnostics |
+| Data source | Platform monitoring and observability (logs, metrics, alerts — §10) |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 99.5% each month, zero unannounced outage during school-year-start and closing peaks |
+| Year 1 target | ≥ 99.5% each month |
+| Year 3 target | ≥ 99.5% each month |
+| Owner | Reliability |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §10 (availability), §9, ADR-ZS-007) |
+| Stakeholders | ZSchool, all users |
+
+#### KPI-ZS-030 — Common page latency on mobile networks
+
+| Attribute | Value |
+|---|---|
+| Description | Share of common page loads completed in under 2 seconds on a 4G mobile network, measured via client-side real-user monitoring (RUM), by screen family (home, roll call, grade entry, parent viewing) |
+| Data source | RUM telemetry (observability — §10) |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 95% of loads under 2 s; equal scores between unstable-connectivity zones and the Casablanca-Rabat corridor |
+| Year 1 target | ≥ 95% under 2 s |
+| Year 3 target | ≥ 95% under 2 s, native apps included (V1, subject to OQ-ZS-363 of `prd/cross-cutting/37-roadmap-mvp-v1-v2.md`) |
+| Owner | Reliability (with Product) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §10 (performance), §2.10, H-11; URS-ZS-017, URS-ZS-027) |
+| Stakeholders | All users, ZSchool |
+
+#### KPI-ZS-031 — Bulk report-card publication
+
+| Attribute | Value |
+|---|---|
+| Description | The duration of the bulk generation and publication run for a 2,000-student school's report cards (baseline target: under 10 minutes), and the generation time for a single report card (baseline target: under 3 seconds); measured under real conditions at every period closing. The trimester-based pilot school (ADR-ZS-035) triples the publication windows: December, March, June |
+| Data source | Publication-run timestamps (`ReportCardPublished`), generation telemetry |
+| Frequency | At every period closing |
+| Pilot target (ADR-ZS-035) | 100% of publications compliant: < 10 min for 2,000 students (validated on the group pilot), < 3 s per report card |
+| Year 1 target | 100% compliant across the fleet |
+| Year 3 target | 100% compliant, including for consolidated organizations |
+| Owner | Reliability (with Product Assessments) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §10 (performance), §7.5; JMP-ZS-006; URS-ZS-006; URS-ZS-053) |
+| Stakeholders | School leadership, teachers, parents, students, ZSchool |
+
+### 3.6 Business family
+
+Measuring the confirmed commercial ambition (ADR-ZS-008, Q-09), the single plan (ADR-ZS-009, Q-10), and the model's viability (§11). Technical sizing volumetry: 500 schools and 500,000 students at three years (§10), a 2.5x margin over the ADR-ZS-008 targets.
+
+#### KPI-ZS-005 — Active schools
+
+| Attribute | Value |
+|---|---|
+| Description | Number of active schools per P6, at period end; broken down into single-site schools, group sites, and organizations. Market reference: the fleet counted 7,564 private schools in 2023-2024, 70% of them on the Casablanca-Kénitra corridor (`prd/research/01-market-competition.md` §1), the baseline's priority zone (§1, ADR-ZS-008) |
+| Data source | `Subscription`, `Enrollment`, `School`, `Organization` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | 3 to 5 pilot schools covering the 4 ADR-ZS-035 profiles |
+| Year 1 target | 20 active schools by the end of year 1 (about 0.3% of the fleet) |
+| Year 3 target | 300 active schools (about 4% of the fleet) |
+| Owner | Sales leadership |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-008, Q-09, H-01; §1, §10 (volumetry)) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-032 — Billed active students
+
+| Attribute | Value |
+|---|---|
+| Description | The monthly sum of active students per P6 across active schools, consistent with KPI-ZS-017; the billing unit is the active student, counted from September to June (§11, ADR-ZS-024) |
+| Data source | `UsageMetric`, `Enrollment` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Coverage of the 4 profiles: about 300 (primary) + 800 (middle/high school) + over 2,000 (group) + the trimester-based school's headcount |
+| Year 1 target | 15,000 active students (an average of about 750 per school) |
+| Year 3 target | 200,000 active students |
+| Owner | Sales leadership |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-008, ADR-ZS-024, ADR-ZS-009, Q-09, Q-10; §11) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-033 — Recurring revenue (MRR and ARR) in MAD
+
+| Attribute | Value |
+|---|---|
+| Description | Monthly recurring revenue (MRR) computed at MAD 5 per active student per month (single plan, all modules included, ADR-ZS-009), and annual recurring revenue (ARR) at MAD 50 per active student per year over 10 months. Consumables (SMS, WhatsApp, storage) and services (onboarding, migration) are tracked separately and excluded from base ARR (§11, ADR-ZS-009) |
+| Data source | `UsageMetric`, `Subscription`, `Plan`, internal billing |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Pilot billing operational from month one (no counting deferral) |
+| Year 1 target | ARR ≈ MAD 750,000 (15,000 students); peak MRR (June) ≈ MAD 75,000 |
+| Year 3 target | ARR ≈ MAD 10,000,000 (200,000 students); peak MRR ≈ MAD 1,000,000 |
+| Owner | Sales leadership (with internal finance) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-008, ADR-ZS-009, Q-10; §11) |
+| Stakeholders | ZSchool |
+
+#### KPI-ZS-034 — School attrition (churn)
+
+| Attribute | Value |
+|---|---|
+| Description | Schools that canceled relative to active schools at period start, both monthly and trailing annual; supplemented by active-student attrition (billed headcount lost within retained schools). Cancellation follows the ADR-ZS-004 process (export, 90 days read-only, deletion at 12 months); every cancellation triggers a categorized exit interview |
+| Data source | `Subscription` (statuses), `SubscriptionSuspendedOrTerminated`, exit interviews |
+| Frequency | Monthly; a consolidated annual rate |
+| Pilot target (ADR-ZS-035) | Zero pilot cancellation; dissatisfaction reasons tracked |
+| Year 1 target | ≤ 1% monthly; ≤ 10% annual |
+| Year 3 target | ≤ 0.7% monthly; ≤ 8% annual |
+| Owner | Sales leadership (with Customer Success) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-004, ADR-ZS-008; §11 (retention levers: global identity, multi-school parents)) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-006 — School acquisition cost
+
+| Attribute | Value |
+|---|---|
+| Description | Full acquisition cost (marketing, sales, salable onboarding) relative to the number of new active schools in the period; supplemented by the payback period (CAC relative to a school's average annual subscription revenue, about MAD 37,500 at 750 active students, ADR-ZS-009) and the customer-lifetime-value-to-CAC ratio, targeted ≥ 3 |
+| Data source | Acquisition spend (internal), new active `Subscription` records, `UsageMetric` |
+| Frequency | Quarterly |
+| Pilot target (ADR-ZS-035) | Tracked for information only; pilot acquisition is a founding effort, outside this benchmark |
+| Year 1 target | Payback ≤ 12 months of subscription revenue; LTV/CAC ≥ 3 |
+| Year 3 target | Payback ≤ 9 months; LTV/CAC ≥ 4 (referral effect, §11) |
+| Owner | Sales leadership |
+| Priority | Should |
+| Version | V1 |
+| Traceability | (→ ADR-ZS-008, ADR-ZS-009; §11 (growth levers)) |
+| Stakeholders | ZSchool |
+
+#### KPI-ZS-035 — School-leadership net satisfaction (NPS)
+
+| Attribute | Value |
+|---|---|
+| Description | Net Promoter Score among school directors and leaders, a semi-annual survey (March and October), broken down by ADR-ZS-035 profile and by tenure; verbatim feedback is categorized and feeds the roadmap. No sourced NPS benchmark exists for private education in Morocco: targets set by internal decision (see OQ-ZS-365) |
+| Data source | Semi-annual surveys (aggregated responses, P3) |
+| Frequency | Semi-annual |
+| Pilot target (ADR-ZS-035) | ≥ 40, with a response rate ≥ 60% of pilots |
+| Year 1 target | ≥ 40 |
+| Year 3 target | ≥ 50 |
+| Owner | Executive leadership (with Product) |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §3.2 (school leadership), ADR-ZS-008, Q-13) |
+| Stakeholders | School leadership, ZSchool |
+
+#### KPI-ZS-036 — Parent net satisfaction (NPS)
+
+| Attribute | Value |
+|---|---|
+| Description | Net Promoter Score among parents, a semi-annual in-app survey (one participation prompt per account, several children counting as a single response), broken down by school subject to the cohort threshold (OQ-ZS-363). Calibration reference: existing parent apps score poorly (Moutamadris 3.1/5 on about 7,060 reviews; `prd/research/01-market-competition.md` §4) — the goal is a clearly superior experience |
+| Data source | Semi-annual in-app surveys (aggregated responses, P3) |
+| Frequency | Semi-annual |
+| Pilot target (ADR-ZS-035) | ≥ 30, with a response rate ≥ 25% of active parents |
+| Year 1 target | ≥ 30 |
+| Year 3 target | ≥ 40 |
+| Owner | Executive leadership (with Product) |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §3.2 (parent), §3.3, H-11) |
+| Stakeholders | Parents, ZSchool |
+
+### 3.7 Costs, Compliance, and Operations family (added by the 09/09/2026 review)
+
+Indicators promised by the risk register (`prd/cross-cutting/39-risks-mitigations.md`: RSK-ZS-009, RSK-ZS-005, RSK-ZS-017, RSK-ZS-019, RSK-ZS-020, RSK-ZS-006, RSK-ZS-021) and by modules `prd/modules/18`, `19`, `21` (§10 of each), absent from version 1.0 (ADR-ZS-042 (§26h)). They follow the catalogue's template and are measured per P8.
+
+#### KPI-ZS-037 — Communication cost per notification and per active student
+
+| Attribute | Value |
+|---|---|
+| Description | Monthly cost of communication consumables (alias SMS, LowCost SMS, WhatsApp conversations) relative to the number of notifications delivered and the number of active students, per school and in aggregate; broken down between costs charged to the school (packs, BEH-ZS-188) and the platform-level cost of authentication SMS (OTP, MFA, invitations, resets — PAK-ZS-002, ADR-ZS-062 (§21h)); tracks the effect of the 01/10/2026 WhatsApp pricing switch (H-20) |
+| Data source | `DeliveryLog` (channel, status, cost), pack counters (`UsageMetric`), SMS-aggregator and Meta invoices |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Average cost per notification delivered ≤ MAD 0.40; authentication platform cost ≤ MAD 0.50 per active account per month; a gap ≤ 10% between the cost billed to schools and the carrier cost |
+| Year 1 target | Cost per active student per month ≤ MAD 1.5 across all channels (30% of the plan price, ADR-ZS-009); authentication platform cost ≤ MAD 0.40 per active account |
+| Year 3 target | Cost per active student per month ≤ MAD 1 (a growing share of free push, V1) |
+| Owner | Product (communication), with internal finance |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-009, ADR-ZS-036, H-20; RSK-ZS-005; PAK-ZS-014, PAK-ZS-002; BEH-ZS-188; ADR-ZS-062 (§21h)) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-038 — CNDP compliance status
+
+| Attribute | Value |
+|---|---|
+| Description | Share of planned CNDP formalities (CNF-ZS-001: F211 for each active school and for ZSchool, F112 for national ID numbers before re-enabling that field, F118 or documented express consent for providers outside the adequacy list) filed and obtained by their planned date; supplemented by the number of active schools with no F211 receipt (target: zero) |
+| Data source | The compliance-formalities register (CNF-ZS-001), the sub-processor register (SEC-ZS-023), `Subscription` |
+| Frequency | Monthly; a gating check before every school activation |
+| Pilot target (ADR-ZS-035) | 100% of pilot and ZSchool filings submitted before 15/12/2026; zero pilot activated with no F211 receipt; no national ID number collected before the F112 authorization |
+| Year 1 target | 100% of active schools with an F211 receipt before activation; ZSchool's own filings kept current |
+| Year 3 target | 100%; an annual compliance audit with no major finding |
+| Owner | Compliance (data-protection point of contact, CNF-ZS-026) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §9, ADR-ZS-027, ADR-ZS-007; RSK-ZS-009; CNF-ZS-007, CNF-ZS-008, CNF-ZS-004, CNF-ZS-001, CNF-ZS-026; ADR-ZS-066) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-039 — Security incidents and time to resolution
+
+| Attribute | Value |
+|---|---|
+| Description | Number of security incidents classified by severity (unauthorized access attempt, account compromise, data leak, malicious outage), median time to detection, containment, and notification (a contractual 72-hour window to schools, CNF-ZS-002; to affected individuals per SEC-ZS-013); supplemented by the share of critical penetration-test findings remediated before pilot activation (SEC-ZS-027) |
+| Data source | The incident log (SEC-ZS-013), penetration-test reports, monitoring alerts |
+| Frequency | Monthly; a quarterly review |
+| Pilot target (ADR-ZS-035) | Zero major-severity incident; 100% of the first penetration test's critical findings remediated before RDM-ZS-001; a notification delay ≤ 72 h on every classified incident |
+| Year 1 target | Zero data leak; median detection ≤ 24 h; containment ≤ 48 h |
+| Year 3 target | Zero leak; median detection ≤ 4 h; an annual penetration test with no critical finding open beyond 30 days |
+| Owner | Reliability (security) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §9; RSK-ZS-017; SEC-ZS-013, SEC-ZS-027, SEC-ZS-004, SEC-ZS-003; CNF-ZS-002; ADR-ZS-066 (§25g)) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-040 — Import identity quality: duplicates detected and merged
+
+| Attribute | Value |
+|---|---|
+| Description | For every bulk import (BEH-ZS-006) and on an ongoing basis: the number of probable student duplicates found by weak matching (BEH-ZS-027) and guardians matched by phone number (ADR-ZS-050), relative to imported rows; the share of confirmed duplicates then merged by support (BEH-ZS-029, `MergeOperation`) within 15 days; the outstanding stock of unresolved probable duplicates |
+| Data source | Import reports, the `ProbableDuplicateDetected` event, `MergeOperation`, the `MergeCompleted` event |
+| Frequency | At every import; monthly |
+| Pilot target (ADR-ZS-035) | ≤ 2% of rows as probable duplicates after intra-file deduplication; 100% of confirmed duplicates merged within 15 days; zero outstanding stock at the June 2027 closing |
+| Year 1 target | ≤ 1% of probable duplicates per import; merged within 10 days |
+| Year 3 target | ≤ 0.5%; merged within 5 days |
+| Owner | Customer Success (with Support) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ INV-ZS-055, INV-ZS-056, ADR-ZS-015; RSK-ZS-019; BEH-ZS-006, BEH-ZS-027, BEH-ZS-029, INV-ZS-005, INV-ZS-020; ADR-ZS-050) |
+| Stakeholders | ZSchool, front office, school leadership |
+
+#### KPI-ZS-007 — Onboardings completed against plan
+
+| Attribute | Value |
+|---|---|
+| Description | Schools whose onboarding (RDM-ZS-012: structure, import, invitations, the express school-year-start journey BEH-ZS-019, or the mid-year data migration BEH-ZS-047) is complete and validated, relative to onboardings planned for the period; median onboarding duration per profile (the express journey's target: under one day for 300 students); the average delay against the planned date |
+| Data source | Onboarding tracking (Customer Success), BEH-ZS-005/06/19 timestamps, `Subscription` |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | 100% of pilots activated within the February-April 2027 window (RDM-ZS-012/RDM-ZS-001); mid-year data migration ≤ 5 working days per pilot |
+| Year 1 target | ≥ 90% of planned onboardings completed within the planned month; median duration ≤ 3 working days outside groups |
+| Year 3 target | ≥ 95%; median duration ≤ 2 working days |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §7.1, G-18; RSK-ZS-020; RDM-ZS-012, RDM-ZS-001; BEH-ZS-005, BEH-ZS-006, BEH-ZS-019, BEH-ZS-047; ADR-ZS-043) |
+| Stakeholders | ZSchool, school leadership |
+
+#### KPI-ZS-008 — Demo-to-contract conversion
+
+| Attribute | Value |
+|---|---|
+| Description | Schools that signed a subscription relative to schools that received a demo or opened a trial (BEH-ZS-010) in the period, with the median time between the first demo and signature; broken down by size and by zone (the Casablanca-Kénitra corridor, ADR-ZS-030) |
+| Data source | Internal sales tracking, `Subscription` (trial → active) |
+| Frequency | Monthly; measured from RDM-ZS-002 onward (P8) |
+| Pilot target (ADR-ZS-035) | Tracked for information only (pilot recruitment falls outside this benchmark) |
+| Year 1 target | ≥ 25% conversion; median time ≤ 60 days |
+| Year 3 target | ≥ 35%; median time ≤ 45 days |
+| Owner | Sales leadership |
+| Priority | Should |
+| Version | V1 |
+| Traceability | (→ ADR-ZS-030, ADR-ZS-008; RSK-ZS-006; BEH-ZS-010; §11) |
+| Stakeholders | ZSchool |
+
+#### KPI-ZS-041 — Channel-fallback delay
+
+| Attribute | Value |
+|---|---|
+| Description | For critical notifications (attendance, security), the delay between a primary channel's failure or missing acknowledgment (WhatsApp at MVP; push at V1) and the SMS fallback being handed off to the carrier (BEH-ZS-184); the share of fallbacks executed within 2 minutes; the rate of critical notifications with no delivery at all after fallback |
+| Data source | `Notification`, `DeliveryLog` (initial channel, fallback channel, timestamps) |
+| Frequency | Daily; monthly review |
+| Pilot target (ADR-ZS-035) | ≥ 98% of fallbacks within 2 minutes; total failure rate ≤ 0.5% |
+| Year 1 target | ≥ 99% within 2 minutes; total failure ≤ 0.3% |
+| Year 3 target | ≥ 99.5%; total failure ≤ 0.2% |
+| Owner | Reliability (with Product Communication) |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ ADR-ZS-036, §10; RSK-ZS-005, RSK-ZS-021; BEH-ZS-184, INT-ZS-026, INT-SMS; ADR-ZS-062) |
+| Stakeholders | ZSchool, parents |
+
+#### KPI-ZS-042 — Student access activation
+
+| Attribute | Value |
+|---|---|
+| Description | Students at eligible levels (default: from 1AC onward, INV-ZS-051, a school-level parameter) whose personal access was activated by a legal guardian (JNY-ZS-081, a generated login identifier, ADR-ZS-048), relative to eligible students; the share of activated accounts that completed at least one session in the month |
+| Data source | `User` records tied to a `StudentProfile`, the activation log, authentication sessions |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | ≥ 50% of eligible students activated by the June 2027 closing (middle/high school and group); ≥ 60% of activated accounts used within the month |
+| Year 1 target | ≥ 60% activated; ≥ 60% used |
+| Year 3 target | ≥ 75% activated; ≥ 65% used |
+| Owner | Product |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ INV-ZS-051, INV-ZS-043, INV-ZS-003; URS-ZS-051; JNY-ZS-081; ADR-ZS-048) |
+| Stakeholders | Students, parents, ZSchool |
+
+#### KPI-ZS-043 — Average time for a transfer between ZSchool schools
+
+| Attribute | Value |
+|---|---|
+| Description | The time between a transfer request being initiated (BEH-ZS-201) and its activation (BEH-ZS-206), in calendar days, median and 90th percentile; the share of requests refused by the destination, canceled, or expired (30 days, ADR-ZS-063); the share of activated transfers with no duplicate identity created (INV-ZS-023, target 100%) |
+| Data source | `TransferRequest` (statuses and timestamps), the `TransferValidated`, `TransferDeclined`, `TransferCancelled`, and `TransferExpired` events |
+| Frequency | Monthly; peaking in June-September |
+| Pilot target (ADR-ZS-035) | Median ≤ 7 days between pilots; 100% with no duplicate identity; expirations ≤ 10% |
+| Year 1 target | Median ≤ 5 days; 90th percentile ≤ 15 days |
+| Year 3 target | Median ≤ 3 days; 90th percentile ≤ 10 days |
+| Owner | Product (mobility) |
+| Priority | Should |
+| Version | MVP |
+| Traceability | (→ §7.9, INV-ZS-082, INV-ZS-083, INV-ZS-023; JMP-ZS-009; BEH-ZS-201, BEH-ZS-202, BEH-ZS-206; ADR-ZS-063) |
+| Stakeholders | School leadership, front office, parents |
+
+#### KPI-ZS-044 — Massar files accepted on first submission
+
+| Attribute | Value |
+|---|---|
+| Description | Massar export files (class lists BEH-ZS-263, continuous assessment BEH-ZS-264) uploaded into the Massar module with no rejection and no correction, relative to files generated and uploaded, per period and per school; the share of files that passed the BEH-ZS-265 validation report with no warning; a "first attempt" complement to KPI-ZS-028's overall error rate |
+| Data source | Generation timestamps, BEH-ZS-265 validation reports, a structured re-upload log (a pilot form) |
+| Frequency | Per grading period |
+| Pilot target (ADR-ZS-035) | ≥ 85% accepted on first submission at the June 2027 closing (MVP wave 2), including the trimester-based school (trimester-to-semester mapping, ADR-ZS-058 (§17h)) |
+| Year 1 target | ≥ 95% |
+| Year 3 target | ≥ 98% |
+| Owner | Product (Massar) |
+| Priority | Should |
+| Version | MVP (wave 2 — year-end closing; ADR-ZS-041) |
+| Traceability | (→ §7.12, H-04; `prd/modules/21` §10; BEH-ZS-263, BEH-ZS-264, BEH-ZS-265; ADR-ZS-041, ADR-ZS-058) |
+| Stakeholders | School leadership, front office, ZSchool |
+
+#### KPI-ZS-045 — External public-sector teacher AREF authorizations kept current
+
+| Attribute | Value |
+|---|---|
+| Description | External public-sector teacher affiliations (BEH-ZS-231) with a valid AREF authorization at measurement time, relative to active affiliations of that status; the number of expiry alerts left unaddressed at 30 days; the share of monthly AREF lists (BEH-ZS-233) generated on time. Measured per school, without revealing a teacher's affiliations at other schools (INV-ZS-087, ADR-ZS-064 (§23a)) |
+| Data source | `SchoolMembership` (status, authorization, expiry), the BEH-ZS-233 generation history |
+| Frequency | Monthly |
+| Pilot target (ADR-ZS-035) | Not measurable at MVP (BEH-ZS-231 to BEH-ZS-233 are V1); a self-reported pilot count of affected teachers |
+| Year 1 target | ≥ 95% of authorizations valid; zero expiry alert left unaddressed at 30 days |
+| Year 3 target | ≥ 98%; monthly lists generated on time 100% of the time |
+| Owner | Product (career) |
+| Priority | Could |
+| Version | V1 |
+| Traceability | (→ §2.7, H-14; `prd/modules/19` §10; BEH-ZS-231, BEH-ZS-232, BEH-ZS-233; ADR-ZS-064) |
+| Stakeholders | School leadership, external public-sector teachers |
+
+#### KPI-ZS-012 — Initial (baseline) pilot measurement before activation
+
+| Attribute | Value |
+|---|---|
+| Description | A measurement requirement: before activating each pilot school (RDM-ZS-001), and before activating any school in year 1, ZSchool records and archives an initial measurement of the indicators whose target is an improvement: the previous year's D+30 collection rate and year-end clearance rate (KPI-ZS-009), the share of late monthly payments (KPI-ZS-010), the average time to collection (KPI-ZS-011), Massar double-data-entry time per grading session (KPI-ZS-004), the previous rollover's preparation time (KPI-ZS-003), export preparation time (KPI-ZS-027). The record is self-reported (the school's own registers and files, a structured interview), dated, attributed, and tied to the tenant; the "pilot" targets for the relevant KPIs are read as an improvement over this measurement |
+| Data source | An initial-measurement form (Customer Success), the school's own documents (registers, Excel files, cash-drawer logs), the data-migration import (BEH-ZS-006: paid payment schedules) |
+| Frequency | Once per school, before activation; checked in the monthly review (KPI-ZS-014) |
+| Pilot target (ADR-ZS-035) | 100% of pilots with an archived initial measurement before activation (RDM-ZS-012); no activation without a baseline |
+| Year 1 target | 100% of new schools with a baseline before activation |
+| Year 3 target | 100%; a lightweight baseline (a 30-minute form) built into onboarding |
+| Owner | Customer Success |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §18 point 8 ("reduction" of double data entry, improved collections); RDM-ZS-012, RDM-ZS-001; KPI-ZS-009, KPI-ZS-010, KPI-ZS-011, KPI-ZS-003, KPI-ZS-027, KPI-ZS-004; ADR-ZS-042 (§26h)) |
+| Stakeholders | ZSchool, school leadership |
+
+**Acceptance criteria (critical flow, KPI-ZS-012):**
+
+```gherkin
+Feature: Initial measurement before school activation
+  Scenario: Activation gated on the baseline (MVP)
+    Given a pilot school whose onboarding is complete
+    And no initial measurement archived for that tenant
+    When Customer Success requests activation (RDM-ZS-001)
+    Then activation is refused, with the list of missing initial measurements
+  Scenario: Reading pilot targets (MVP wave 2)
+    Given an archived initial measurement showing a D+30 collection rate of 82 percent
+    When KPI-ZS-009 is computed at the June 2027 closing
+    Then the internal dashboard shows the current value, the pilot target, and the gap against the initial measurement
+```
+
+## 4. Distinct targets per pilot profile (ADR-ZS-035)
+
+The four pilot schools (§12 MVP: 3 to 5 schools; ADR-ZS-035, Q-13: a primary school of about 300 students, a middle/high school of about 800 students, a multi-site group of over 2,000 students, a bilingual school running on trimesters, on the Casablanca-Rabat corridor) validate the product across distinct usage profiles. The table below gathers pilot targets broken down by profile; for indicators with no dedicated row, the catalogue's generic pilot target (§3) applies.
+
+| KPI | Primary (~300 students) | Middle/high school (~800 students) | Multi-site group (> 2,000 students) | Trimester-based bilingual school |
+|---|---|---|---|---|
+| KPI-ZS-001 Daily roll-call rate | ≥ 95% | ≥ 90% | ≥ 90% per site | ≥ 90% |
+| KPI-ZS-015 Weekly active teachers | ≥ 80% | ≥ 80% | ≥ 75% | ≥ 80% |
+| KPI-ZS-016 Weekly active parents | ≥ 70% | ≥ 60% | ≥ 55% | ≥ 60% |
+| KPI-ZS-020 Absence notification delay | ≥ 99% < 5 min | ≥ 99% < 5 min | ≥ 99% < 5 min, per site | ≥ 99% < 5 min |
+| KPI-ZS-023 Justifications within 48 h | ≥ 50% | ≥ 45% | ≥ 45% | ≥ 45% |
+| KPI-ZS-004 Double data entry eliminated (June 2027 closing, MVP wave 2) | ≥ 80% of eligible sessions | ≥ 80% (certifying levels prioritized) | ≥ 80%, consolidated per site | ≥ 80%, across three closing windows (Massar trimester-to-semester mapping, ADR-ZS-058 (§17h)) |
+| KPI-ZS-031 Report-card publication | < 3 s per report card | < 3 s per report card | A 2,000-student run < 10 min (the baseline's §10 reference load case) | < 10 min for the full headcount, three times a year (December, March, June) |
+| KPI-ZS-035 School-leadership NPS | ≥ 40 | ≥ 40 | ≥ 40 | ≥ 40, with attention to the tripled closing workload |
+
+Reading rules:
+
+- the trimester-based school shifts and triples the "report card" peak and the Massar export windows (journey map `prd/journeys/00-journey-map.md` §4.2); its closing measurements (KPI-ZS-027, KPI-ZS-028, KPI-ZS-004, KPI-ZS-031, KPI-ZS-044) are evaluated across three windows instead of two, with Massar exports remaining semester-based (ADR-ZS-058 (§17h));
+- the multi-site group is measured in consolidated read-only view from MVP onward (`Organization` in consolidated view, ADR-ZS-041); shared administration remains V1;
+- any "improvement" target is read against the school's initial measurement (KPI-ZS-012);
+- the multi-site group is measured per site and then consolidated (INV-ZS-073, P4); its collection KPIs (KPI-ZS-009 to KPI-ZS-011) are evaluated on a consolidated basis, since the group's accounting is consolidated (§2.11);
+- year-1 and year-3 targets (ADR-ZS-008) are not broken down by profile: they apply to the whole fleet.
+
+## 5. Measurement governance: instrumentation, dashboard, monthly review
+
+The following requirements make the framework operational. They follow the requirement template (conventions §3) adapted to a cross-cutting domain. **KPI-ZS-013 to KPI-ZS-014 (and KPI-ZS-012) are measurement-governance requirements, not indicators**: they keep their identifiers (no renumbering, conventions §1), and the README counts them separately (OQ-ZS-367 resolved, ADR-ZS-042).
+
+**Baseline rule.** No school is activated without the initial measurement described in KPI-ZS-012; KPIs whose target is an improvement (KPI-ZS-009, KPI-ZS-010, KPI-ZS-011, KPI-ZS-003, KPI-ZS-027, KPI-ZS-004) are always shown with their initial value, current value, and the gap between them.
+
+### KPI-ZS-013 — Indicator instrumentation framework
+
+| Attribute | Value |
+|---|---|
+| Description | Every KPI-ZS-NNN in this chapter is computed automatically from data sources produced by the platform (entities, domain events, INV-ZS-090 logs, telemetry), at the stated frequency, with no manual rekeying; computed values are timestamped (UTC, P2), immutable, and traceable back to their definition; indicators that cannot be automated (surveys, self-reported Massar re-upload logs) have a dated, structured collection process. No value contains named individual data (P3) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ INV-ZS-090, §10 (observability); correction #1 of `prd/research/00-baseline-corrections.md`; entities and events in `prd/03-domain-data-model.md` §7) |
+| Stakeholders | ZSchool |
+
+**Acceptance criteria (critical flow):**
+
+```gherkin
+Feature: Indicator instrumentation
+  Scenario: Automatic computation of an indicator
+    Given the past month's product events timestamped in UTC
+    And an active school with an ongoing school year
+    When the monthly indicator computation runs
+    Then each KPI (KPI-ZS-001 to KPI-ZS-036 and KPI-ZS-037 to KPI-ZS-045) is computed from only the sources listed in its attribute table
+    And the produced value is timestamped, immutable, and traceable back to its KPI-ZS-NNN definition
+    And no published value contains named data about a student, a parent, a teacher, or a staff member
+  Scenario: An indicator that cannot be automated
+    Given an indicator fed by a survey or a self-reported log (KPI-ZS-027, KPI-ZS-028, KPI-ZS-035, KPI-ZS-036, KPI-ZS-012)
+    When the collection period opens
+    Then the collection process is dated, assigned an owner, and archived with its aggregated responses
+```
+
+### KPI-ZS-046 — Internal indicator dashboard
+
+| Attribute | Value |
+|---|---|
+| Description | An internal ZSchool dashboard (access restricted to authorized teams, outside the scope of the RAP module's school-facing screens) presenting the seven families (§3.1 to §3.7) with, for each KPI: current value, current-phase target, a 4-week trend, and owner; filterable by school, organization, and pilot cohort; an alert to the owner and a visual flag whenever an indicator marked critical drops below its phase target; cohorts below the confidentiality threshold are hidden (OQ-ZS-363). ZSchool's observation of a school's usage is contractually bounded and compliant with confidentiality commitments (see `prd/cross-cutting/36-legal-compliance-data-protection.md`) |
+| Priority | Must |
+| Version | MVP (limited to MVP indicators); V1 (complete) |
+| Traceability | (→ INV-ZS-073, INV-ZS-090, §10 (observability), §9) |
+| Stakeholders | ZSchool |
+
+**Acceptance criteria (critical flow):**
+
+```gherkin
+Feature: Internal indicator dashboard
+  Scenario: Viewing by an authorized team
+    Given an authorized internal ZSchool user
+    When they open the internal dashboard
+    Then all seven indicator families are shown with current value, phase target, the initial measurement where applicable (KPI-ZS-012), and a 4-week trend
+    And the scope is filterable by school, organization, and pilot cohort
+    And cohorts below the confidentiality threshold are hidden
+  Scenario: Crossing a critical threshold
+    Given an indicator marked critical in the framework
+    When its recomputed value drops below the current phase's target
+    Then an alert is sent to the indicator's owner
+    And the alert stays visible on the dashboard until it is closed in the monthly review
+```
+
+### KPI-ZS-014 — Monthly indicator review
+
+| Attribute | Value |
+|---|---|
+| Description | An internal monthly ritual: reviewing the seven families with their owners, comparing against phase targets (pilots, year 1, year 3), deciding on dated, assigned actions for every significant gap (default: over 10% of the target, or a KPI-ZS-046 critical alert), and tracking the previous review's actions; the minutes are archived. During the pilot phase, the review incorporates qualitative feedback from the four ADR-ZS-035 profiles, prepares open-question arbitrations (including OQ-ZS-363, OQ-ZS-364, OQ-ZS-365), and checks that initial measurements exist (KPI-ZS-012) |
+| Priority | Must |
+| Version | MVP |
+| Traceability | (→ §18 point 8, ADR-ZS-008, ADR-ZS-035, Q-09, Q-13) |
+| Stakeholders | ZSchool |
+
+**Acceptance criteria (critical flow):**
+
+```gherkin
+Feature: Monthly indicator review
+  Scenario: Holding the review
+    Given the latest monthly indicator snapshot
+    When the monthly review takes place
+    Then each family is reviewed with its owner
+    And every gap exceeding 10 percent of the phase target gets a dated, assigned action
+    And the archived minutes list the previous review's actions with their status
+  Scenario: Closing out a phase
+    Given the end of the pilot phase or of year 1
+    When the closing review takes place
+    Then each KPI is closed out with its achieved value, its target, and an achievement verdict
+    And the verdicts feed the roadmap's milestone review (prd/cross-cutting/37-roadmap-mvp-v1-v2.md)
+```
+
+## 6. Open Questions
+
+| ID | Question | Context |
+|---|---|---|
+| OQ-ZS-361 | **Escalated — ADR-ZS-071** (a corresponding baseline update, `prd/cross-cutting/42-review-arbitrations.md` §3): updating the baseline on the time zone | The baseline (§2.4, §10) still describes "UTC+1 reverting to UTC+0 during Ramadan." Per correction #1 of `prd/research/00-baseline-corrections.md`, Decree No. 2.26.530 (Official Gazette No. 7521 of 29/06/2026) establishes a **permanent return to UTC+0 on 20/09/2026**, with no seasonal alternation. This chapter already applies permanent UTC+0 for measurement timestamps (P2); the baseline correction still needs to be recorded in review |
+| OQ-ZS-362 | **Resolved — ADR-ZS-061** (the single rule in `prd/cross-cutting/33-business-model-packaging.md` §3, a transfer counted at the origin school; OQ-ZS-365 of `prd/03` resolved): the monthly "active student" counting rule | KPI-ZS-017 and billing (ADR-ZS-024, ADR-ZS-009) share the same definition; the proration rule for months when an enrollment changes state (ACTIVE, SUSPENDED, closed) is open in `prd/03-domain-data-model.md` (OQ-ZS-365). This chapter does not settle it: the consistency target (gap ≤ 0.5%) applies regardless of the rule adopted |
+| OQ-ZS-363 | A minimum cohort threshold for publishing cross-school KPIs | Per-school NPS (KPI-ZS-035, KPI-ZS-036) and adoption comparisons must not allow re-identification of individuals (P3); propose a minimum threshold (5 respondents or users) to be settled in review |
+| OQ-ZS-364 | An operational definition of "response to a reminder" (KPI-ZS-025) | Three candidates: full payment, a payment commitment logged in the record, a tracked contact with the school; the choice changes the achievable target level and must be set before the year-1 reminder campaign |
+| OQ-ZS-365 | NPS targets with no sourced benchmark | No reference NPS is documented for private education in Morocco in `prd/research/01-market-competition.md`; the KPI-ZS-035 and KPI-ZS-036 targets (40/30 then 50/40) are internal choices, to be recalibrated after the first pilot wave |
+| OQ-ZS-366 | Numeric targets for the added indicators (KPI-ZS-037 to KPI-ZS-045): starting values set by internal decision, with no sourced benchmark (cost per notification, conversion, transfer delay) | To be recalibrated after the first pilot closing (June 2027) and confirmed by the founder alongside ADR-ZS-041 (ADR-ZS-073); KPI-ZS-037 depends on the 01/10/2026 WhatsApp rate card (H-20, OQ-ZS-367 of `prd/cross-cutting/40`) |
+| OQ-ZS-367 | **Resolved — ADR-ZS-042** (identifiers kept; governance requirements counted separately in the README; KPI-ZS-012 follows the same rule): numbering KPI-ZS-013 to KPI-ZS-014 within the indicator namespace | Conventions §2 reserve `KPI-ZS-NNN` for measurable indicators; KPI-ZS-013 (instrumentation framework), KPI-ZS-046 (internal dashboard), and KPI-ZS-014 (monthly review) are measurement-governance requirements. Since identifiers are stable (no renumbering, conventions §1), the decision requested is to extend this file's namespace definition to instrumentation requirements; failing that, a dedicated namespace would be created in a later edition with no renumbering of existing requirements. No other file creates a `KPI-ZS-NNN`. |
+
+---
+
+## Traceability
+
+A table mapping baseline and research IDs to coverage in this file.
+
+| Baseline / source ID | Item | Coverage in this file |
+|---|---|---|
+| §1, H-01 | Market: 7,564 private schools (2023-2024), 70% Casablanca-Kénitra corridor | KPI-ZS-005 (fleet share) |
+| §3.2 | Value proposition by stakeholder | KPI-ZS-001 to KPI-ZS-019 (adoption by stakeholder), KPI-ZS-022, KPI-ZS-023, KPI-ZS-009 (improved collections), KPI-ZS-003, KPI-ZS-004 (less rekeying), KPI-ZS-035, KPI-ZS-036 |
+| §3.3 | Differentiation, weakness of existing parent apps | KPI-ZS-016, KPI-ZS-036 |
+| §5.2 | Personas ("stop double data entry," "calls families of absent students before 10 a.m.") | KPI-ZS-001, KPI-ZS-004 |
+| §7.4, §7.5, §7.7, §7.8, §7.11, §7.12 | Source modules for the measurements | KPI-ZS-001, KPI-ZS-020, KPI-ZS-023, KPI-ZS-009 to KPI-ZS-026, KPI-ZS-027 to KPI-ZS-004, KPI-ZS-031 |
+| §9, §10 (observability, availability, performance, notifications) | Measured non-functional thresholds | KPI-ZS-020, KPI-ZS-021, KPI-ZS-024, KPI-ZS-029, KPI-ZS-030, KPI-ZS-031; KPI-ZS-013 |
+| §11 | Business model (single plan, MAD 5/student/month, consumables on top) | KPI-ZS-019, KPI-ZS-032, KPI-ZS-033, KPI-ZS-006 |
+| §12 | Scope by version (MVP/V1/V2+ tags) | The "Version" column of every KPI |
+| §18 point 8 | MVP success indicators (pilot adoption, daily roll call, notification delay, collections, double data entry) | §1; KPI-ZS-001, KPI-ZS-016, KPI-ZS-020, KPI-ZS-009, KPI-ZS-004 |
+| INV-ZS-073 | Organization consolidation without merging | P4; KPI-ZS-046; §4 (group reading) |
+| INV-ZS-074 | School parameters (calendar, periods) | P6 (school day) |
+| INV-ZS-077 | Structure cloning from N to N+1 | KPI-ZS-003 |
+| INV-ZS-090 | Write logging (a cross-check source) | P1, P3; KPI-ZS-015, KPI-ZS-019, KPI-ZS-013 |
+| ADR-ZS-023, ADR-ZS-036 | Notification channels and fallback | KPI-ZS-021, KPI-ZS-022 |
+| ADR-ZS-024 | Paying client, billing per active student in MAD | KPI-ZS-017, KPI-ZS-032 |
+| ADR-ZS-004 | Cancellation (export, read-only, deletion) | KPI-ZS-034 |
+| ADR-ZS-007 | Production and backup hosting in Morocco | KPI-ZS-029 |
+| ADR-ZS-008, Q-09 | Ambition: 20 schools and 15,000 students (year 1); 300 and 200,000 (year 3) | KPI-ZS-005, KPI-ZS-032, KPI-ZS-033, KPI-ZS-006, KPI-ZS-035 |
+| ADR-ZS-009, Q-10 | Single plan, MAD 5/active student/month over 10 months | KPI-ZS-017, KPI-ZS-033, KPI-ZS-006 |
+| ADR-ZS-031 | Fatourati as the primary rail from V1 onward | KPI-ZS-026 |
+| ADR-ZS-035, Q-13 | Four pilot profiles (primary, middle/high school, group, trimesters) | §4 (targets by profile); KPI-ZS-031, KPI-ZS-035; KPI-ZS-014 |
+| H-04 | Massar with no API, a file-based channel | KPI-ZS-027, KPI-ZS-028, KPI-ZS-004 |
+| H-11 | Mobile and WhatsApp usage | KPI-ZS-016, KPI-ZS-021, KPI-ZS-022, KPI-ZS-030 |
+| H-13 | Multi-school part-time teachers | KPI-ZS-015 |
+| `prd/research/00-baseline-corrections.md` #1 | Permanent UTC+0 as of 20/09/2026 | P2; OQ-ZS-361 |
+| `prd/research/01-market-competition.md` §1 | Size of the private-school fleet | KPI-ZS-005 |
+| `prd/research/01-market-competition.md` §2 | Genuinely low adoption of competing parent apps | KPI-ZS-016 (calibration) |
+| `prd/research/01-market-competition.md` §4 | Connection reliability = the #1 complaint; Moutamadris 3.1/5 (~7,060 reviews) | KPI-ZS-024, KPI-ZS-002, KPI-ZS-036 (market references) |
+| Journeys JMP-ZS-002, JMP-ZS-003 to JMP-ZS-008, JMP-ZS-011 (`prd/journeys/00-journey-map.md`) | Journeys measured by the KPIs | KPI-ZS-001, KPI-ZS-018, KPI-ZS-020, KPI-ZS-023, KPI-ZS-009 to KPI-ZS-026, KPI-ZS-003, KPI-ZS-027 to KPI-ZS-004, KPI-ZS-031 |
+| BES needs (`prd/02-actors-personas.md`) | User origin of the measurements | KPI-ZS-001, KPI-ZS-015, KPI-ZS-016, KPI-ZS-018, KPI-ZS-020, KPI-ZS-023, KPI-ZS-009 to KPI-ZS-026, KPI-ZS-027 to KPI-ZS-031 |
+| Entities and events (`prd/03-domain-data-model.md` §2, §7) | Data sources for the indicators | P1, P6; "Data source" columns; KPI-ZS-017, KPI-ZS-013; KPI-ZS-040, KPI-ZS-043 |
+| ADR-ZS-041 (`prd/cross-cutting/42-review-arbitrations.md`) | Two-wave MVP scope; year-end closing and Massar exports in June 2027 | P5, P8; KPI-ZS-003 to KPI-ZS-004, KPI-ZS-044; §4 |
+| ADR-ZS-045, ADR-ZS-046 | Declared sessions and unfulfilled sessions | P6; KPI-ZS-001 |
+| ADR-ZS-056, ADR-ZS-062 | First absence of the day, hold-back, MVP channels with no push, hand-off to carrier | KPI-ZS-020, KPI-ZS-021, KPI-ZS-041 |
+| ADR-ZS-061 | The active-student counting rule, a transfer counted at the origin school | P6; KPI-ZS-017; OQ-ZS-362 |
+| ADR-ZS-065 | A single attendance-rate definition (BEH-ZS-241) | P6 |
+| ADR-ZS-042 (h) | Indicators promised by `prd/cross-cutting/39` and by modules 18, 19, 21; a baseline requirement; KPI-ZS-013 to KPI-ZS-014 governance | §3.7 (KPI-ZS-037 to KPI-ZS-012); §5; OQ-ZS-367 |
+| `prd/cross-cutting/39-risks-mitigations.md` (RSK-ZS-009, RSK-ZS-005, RSK-ZS-017, RSK-ZS-019, RSK-ZS-020, RSK-ZS-006, RSK-ZS-021) | Risk warning indicators | KPI-ZS-037, KPI-ZS-038, KPI-ZS-039, KPI-ZS-040, KPI-ZS-007, KPI-ZS-008, KPI-ZS-041 |

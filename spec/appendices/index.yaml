@@ -4,5 +4,14 @@
 kind: appendices
 package: zschool
 infix: ZS
-# Populated in Phase 1.5. Entries for appendices/00-project-baseline.md and appendices/01-review-history.md.
-entries: []
+entries:
+  - id: "ZSCHOOL-APP-00"
+    file: "00-project-baseline.md"
+    title: "ZSchool Project Baseline (relocated, historical anchor)"
+    status: "Superseded — historical reference only"
+    origin: "PROJECT.md (repo root, relocated verbatim)"
+  - id: "ZSCHOOL-APP-01"
+    file: "01-review-history.md"
+    title: "ZSchool Review History (non-normative)"
+    status: "Reference — non-normative"
+    origin: "PROJECT.md §13/§15/§16; prd/cross-cutting/42-review-arbitrations.md §2; PRD-REVIEW-2026-09-09.md"

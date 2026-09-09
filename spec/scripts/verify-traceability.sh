@@ -261,15 +261,20 @@ fi
 # and as explanatory examples. appendices/ is exempt for the same reason:
 # 01-review-history.md deliberately preserves H-/G-/C-/Q- IDs unchanged,
 # non-normative, per process/requirement-id-scheme.md §2. Every OTHER
-# normative document must be clean.
+# normative document must be clean, EXCEPT for the ADR template's own
+# "Historical aliases:" line (decisions/*.md), which legitimately cites the
+# old DEC-/ARB-/ESC- id(s) an ADR supersedes, and D1-D10 alias mentions in
+# prose that make the same kind of backward-pointing citation — both are
+# stripped from the scanned text before matching, line by line.
 # ---------------------------------------------------------------------------
 LEGACY_PATTERN='FR-[A-Z]{3}-[0-9]+|PJ-[A-Z]{3}-[0-9]+|\bINV-[0-9]+\b|\bRG-[0-9]+|\bDEC-[0-9]+\b|\bARB-[0-9]+\b|\bESC-[0-9]+\b|BES-[A-Z]+-[0-9]+|\bPER-[0-9]+\b|ECR-[A-Z]+-[0-9]+|\bJAL-[0-9]+\b|\bKPI-[0-9]+\b|\bR-[0-9]+\b|\bOQ-[0-9]+\b'
+ALIAS_LINE_PATTERN='[Hh]istorical alias(es)?'
 
 legacy_hits=""
 scan_count=0
 while IFS= read -r md; do
   scan_count=$((scan_count + 1))
-  hit=$(grep -noE "$LEGACY_PATTERN" "$md" 2>/dev/null | head -1)
+  hit=$(grep -v -E "$ALIAS_LINE_PATTERN" "$md" 2>/dev/null | grep -noE "$LEGACY_PATTERN" | head -1)
   [[ -n "$hit" ]] && legacy_hits="${legacy_hits} $(basename "$md"):${hit}"
 done < <(find "$SPEC_DIR" -name '*.md' -type f \
   -not -path "$SPEC_DIR/process/*" \
