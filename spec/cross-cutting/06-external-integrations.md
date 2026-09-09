@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-CC-06                                                  |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Draft                                                          |
 > | Author         | ZSchool Product                                                |
 > | Classification | Functional Specification — Cross-Cutting (External Integrations) |
-> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/35-external-integrations.md` (v0.3), old `INT-<SYS>-NN` -> `INT-ZS-NNN`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/35-external-integrations.md` (v0.3), old `INT-<SYS>-NN` -> `INT-ZS-NNN`, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): §8 (Cloud hosting) and INT-ZS-036/037/039/040 redefined for AWS `eu-central-1`/`eu-west-3` per ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # External Integrations
 
@@ -974,31 +974,30 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/domain-model
 
 ### 8.1 Objective and scope
 
-The historical baseline requires **production and backups in Morocco** ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)): no student data leaves the territory, which removes any transfer formality under Law 09.08; the only outbound flows are those of messaging vendors (WhatsApp, email), governed by the F118 model (INT-ZS-038). The **OCI "Morocco West (Casablanca)" region, af-casablanca-1**, hosted at N+ONE (Nouaceur), has been open since **April 7, 2026**, with **a single availability domain**; the second Moroccan Oracle region (Settat) is planned with no published timeline; candidate failover sites: N+ONE Settat, Atlas Cloud Services (Benguerir, Uptime Institute Tier III and IV certified, ISO 27001 and PCI DSS), and OVHcloud Local Zone Rabat (Compute, Block Storage, a local IP; Object Storage and managed Kubernetes announced in 2024, not reconfirmed). Scope covers selecting and running the hosting platform, data residency, the cross-site failover plan, and verifying the service catalog; detailed technical architecture falls to `spec/cross-cutting/03-non-functional-requirements.md` and `spec/cross-cutting/02-security-privacy.md`.
+The historical baseline required **production and backups in Morocco** ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md), the **OCI "Morocco West (Casablanca)" region, af-casablanca-1**, hosted at N+ONE Nouaceur, open since April 7, 2026, with a single availability domain). **[ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09) supersedes that baseline**: production, database, and storage now run on AWS `eu-central-1` (Frankfurt), with `eu-west-3` (Paris) as the second region for backup replication and disaster recovery. No student data leaves the EU/EEA, which keeps the transfer question closed under the CNDP EU-adequacy list (Deliberation No. 236-2015, Law 09.08) rather than under the original "no transfer at all" basis; the only outbound flows outside the EU/EEA are those of messaging vendors (WhatsApp, email), governed by the F118 model (INT-ZS-038). Scope covers selecting and running the hosting platform, data residency, the cross-region failover plan, and verifying the service catalog; detailed technical architecture falls to `spec/cross-cutting/03-non-functional-requirements.md` and `spec/cross-cutting/02-security-privacy.md`.
 
-**Deviation note.** [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) records a since-raised, escalated deviation from this Morocco-hosting baseline (an EU-hosting option under review); this chapter's requirements state the baseline as adopted at the time of this migration, with [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) as the pending decision that would supersede them if resolved toward EU hosting.
+**Deviation note.** [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) is the accepted deviation from the Morocco-hosting baseline recorded above; every requirement in this chapter's §8.6 that cited Morocco/af-casablanca-1 specifics has been redefined for AWS `eu-central-1`/`eu-west-3` accordingly. ADR-ZS-007 remains on record as the superseded original decision, not as the current baseline.
 
 ### 8.2 Data flows
 
-1. **Production (ZSchool tenant)**: all production processing and data is hosted in af-casablanca-1; no student data is processed or stored outside Morocco; a Europe fallback (observed RTT roughly 35 to 60 ms) is ruled out for student data.
-2. **Backups (national cross-site outbound)**: daily backups, at least 30-day retention, quarterly restore testing; backups stay in Morocco; daily encrypted replication to a second Moroccan center **from MVP onward** (INT-ZS-036, [ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md): N+ONE Settat, Atlas Cloud Benguerir, or OVH Rabat); a full disaster recovery plan with failover in V1 (INT-ZS-037).
+1. **Production (ZSchool tenant)**: all production processing and data is hosted in AWS `eu-central-1` (ADR-ZS-091); no student data is processed or stored outside the EU/EEA except the governed messaging flows below.
+2. **Backups (cross-region EU replication)**: daily backups, at least 30-day retention, quarterly restore testing; backups stay within the EU (`eu-central-1`); daily encrypted replication to a second EU region **from MVP onward** (INT-ZS-036, [ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md), [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md): `eu-west-3`); a full disaster recovery plan with failover in V1 (INT-ZS-037).
 3. **Limited outbound flows**: messaging only (INT-ZS-021 stays domestic via the Moroccan aggregator, INT-ZS-025 travels through Meta's servers under F118 governance, INT-ZS-038 per INT-ZS-038); no student-data flow to any other vendor.
 4. **Operations**: observability (logs, metrics, alerts, per-tenant traceability) operated from the same region; support access governed and audited (`spec/cross-cutting/02-security-privacy.md`).
 
 ### 8.3 Contractual model
 
-Direct contracts between the ZSchool operator and the infrastructure vendor (Oracle Cloud for af-casablanca-1) and, where applicable, the failover-site vendor. OCI Casablanca's price list is not consolidated and published as of the PRD's date and available managed services remain to be verified service by service; no cost commitment is set in this chapter. ZSchool is the controller for the global identity and a processor for schools' operational data ([ADR-ZS-027](../decisions/027-processor-and-controller-roles.md)): hosting contracts carry processor, confidentiality, reversibility, and audit clauses, detailed in `spec/cross-cutting/07-legal-compliance-data-protection.md`. DGSSI cloud qualification (Law 05.20) does not automatically apply to private schools and ZSchool in 2026, but is a sales argument and a potential contractual requirement for a public-sector client. **Remote administration by the vendor**: since Oracle is a foreign company, the contract specifies the terms for the vendor's regional administration (technical access from abroad limited to infrastructure, encryption of data at rest with keys managed by ZSchool — [SEC-ZS-015](../cross-cutting/02-security-privacy.md), logged and notified access, a commitment not to access content); this clause is documented against the DGSSI standard (level 2: administration from Morocco), on a voluntary basis, and appears in the sub-processor list ([CNF-ZS-012](../cross-cutting/07-legal-compliance-data-protection.md)).
+Direct contracts between the ZSchool operator and AWS (`eu-central-1`, `eu-west-3` per ADR-ZS-091). AWS's pricing is published and available managed services (RDS/Neon-managed Postgres, Lambda, S3, Cognito, CloudFront) are verified service by service at launch (INT-ZS-039); no cost commitment is set in this chapter beyond `spec/stack.md` §2's pinned-version snapshot. ZSchool is the controller for the global identity and a processor for schools' operational data ([ADR-ZS-027](../decisions/027-processor-and-controller-roles.md)): hosting contracts carry processor, confidentiality, reversibility, and audit clauses, detailed in `spec/cross-cutting/07-legal-compliance-data-protection.md`. DGSSI cloud qualification (Law 05.20) does not automatically apply to private schools and ZSchool in 2026 and is moot for an AWS EU deployment; the sub-processor registry (SEC-ZS-024, [CNF-ZS-012](../cross-cutting/07-legal-compliance-data-protection.md)) is extended to cover AWS `eu-central-1`, Neon `eu-central-1`, and CloudFront, per ADR-ZS-091's Decision.
 
 ### 8.4 External dependencies
 
-- af-casablanca-1's service catalog: actual, service-by-service availability of managed databases, Object Storage, and orchestration at launch (OQ-ZS-325).
-- Timeline for Oracle's second Settat region: planned with no published timeline.
-- Failover site: N+ONE Settat's, Atlas Cloud Benguerir's, or OVH Rabat's actual capabilities (limited services on OVH's side) to audit before committing.
+- AWS `eu-central-1`'s service catalog: actual, service-by-service availability of managed Postgres, S3, Lambda, and Cognito at launch (INT-ZS-039; supersedes OQ-ZS-325's original OCI-Casablanca framing).
+- Failover region: `eu-west-3` (Paris) capacity and pricing to confirm before committing (ADR-ZS-091).
 - Up-to-date tzdata for the permanent UTC+0 timezone since 09/20/2026 (decree no. 2.26.530, Official Gazette no. 7521 of 06/29/2026) — no seasonal alternation or Ramadan exception.
 
 ### 8.5 Risks
 
-- **Single availability zone**: a disaster on af-casablanca-1's sole AD is covered only by the cross-site disaster recovery plan; mitigated by INT-ZS-037 (secondary replication/backups) and recovery targets defined in `spec/cross-cutting/03-non-functional-requirements.md`.
+- **Single-region dependency**: AWS `eu-central-1` is multi-AZ (unlike the superseded OCI af-casablanca-1 single-availability-domain risk), but the platform still depends on one region for primary traffic; a region-level disaster is covered only by the cross-region EU disaster recovery plan; mitigated by INT-ZS-037 (secondary replication/backups to `eu-west-3`) and recovery targets defined in `spec/cross-cutting/03-non-functional-requirements.md` (see also RSK-ZS-011, redefined under ADR-ZS-091).
 - Unavailability of some managed services in the young region: catalog verification (INT-ZS-039) before any commitment avoids an architecture dependent on an absent service.
 - Vendor risk and reversibility: export and portability clauses in contracts; a documented exit plan.
 - Non-consolidated costs (the OCI grid not published): budget to validate by quote before commercial launch, out of scope for this chapter (OQ-ZS-325).
@@ -1009,63 +1008,69 @@ Direct contracts between the ZSchool operator and the infrastructure vendor (Ora
 
 | ID | Title | Priority |
 |---|---|---|
-| INT-ZS-040 | [HEB] Host production and backups in Morocco with no student-data exit | Must |
-| INT-ZS-037 | [HEB] Replicate backups to a second Moroccan site for the disaster recovery plan | Must |
-| INT-ZS-039 | [HEB] Verify the Casablanca region's catalog service by service before commitment | Must |
+| INT-ZS-040 | [HEB] Host production and backups in the EU with a documented residency check | Must |
+| INT-ZS-037 | [HEB] Replicate backups to a second EU region for the disaster recovery plan | Must |
+| INT-ZS-039 | [HEB] Verify the `eu-central-1` region's catalog service by service before commitment | Must |
 | INT-ZS-041 | [HEB] Test restores and keep the continuity plan up to date | Must |
 | INT-ZS-042 | [HEB] Guarantee hosting reversibility | Should |
-| INT-ZS-036 | [HEB] Replicate encrypted backups daily to a second Moroccan center from MVP onward | Must |
+| INT-ZS-036 | [HEB] Replicate encrypted backups daily to a second EU region from MVP onward | Must |
 
-### INT-ZS-040: [HEB] Host production and backups in Morocco with no student-data exit
+### INT-ZS-040: [HEB] Host production and backups in the EU with a documented residency check
 
 > **Invariant:** none
-> **See:** [ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)
+> **See:** [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
 > **Priority:** Must
 > **Version:** MVP
 > **Acceptance:** [`@REQ-ZS-533`](../../features/cross-cutting/int/int-zs-040-data-residency-morocco.feature)
 
-REQUIREMENT: ZSchool's production and backups MUST be hosted in Morocco, primarily
-             targeting the OCI af-casablanca-1 region; no student data is stored or
-             processed outside the territory, except the expressly governed messaging
-             flows (INT-ZS-025, INT-ZS-038). A residency check (locating stores, backups,
-             and processing zones) MUST run at launch and at every architecture change,
-             and MUST be documented. See the deviation note in §8.1 ([ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)).
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09).** ZSchool's production and backups MUST be hosted in the
+             EU, targeting AWS `eu-central-1` (Frankfurt); no student data is stored or
+             processed outside the EU/EEA, except the expressly governed messaging
+             flows (INT-ZS-025, INT-ZS-038), which are separately assessed against the CNDP
+             adequacy list. A residency check (locating stores, backups, and processing
+             zones) MUST run at launch and at every architecture change, and MUST be
+             documented — this requirement now serves as that residency check for
+             ADR-ZS-091 itself, replacing the original Morocco-only baseline
+             ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
-### INT-ZS-037: [HEB] Replicate backups to a second Moroccan site for the disaster recovery plan
+### INT-ZS-037: [HEB] Replicate backups to a second EU region for the disaster recovery plan
 
 > **Invariant:** none
-> **See:** none
+> **See:** [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
 > **Priority:** Must
 > **Version:** V1
 > **Acceptance:** none (no dedicated scenario in the source)
 
-REQUIREMENT: The continuity plan relies on a second Moroccan site independent of the
-             first: replication or daily backup exports to N+ONE Settat, Atlas Cloud
-             Services Benguerir, or OVHcloud Local Zone Rabat, the choice justified by a
-             capacity audit. Recovery targets (RPO/RTO) and plan-activation tests are
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09).** The continuity plan relies on a second EU region
+             independent of the first: replication or daily backup exports from AWS
+             `eu-central-1` (Frankfurt) to `eu-west-3` (Paris), matching `spec/stack.md`
+             §3 risk 3. Recovery targets (RPO/RTO) and plan-activation tests are
              defined in `spec/cross-cutting/03-non-functional-requirements.md`; this
              requirement guarantees their physical feasibility (a contracted, funded
-             second site).
+             second region).
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-requirements.md`.
 
-### INT-ZS-039: [HEB] Verify the Casablanca region's catalog service by service before commitment
+### INT-ZS-039: [HEB] Verify the `eu-central-1` region's catalog service by service before commitment
 
 > **Invariant:** none
-> **See:** none
+> **See:** [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
 > **Priority:** Must
 > **Version:** V1
 > **Acceptance:** none (no dedicated scenario in the source)
 
-REQUIREMENT: Before any architecture commitment on af-casablanca-1, the availability,
-             quotas, and performance of every required service (compute, object and
-             block storage, managed databases, orchestration, backup, key encryption)
-             MUST be verified and documented; any required service that is unavailable
-             triggers a documented alternative choice (a self-managed service or another
-             Moroccan site). Verification is repeated at every major architecture
-             expansion.
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09).** Before any architecture commitment on AWS
+             `eu-central-1`, the availability, quotas, and performance of every required
+             service (compute, object and block storage, managed Postgres, orchestration,
+             backup, key encryption) MUST be verified and documented; any required
+             service that is unavailable triggers a documented alternative choice (a
+             self-managed service or another EU region such as `eu-west-3`).
+             Verification is repeated at every major architecture expansion.
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-requirements.md`.
 
@@ -1104,26 +1109,27 @@ REQUIREMENT: Hosting contracts carry reversibility clauses: a full data export i
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
-### INT-ZS-036: [HEB] Replicate encrypted backups daily to a second Moroccan center from MVP onward
+### INT-ZS-036: [HEB] Replicate encrypted backups daily to a second EU region from MVP onward
 
 > **Invariant:** none
-> **See:** [ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)
+> **See:** [ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md), [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
 > **Priority:** Must
 > **Version:** MVP
 > **Acceptance:** none (no dedicated scenario in the source)
 
-REQUIREMENT: From the pilots' activation onward, an encrypted copy ([SEC-ZS-015](../cross-cutting/02-security-privacy.md),
-             keys managed by ZSchool) of the complete daily backup (databases, document
-             files, configuration, logs) MUST be transferred each day to a second
-             Moroccan data center, physically distinct from af-casablanca-1 (N+ONE
-             Settat, Atlas Cloud Services Benguerir, or OVHcloud Local Zone Rabat, the
-             choice justified by the capacity audit), on storage independent of the
-             production account; the copy's integrity MUST be verified after each
-             transfer, with an alert on failure; a restore from the remote copy is tested
-             in the quarterly exercise ([NFR-ZS-011](../cross-cutting/03-non-functional-requirements.md)).
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09).** From the pilots' activation onward, an encrypted
+             copy ([SEC-ZS-015](../cross-cutting/02-security-privacy.md), keys managed by
+             ZSchool) of the complete daily backup (databases, document files,
+             configuration, logs) MUST be transferred each day to a second EU region,
+             `eu-west-3` (Paris), physically distinct from the primary `eu-central-1`
+             (Frankfurt) region, on storage independent of the production account; the
+             copy's integrity MUST be verified after each transfer, with an alert on
+             failure; a restore from the remote copy is tested in the quarterly exercise
+             ([NFR-ZS-011](../cross-cutting/03-non-functional-requirements.md)).
              The MVP fallback RPO is 24 hours and the fallback RTO is that of a measured
              full restore, both recorded in the pilot agreement ([CNF-ZS-002](../cross-cutting/07-legal-compliance-data-protection.md)).
-             The full disaster recovery plan (INT-ZS-037) relies on this same site.
+             The full disaster recovery plan (INT-ZS-037) relies on this same region.
 
 Actors: Platform (ZSchool). Traceability: [SEC-ZS-004](../cross-cutting/02-security-privacy.md); [NFR-ZS-009](../cross-cutting/03-non-functional-requirements.md), [NFR-ZS-010](../cross-cutting/03-non-functional-requirements.md).
 

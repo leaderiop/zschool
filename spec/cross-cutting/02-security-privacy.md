@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-CC-02                                                  |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Draft                                                          |
 > | Author         | ZSchool Product                                                |
 > | Classification | Functional Specification — Security and Privacy               |
-> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/31-security-privacy.md` (v0.3), old `SEC-01..28` -> `SEC-ZS-001..028`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/31-security-privacy.md` (v0.3), old `SEC-01..28` -> `SEC-ZS-001..028`, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): SEC-ZS-024/025/026 redefined for AWS `eu-central-1`/`eu-west-3` per ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # Security and Privacy
 
@@ -47,7 +47,7 @@ Law 09.08 remains in force, with no revision before Parliament (historical hypot
 
 ### 2.3 Hosting and cybersecurity
 
-Law 05.20 and DGSSI-qualified cloud requirements are out of scope for private schools and the SaaS vendor, except under contract with a public entity (historical hypothesis H-06); the real legal constraint remains Law 09.08, and hosting in Morocco removes any transfer formality for student data (ADR-ZS-007). The Oracle Cloud **af-casablanca-1** region (N+ONE data centers, Nouaceur-Casablanca, available since April 2026) has **only one availability domain**; an in-country disaster recovery plan is therefore mandatory (`spec/appendices/01-review-history.md`, research on infrastructure usage). Documented failover candidates are: the planned second Oracle region at Settat (no published timeline), Atlas Cloud Services in Benguerir (Tier III and Tier IV, ISO 27001), and the OVHcloud local zone in Rabat (historical hypothesis H-18).
+Law 05.20 and DGSSI-qualified cloud requirements are out of scope for private schools and the SaaS vendor, except under contract with a public entity (historical hypothesis H-06); the real legal constraint remains Law 09.08. The baseline originally kept hosting in Morocco to remove any transfer formality (ADR-ZS-007), on Oracle Cloud **af-casablanca-1** (N+ONE data centers, Nouaceur-Casablanca), which has only one availability domain. **[ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09) supersedes this**: production and backups now run on AWS `eu-central-1` (Frankfurt, multi-AZ), with the transfer question closed instead via the CNDP EU-adequacy list (Deliberation No. 236-2015). A cross-region disaster recovery plan is mandatory regardless: `eu-west-3` (Paris) is the second EU region (SEC-ZS-025, SEC-ZS-026).
 
 ### 2.4 Relationship to the data model
 
@@ -82,9 +82,9 @@ The requirements below implement the invariants carried by `spec/domain-model.md
 | SEC-ZS-021 | Collect privacy notices and legal guardians' consent | Must |
 | SEC-ZS-022 | Log and bound sharing consents | Must |
 | SEC-ZS-023 | Govern outbound flows to messaging vendors | Must |
-| SEC-ZS-024 | Host production and backups in Morocco | Must |
-| SEC-ZS-025 | Maintain an in-country cross-site disaster recovery plan | Must |
-| SEC-ZS-026 | Encrypt backups and guarantee their residency in Morocco | Must |
+| SEC-ZS-024 | Host production and backups in the EU, under a documented legal basis | Must |
+| SEC-ZS-025 | Maintain a cross-region EU disaster recovery plan | Must |
+| SEC-ZS-026 | Encrypt backups and guarantee their residency in the EU | Must |
 | SEC-ZS-027 | Maintain an application security program | Must |
 | SEC-ZS-028 | Apply retention periods, deletion, and anonymization | Must |
 
@@ -204,7 +204,7 @@ _Acceptance: `@REQ-ZS-421`, `features/cross-cutting/sec/req-zs-421-multi-tenant-
 
 | Attribute | Value |
 |---|---|
-| Description | All application and interface traffic (web, mobile, integrations) is encrypted in transit, including between the platform's internal components. Data is encrypted at rest in databases, file storage, and backups. Keys are managed separately from the data they protect, with periodic rotation and usage traceability; the availability of a key-management service in the af-casablanca-1 region is to be verified at launch (historical hypothesis H-18, OQ-ZS-273). No secret (password, key, code) is stored or logged in plain text. |
+| Description | All application and interface traffic (web, mobile, integrations) is encrypted in transit, including between the platform's internal components. Data is encrypted at rest in databases, file storage, and backups. Keys are managed separately from the data they protect, with periodic rotation and usage traceability; the availability of a key-management service in AWS `eu-central-1` is to be verified at launch (ADR-ZS-091, INT-ZS-039; supersedes OQ-ZS-273's original OCI framing). No secret (password, key, code) is stored or logged in plain text. |
 | Priority | Must |
 | Version | MVP |
 | Traceability | `spec/appendices/00-project-baseline.md` §9 (encryption in transit and at rest), historical hypothesis H-18 (`spec/appendices/01-review-history.md`) |
@@ -347,7 +347,7 @@ _Acceptance: `@REQ-ZS-424`, `features/cross-cutting/sec/req-zs-424-cndp-tier-cha
 
 | Attribute | Value |
 |---|---|
-| Description | Personal-data flows leaving Morocco are exhaustively listed in a **vendor register** kept from MVP onward (purpose, categories transmitted, country of processing, transfer basis): WhatsApp Business (Meta servers, United States, outside the 236-2015 list), transactional email (INT-ZS, `spec/cross-cutting/06-external-integrations.md`), and, in V1, Google's and Apple's push notification services (FCM, APNs, United States — ADR-ZS-066d); any technical monitoring tool hosted outside Morocco (error reporting, APM) is entered in the register before activation or is not used; an SMS to a foreign number travels through an international gateway (ADR-ZS-048). Flows are minimized (contact identity and content strictly necessary; never identity documents, health data, or attachments). At MVP, the transfer basis for WhatsApp is the recipient's **express consent**, collected with an explicit statement about the transfer outside Morocco (INT-ZS-026, ADR-ZS-066c, `spec/appendices/01-review-history.md`), with the F118 request filed in parallel (CNF-ZS-001); domestic SMS travels through a Moroccan aggregator, which rules out any transfer (ADR-ZS-007). ZSchool provides schools with the pre-filled F118 request template corresponding to each vendor, with the routing rules: countries on the current adequacy list (Deliberation No. 236-2015) require no F118, otherwise F118 is filed in the school's name (historical hypothesis H-15). No other flow (hosting, backup, support) leaves the territory (SEC-ZS-024). |
+| Description | Personal-data flows leaving Morocco are exhaustively listed in a **vendor register** kept from MVP onward (purpose, categories transmitted, country of processing, transfer basis): WhatsApp Business (Meta servers, United States, outside the 236-2015 list), transactional email (INT-ZS, `spec/cross-cutting/06-external-integrations.md`), and, in V1, Google's and Apple's push notification services (FCM, APNs, United States — ADR-ZS-066d); any technical monitoring tool hosted outside Morocco (error reporting, APM) is entered in the register before activation or is not used; an SMS to a foreign number travels through an international gateway (ADR-ZS-048). Flows are minimized (contact identity and content strictly necessary; never identity documents, health data, or attachments). At MVP, the transfer basis for WhatsApp is the recipient's **express consent**, collected with an explicit statement about the transfer outside Morocco (INT-ZS-026, ADR-ZS-066c, `spec/appendices/01-review-history.md`), with the F118 request filed in parallel (CNF-ZS-001); domestic SMS travels through a Moroccan aggregator, which rules out any transfer (ADR-ZS-007). ZSchool provides schools with the pre-filled F118 request template corresponding to each vendor, with the routing rules: countries on the current adequacy list (Deliberation No. 236-2015) require no F118, otherwise F118 is filed in the school's name (historical hypothesis H-15). Hosting and backups themselves leave Moroccan territory for the EU (`eu-central-1`/`eu-west-3`) but not the adequacy list, so they are exempt from F118 under the same 236-2015 basis, not entered as a separate F118 flow (SEC-ZS-024, ADR-ZS-091); no flow to a non-adequacy-listed country exists outside this vendor register. |
 | Priority | Must |
 | Version | MVP (vendor register, minimization, WhatsApp express consent with transfer notice, F118 template, Moroccan SMS aggregator); V1 (push via FCM/APNs, any external monitoring, upon prior registration) |
 | Traceability | ADR-ZS-007, ADR-ZS-036, historical hypothesis H-15, INV-ZS-083; ADR-ZS-048, ADR-ZS-066c, ADR-ZS-066d; CNF-ZS-004, CNF-ZS-012, CNF-ZS-001; `spec/appendices/01-review-history.md` |
@@ -355,34 +355,34 @@ _Acceptance: `@REQ-ZS-424`, `features/cross-cutting/sec/req-zs-424-cndp-tier-cha
 
 ### 3.7 Hosting, continuity, and incidents
 
-#### SEC-ZS-024: Host production and backups in Morocco
+#### SEC-ZS-024: Host production and backups in the EU, under a documented legal basis
 
 | Attribute | Value |
 |---|---|
-| Description | Production runs in the Oracle Cloud af-casablanca-1 region (N+ONE data centers, Nouaceur-Casablanca) and backups stay in Morocco (historical question Q-08, ADR-ZS-007): no student data is processed or stored outside the territory, which removes any transfer formality under Law 09.08. At launch, the region's catalog is verified service by service (managed databases, object storage, orchestration) before any commitment (historical hypothesis H-18). ZSchool maintains data-residency documentation enforceable against schools; DGSSI compliance (out of legal scope, historical hypothesis H-06) is targeted only as a potential contractual requirement and a sales argument. |
+| Description | **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09):** production runs in AWS `eu-central-1` (Frankfurt) and backups stay within the EU; no student data is processed or stored outside the EU/EEA except the expressly governed messaging flows. The transfer's legal basis is the CNDP EU-adequacy list (Deliberation No. 236-2015, Law 09.08), which exempts it from F118 authorization — replacing the original "no transfer, no transfer question" basis of ADR-ZS-007 (historical question Q-08). At launch and at every architecture change, the AWS `eu-central-1` service catalog is verified service by service, and a residency check (locating stores, backups, and processing zones) runs and is documented (mirrors INT-ZS-039/INT-ZS-040). ZSchool maintains data-residency documentation enforceable against schools; DGSSI compliance (out of legal scope, historical hypothesis H-06) is targeted only as a potential contractual requirement, no longer as a "hosted in Morocco" sales argument (that commercial position is a named, accepted loss — see ADR-ZS-091 Consequences). |
 | Priority | Must |
 | Version | MVP |
-| Traceability | ADR-ZS-007, historical items Q-08, H-06, H-18 (`spec/appendices/01-review-history.md`) |
+| Traceability | ADR-ZS-091, ADR-ZS-007 (superseded baseline), historical items Q-08, H-06, H-18 (`spec/appendices/01-review-history.md`) |
 | Actors | Platform; schools (beneficiaries of the commitment) |
 
-#### SEC-ZS-025: Maintain an in-country cross-site disaster recovery plan
+#### SEC-ZS-025: Maintain a cross-region EU disaster recovery plan
 
 | Attribute | Value |
 |---|---|
-| Description | Since the Casablanca region has only one availability domain, an in-country cross-site disaster recovery plan is established: replication or backup copy to a second Moroccan site (the second Oracle region at Settat once open, otherwise Atlas Cloud Services in Benguerir or the OVHcloud local zone in Rabat), a documented failover procedure, recovery time (RTO 8 hours) and maximum data loss (RPO 15 minutes) objectives that apply only to a site-level disaster (arbitration D5, ADR-ZS-066i; NFR-ZS-008's 99.5% SLA is understood as excluding a site-level disaster), and an annual failover test. The business-continuity plan covers degraded mode: communication to schools, offline operation of mobile apps (attendance and grading tolerant of outages), and return to normal. |
+| Description | **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09):** a cross-region EU disaster recovery plan is established: replication or backup copy from the primary `eu-central-1` region to a second EU region, `eu-west-3` (Paris — `spec/stack.md` §3 risk 3), a documented failover procedure, recovery time (RTO 8 hours) and maximum data loss (RPO 15 minutes) objectives that apply only to a region-level disaster (arbitration D5, ADR-ZS-066i; NFR-ZS-008's 99.5% SLA is understood as excluding a region-level disaster), and an annual failover test. Data never leaves the EU/EEA at any point in this plan, preserving the CNDP EU-adequacy basis. The business-continuity plan covers degraded mode: communication to schools, offline operation of mobile apps (attendance and grading tolerant of outages), and return to normal. |
 | Priority | Must |
-| Version | V1 (full disaster recovery plan with failover and annual test); daily replication of encrypted backups to a second Moroccan center applies from MVP onward (SEC-ZS-026, INT-ZS-036 — ADR-ZS-066h) |
-| Traceability | ADR-ZS-007, historical items H-18, Q-08; ADR-ZS-066h, ADR-ZS-066i; `spec/appendices/01-review-history.md` |
+| Version | V1 (full disaster recovery plan with failover and annual test); daily replication of encrypted backups to `eu-west-3` applies from MVP onward (SEC-ZS-026, INT-ZS-036 — ADR-ZS-066h) |
+| Traceability | ADR-ZS-091, ADR-ZS-007 (superseded baseline), historical items H-18, Q-08; ADR-ZS-066h, ADR-ZS-066i; `spec/appendices/01-review-history.md` |
 | Actors | Platform; schools informed of the commitments |
 
-#### SEC-ZS-026: Encrypt backups and guarantee their residency in Morocco
+#### SEC-ZS-026: Encrypt backups and guarantee their residency in the EU
 
 | Attribute | Value |
 |---|---|
-| Description | Backups are encrypted (SEC-ZS-015), kept in Morocco (ADR-ZS-007), and replicated daily to a second Moroccan center from MVP onward (INT-ZS-036, ADR-ZS-066h; the MVP fallback RPO of 24 hours is recorded in the pilot agreement); the full recovery plan is covered by SEC-ZS-025. Operational thresholds — daily frequency, at least 30-day retention, quarterly restore tests — are carried by requirements NFR-ZS-010 to NFR-ZS-011 of `spec/cross-cutting/03-non-functional-requirements.md`, without duplication here. On-demand restoration after an incident (for example a massive accidental deletion) remains possible, logged (INV-ZS-090), with the school informed of the scope restored and any potential loss between the last backup and the incident. |
+| Description | **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09):** backups are encrypted (SEC-ZS-015), kept within the EU (`eu-central-1`), and replicated daily to `eu-west-3` from MVP onward (INT-ZS-036, ADR-ZS-066h; the MVP fallback RPO of 24 hours is recorded in the pilot agreement); the full recovery plan is covered by SEC-ZS-025. Operational thresholds — daily frequency, at least 30-day retention, quarterly restore tests — are carried by requirements NFR-ZS-010 to NFR-ZS-011 of `spec/cross-cutting/03-non-functional-requirements.md`, without duplication here. On-demand restoration after an incident (for example a massive accidental deletion) remains possible, logged (INV-ZS-090), with the school informed of the scope restored and any potential loss between the last backup and the incident. |
 | Priority | Must |
 | Version | MVP |
-| Traceability | `spec/appendices/00-project-baseline.md` §9 (encrypted backups), INV-ZS-090, ADR-ZS-007; thresholds and restore tests: NFR-ZS-010, NFR-ZS-011 (`spec/cross-cutting/03-non-functional-requirements.md`) |
+| Traceability | ADR-ZS-091, `spec/appendices/00-project-baseline.md` §9 (encrypted backups), INV-ZS-090, ADR-ZS-007 (superseded baseline); thresholds and restore tests: NFR-ZS-010, NFR-ZS-011 (`spec/cross-cutting/03-non-functional-requirements.md`) |
 | Actors | Platform; the affected school in case of an on-demand restore |
 
 ```gherkin
@@ -535,7 +535,7 @@ Biometrics note: no biometrics appear on the roadmap; any school request is refu
 
 - Formalities are free of charge; filed online via CNDP-FORMS; declaration receipt within 24 hours; possible reclassification as an authorization within 8 days.
 - Declarations filed by ZSchool do not exempt the school from its own formalities (ADR-ZS-027): the SEC-ZS-001 assistant keeps the two registers separately.
-- Transfers: the current adequacy list (Deliberation No. 236-2015: European Union and EEA excluding Croatia, the United Kingdom, Switzerland, Canada) exempts from F118; outside the list, F118 in the controller's name (2-month delay, extendable) or the data subject's documented express consent. Since hosting and backups stay in Morocco (SEC-ZS-024), the only flows concerned are those in the vendor register (SEC-ZS-023): messaging, push in V1, any external monitoring.
+- Transfers: the current adequacy list (Deliberation No. 236-2015: European Union and EEA excluding Croatia, the United Kingdom, Switzerland, Canada) exempts from F118; outside the list, F118 in the controller's name (2-month delay, extendable) or the data subject's documented express consent. Hosting and backups now sit in the EU (`eu-central-1`/`eu-west-3`, ADR-ZS-091), themselves exempt via the adequacy list rather than requiring F118 (SEC-ZS-024); the flows still requiring the F118/express-consent analysis are those to non-adequacy-listed vendors in the register (SEC-ZS-023): messaging, push in V1, any external monitoring.
 - Timeline before pilot activation (RDM-ZS-001): F211 for each pilot and for ZSchool, F112 for national ID, F118 for messaging, all filed before December 15, 2026 (CNF-ZS-001, ADR-ZS-066b).
 - Retention periods entered in declarations are those of ADR-ZS-003 (SEC-ZS-028).
 

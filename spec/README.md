@@ -145,6 +145,7 @@ See `process/definitions-of-done.md` for the full merge-gate checklist.
 | CCR | Date | Description |
 |---|---|---|
 | CCR-ZS-001 | 2026-09-09 | The qadi-style migration itself: Phase 0 (scaffolding + ID map) through Phase 8 (this README). Every file's own Document Control "Change History" cites this CCR for its individual migration. |
+| CCR-ZS-002 | 2026-09-09 | Resolved the [ADR-ZS-091](decisions/091-eu-hosting-deviation-from-morocco-baseline.md) hosting escalation: product-owner sign-off accepted AWS `eu-central-1`/`eu-west-3` over the original Morocco/OCI baseline. Propagated through SEC-ZS-024/025/026, INT-ZS-036/037/039/040, NFR-ZS-009/010, RSK-ZS-011, OQ-ZS-372, `spec/stack.md`, `spec/traceability.md`, and `spec/roadmap.md`'s RDM-ZS-004/013 milestones. |
 
 Prior history (the PRD this spec supersedes: French→English translation,
 critical review, arbitrations) is preserved in `appendices/01-review-history.md`

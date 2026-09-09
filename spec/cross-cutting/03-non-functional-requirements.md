@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-CC-03                                                  |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Draft                                                          |
 > | Author         | ZSchool Product                                                |
 > | Classification | Functional Specification — Non-Functional Requirements         |
-> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/32-non-functional-requirements.md` (v0.3), old `NFR-<DOM>-NN` -> `NFR-ZS-001..050`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/32-non-functional-requirements.md` (v0.3), old `NFR-<DOM>-NN` -> `NFR-ZS-001..050`, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): NFR-ZS-009/010 redefined for AWS `eu-central-1`/`eu-west-3` per ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # Non-Functional Requirements
 
@@ -30,8 +30,8 @@ Module chapters (`spec/behaviors/01-administration-onboarding-subscription.md` t
 | NFR-ZS-006 | PERF | Imports and bulk operations handled without blocking | Must | MVP |
 | NFR-ZS-007 | MOB | Channel reliability and automatic fallback | Must | MVP / V1 |
 | NFR-ZS-008 | DISP | 99.5% availability excluding announced maintenance | Must | MVP |
-| NFR-ZS-009 | DISP | Disaster recovery plan on a Moroccan site | Must | MVP (fallback) / V1 (full) |
-| NFR-ZS-010 | SAV | Daily backups hosted in Morocco | Must | MVP |
+| NFR-ZS-009 | DISP | Disaster recovery plan across two EU regions | Must | MVP (fallback) / V1 (full) |
+| NFR-ZS-010 | SAV | Daily backups hosted in the EU | Must | MVP |
 | NFR-ZS-011 | SAV | Quarterly restore test | Must | MVP |
 | NFR-ZS-012 | DISP | Degraded mode and read priority | Should | V1 |
 | NFR-ZS-013 | DISP | Error budget and peak absorption | Must | MVP |
@@ -156,14 +156,24 @@ REQUIREMENT: The service MUST be available at least 99.5% of the time each calen
 
 A monthly availability report (global and per tenant) is kept by operations and available to schools on request. Traceability: `spec/appendices/00-project-baseline.md` §10. Actors: all; ZSchool operator.
 
-### NFR-ZS-009: [DISP] Disaster recovery plan on a Moroccan site
+### NFR-ZS-009: [DISP] Disaster recovery plan across two EU regions
 
 > **Priority:** Must
 > **Version:** MVP (daily off-site replication, 24-hour fallback RPO recorded, ADR-ZS-066 §ARB-25h); V1 (full disaster recovery plan, tested failover)
 
-REQUIREMENT: Production MUST be hosted in Morocco (ADR-ZS-007). The primary "Morocco West (Casablanca)" region (af-casablanca-1) has only one availability domain (`spec/research/05-infrastructure-usage.md` §1): a disaster recovery plan to a second Moroccan site is therefore mandatory. Targets, applicable only to a site-level disaster (historical alias D5, ADR-ZS-066 §ARB-25i; NFR-ZS-008's SLA excludes a disaster): service recovery within 8 hours maximum (RTO) and data loss of 15 minutes maximum (RPO); meeting a 15-minute RPO requires continuous replication or log archiving at least every fifteen minutes to the second site, in addition to daily backups (NFR-ZS-010).
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09), superseding the original Morocco-hosting baseline
+             ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).**
+             Production MUST be hosted in the EU, on AWS `eu-central-1` (Frankfurt): a
+             disaster recovery plan to a second EU region, `eu-west-3` (Paris), is
+             mandatory. Targets, applicable only to a region-level disaster (historical
+             alias D5, ADR-ZS-066 §ARB-25i; NFR-ZS-008's SLA excludes a disaster):
+             service recovery within 8 hours maximum (RTO) and data loss of 15 minutes
+             maximum (RPO); meeting a 15-minute RPO requires continuous replication or
+             log archiving at least every fifteen minutes to the second region, in
+             addition to daily backups (NFR-ZS-010).
 
-From MVP onward (ADR-ZS-066 §ARB-25h), encrypted backups MUST be replicated daily to a second Moroccan center (SEC-ZS-023, CNF-ZS-012): the MVP fallback RPO is 24 hours and the fallback RTO is that of a full restore as measured by NFR-ZS-011; these fallback values are recorded in the pilot agreement (CNF-ZS-002). The full disaster recovery plan (failover, RTO 8h / RPO 15min, annual exercise) ships in V1. The final choice of failover site is an open question, tracked in `spec/open-questions.md`. Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-007; `spec/appendices/01-review-history.md` (H-18); `spec/research/05-infrastructure-usage.md` §1. Actors: ZSchool operator.
+From MVP onward (ADR-ZS-066 §ARB-25h), encrypted backups MUST be replicated daily to `eu-west-3` (SEC-ZS-023, CNF-ZS-012): the MVP fallback RPO is 24 hours and the fallback RTO is that of a full restore as measured by NFR-ZS-011; these fallback values are recorded in the pilot agreement (CNF-ZS-002). The full disaster recovery plan (failover, RTO 8h / RPO 15min, annual exercise) ships in V1. Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-091, ADR-ZS-007 (superseded baseline); `spec/appendices/01-review-history.md` (H-18). Actors: ZSchool operator.
 
 ### NFR-ZS-012: [DISP] Degraded mode and read priority
 
@@ -494,14 +504,19 @@ The baseline cites webhooks in §10 without a version; they are placed in V2 alo
 
 ## 11. Backup and restore
 
-### NFR-ZS-010: [SAV] Daily backups hosted in Morocco
+### NFR-ZS-010: [SAV] Daily backups hosted in the EU
 
 > **Priority:** Must
 > **Version:** MVP
 
-REQUIREMENT: An automatic daily backup MUST cover all data: databases (operational data, global identities), document files, tenant configuration, and logs. Backups MUST be stored in Morocco (ADR-ZS-007), encrypted, and their integrity automatically verified after each run, with an alert on failure.
+REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
+             (Accepted, 2026-09-09).** An automatic daily backup MUST cover all data:
+             databases (operational data, global identities), document files, tenant
+             configuration, and logs. Backups MUST be stored within the EU (AWS
+             `eu-central-1`), encrypted, and their integrity automatically verified after
+             each run, with an alert on failure.
 
-Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-007; `spec/research/05-infrastructure-usage.md` §1. Actors: ZSchool operator.
+Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-091, ADR-ZS-007 (superseded baseline). Actors: ZSchool operator.
 
 ### NFR-ZS-044: [SAV] At least 30-day retention
 

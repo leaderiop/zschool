@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-RTM                                                    |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Draft                                                          |
 > | Author         | ZSchool Product                                                |
 > | Classification | Verification Record                                            |
-> | Change History | 1.0 (2026-09-09): Initial build of the traceability capstone, deriving all 9 sections from the by-then-complete `spec/*/index.yaml` registries, `spec/process/id-migration-map.md`, and `features/**/*.feature` tags (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Initial build of the traceability capstone, deriving all 9 sections from the by-then-complete `spec/*/index.yaml` registries, `spec/process/id-migration-map.md`, and `features/**/*.feature` tags (CCR-ZS-001). 1.1 (2026-09-09): ADR-ZS-091 decision-traceability row updated to Accepted (CCR-ZS-002). |
 
 # Traceability Matrix
 
@@ -242,7 +242,7 @@ into that range.
 | [ADR-ZS-088](decisions/088-effect-cucumber-vitest-as-bdd-runner.md) | @effect-cucumber/vitest as the BDD runner | Accepted | — |
 | [ADR-ZS-089](decisions/089-github-actions-alchemy-per-pr-stages.md) | GitHub Actions with per-PR Alchemy preview stages | Accepted | — |
 | [ADR-ZS-090](decisions/090-effect-opentelemetry-cloudwatch.md) | @effect/opentelemetry to CloudWatch over an external observability SaaS | Accepted | — |
-| [ADR-ZS-091](decisions/091-eu-hosting-deviation-from-morocco-baseline.md) | EU hosting (AWS eu-central-1) as a deviation from the Morocco-hosting baseline | Escalated - pending product owner sign-off; blocking before RDM-ZS-004 and 15/12/2026 | — |
+| [ADR-ZS-091](decisions/091-eu-hosting-deviation-from-morocco-baseline.md) | EU hosting (AWS eu-central-1) as a deviation from the Morocco-hosting baseline | Accepted - product-owner sign-off obtained 2026-09-09 | — |
 | [ADR-ZS-092](decisions/092-rls-as-defense-in-depth.md) | Postgres Row-Level Security as defense-in-depth behind application authorization | Accepted | — |
 | [ADR-ZS-093](decisions/093-shadcn-ui-tailwind4.md) | shadcn/ui on Tailwind CSS 4, components copied into the repository | Accepted | — |
 | [ADR-ZS-094](decisions/094-react-hook-form-effect-schema-zod-rejected.md) | react-hook-form with a custom Effect Schema resolver, zod rejected | Accepted | — |

@@ -383,7 +383,7 @@ entries:
   - id: "ADR-ZS-091"
     file: "091-eu-hosting-deviation-from-morocco-baseline.md"
     title: "EU hosting (AWS eu-central-1) as a deviation from the Morocco-hosting baseline"
-    status: "Escalated - pending product owner sign-off; blocking before JAL-02 and 15/12/2026"
+    status: "Accepted - product-owner sign-off obtained 2026-09-09"
     origin: "STACK.md §2"
   - id: "ADR-ZS-092"
     file: "092-rls-as-defense-in-depth.md"

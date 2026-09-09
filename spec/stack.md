@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-STK                                                    |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Effective                                                       |
 > | Author         | ZSchool Product                                                |
 > | Classification | Technical Architecture Summary                                  |
-> | Change History | 1.0 (2026-09-09): Thinned from the repo-root `STACK.md` during the qadi-style spec migration, Phase 8. Every individual architecture decision STACK.md argued for now lives as its own ADR (`spec/decisions/081-104-*.md`) — this file summarizes and points to them rather than re-arguing them, per the migration plan. |
+> | Change History | 1.0 (2026-09-09): Thinned from the repo-root `STACK.md` during the qadi-style spec migration, Phase 8. Every individual architecture decision STACK.md argued for now lives as its own ADR (`spec/decisions/081-104-*.md`) — this file summarizes and points to them rather than re-arguing them, per the migration plan. 1.1 (2026-09-09): ADR-ZS-091 resolved Accepted; "still-open item" note rewritten as resolved (CCR-ZS-002). |
 
 # ZSchool — Technical Stack Summary
 
@@ -32,7 +32,7 @@ open technical risks, and next steps.
 | `ADR-ZS-088` | `@effect-cucumber/vitest` as the BDD runner |
 | `ADR-ZS-089` | GitHub Actions with per-PR Alchemy preview stages |
 | `ADR-ZS-090` | `@effect/opentelemetry` to CloudWatch over an external observability SaaS |
-| `ADR-ZS-091` | **EU hosting (AWS eu-central-1) as a deviation from the Morocco-hosting baseline** — Status: Escalated, pending product-owner sign-off; see the ADR for the CNDP/dated-deadline detail |
+| `ADR-ZS-091` | **EU hosting (AWS eu-central-1) as a deviation from the Morocco-hosting baseline** — Status: Accepted (product-owner sign-off 2026-09-09); see the ADR for the CNDP legal-basis detail |
 | `ADR-ZS-092` | Postgres Row-Level Security as defense-in-depth behind application authorization |
 | `ADR-ZS-093` | shadcn/ui on Tailwind CSS 4, components copied into the repository |
 | `ADR-ZS-094` | react-hook-form with a custom Effect Schema resolver, zod rejected |
@@ -43,11 +43,14 @@ open technical risks, and next steps.
 | `ADR-ZS-099` | SQS with idempotent workers for MVP async processing, workflow deferred |
 | `ADR-ZS-100`–`104` | Postgres full-text search, per-PR/per-BDD-run Neon branching, pnpm workspaces (no monorepo tool), CloudFront for static assets only, ClamAV upload scanning |
 
-**The one still-open item**: `ADR-ZS-091` (EU hosting) is a live deviation
-from the product's original Morocco-hosting expectation, escalated to the
-product owner with a dated deadline (see `spec/cross-cutting/07-legal-compliance-data-protection.md`
-`CNF-ZS-025` and `spec/roadmap.md` for the milestone it blocks). It is not
-yet resolved as of this writing.
+**Resolved**: `ADR-ZS-091` (EU hosting) was a live deviation from the product's
+original Morocco-hosting expectation, escalated to the product owner ahead of
+RDM-ZS-004 and the 15/12/2026 CNDP filing deadline (`spec/cross-cutting/07-legal-compliance-data-protection.md`
+`CNF-ZS-001`). The product owner accepted it on 2026-09-09: production, database,
+and storage are AWS `eu-central-1`; DR replicates cross-region to `eu-west-3`
+(risk 3 below); the Morocco/OCI-specific requirements it superseded
+(SEC-ZS-024/025/026, INT-ZS-036/037/039/040, NFR-ZS-009/010, RSK-ZS-011) have been
+redefined accordingly.
 
 ## 2. Pinned versions (npm registry snapshot, 09/09/2026)
 

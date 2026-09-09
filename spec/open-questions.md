@@ -3,12 +3,12 @@
 > | Property       | Value                                                        |
 > | -------------- | ------------------------------------------------------------- |
 > | Document ID    | ZSCHOOL-OQ                                                     |
-> | Revision       | 1.0                                                            |
+> | Revision       | 1.1                                                            |
 > | Effective Date | 2026-09-09                                                     |
 > | Status         | Draft                                                          |
 > | Author         | ZSchool Product                                                |
 > | Classification | Process — Open Questions Register                              |
-> | Change History | 1.0 (2026-09-09): Consolidated from every chapter's file-local `OQ-NN` open-questions section under `prd/**` (which collided across ~20 files: the same chapter-local counter value meant a different question in every chapter) into one global, permanent `OQ-ZS-NNN` register, one row per original question, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Consolidated from every chapter's file-local `OQ-NN` open-questions section under `prd/**` (which collided across ~20 files: the same chapter-local counter value meant a different question in every chapter) into one global, permanent `OQ-ZS-NNN` register, one row per original question, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): OQ-ZS-372 marked Resolved by ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # ZSchool — Open Questions Register
 
@@ -462,7 +462,7 @@ consolidated in `spec/traceability.md` §8, built in a later migration phase —
 | ID | Question | Status / Context |
 |---|---|---|
 | OQ-ZS-371 | A baseline-document update needed: a payment provider referenced in the risk register ceased operating in 2024 (a fifth occurrence — see OQ-ZS-054/074/182/260). | Escalated — same provider-exclusion applies here, affecting one risk entry and the V2 card-rail comparison. |
-| OQ-ZS-372 | A baseline-document refinement needed on the hosting-region failover plan, given the single-availability-domain limitation (a second occurrence — see OQ-ZS-356). | Escalated — the target backup site and cross-site replication timeline still need settling with the architecture, affecting one risk entry. |
+| OQ-ZS-372 | A baseline-document refinement needed on the hosting-region failover plan, given the single-availability-domain limitation (a second occurrence — see OQ-ZS-356). | Resolved — [ADR-ZS-091](decisions/091-eu-hosting-deviation-from-morocco-baseline.md) (Accepted, 2026-09-09) superseded the OCI single-availability-domain premise entirely: hosting moved to AWS `eu-central-1`/`eu-west-3`, settling the backup-site and replication-timeline question. |
 | OQ-ZS-373 | A baseline-document update needed on the WhatsApp pricing-switch mechanics (a fourth occurrence — see OQ-ZS-082/081/246/266). | Escalated — same not-yet-published-grid status applies here, affecting one risk entry's exposure rating. |
 | OQ-ZS-374 | A baseline-document update needed on Law 59.21's actual publication date and content (a third occurrence — see OQ-ZS-003/185). | Escalated — same corrected-date/content adoption applies here, affecting one risk entry. |
 | OQ-ZS-375 | A baseline-document update needed on the Family Code reform's actual legal status (a fourth occurrence — see OQ-ZS-312/225/276). | Escalated — same not-yet-enacted status applies here, affecting one risk entry tied to the legal-tutor mechanics. |
