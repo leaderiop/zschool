@@ -134,6 +134,18 @@ declare -a REQ_FAMILIES=(
   "cross-cutting/06-external-integrations.md:INT-ZS"
   "cross-cutting/07-legal-compliance-data-protection.md:CNF-ZS"
 )
+# behaviors/*.md (BEH-ZS) and journeys/*.md (JNY-ZS + JMP-ZS) are dynamically
+# named across Phase 2/3 forks, so their filenames can't be hardcoded above --
+# check every file present under each directory instead.
+for f in "$SPEC_DIR"/behaviors/*.md; do
+  [[ -f "$f" ]] || continue
+  REQ_FAMILIES+=("behaviors/$(basename "$f"):BEH-ZS")
+done
+for f in "$SPEC_DIR"/journeys/*.md; do
+  [[ -f "$f" ]] || continue
+  REQ_FAMILIES+=("journeys/$(basename "$f"):JNY-ZS")
+  REQ_FAMILIES+=("journeys/$(basename "$f"):JMP-ZS")
+done
 any_req_family_file=0
 for entry in "${REQ_FAMILIES[@]}"; do
   file="${entry%%:*}"
@@ -262,13 +274,13 @@ fi
 # 01-review-history.md deliberately preserves H-/G-/C-/Q- IDs unchanged,
 # non-normative, per process/requirement-id-scheme.md §2. Every OTHER
 # normative document must be clean, EXCEPT for the ADR template's own
-# "Historical aliases:" line (decisions/*.md), which legitimately cites the
-# old DEC-/ARB-/ESC- id(s) an ADR supersedes, and D1-D10 alias mentions in
-# prose that make the same kind of backward-pointing citation — both are
-# stripped from the scanned text before matching, line by line.
-# ---------------------------------------------------------------------------
+# "Historical aliases:" line (decisions/*.md) and every file's own Document
+# Control "Change History" line, both of which legitimately cite the old
+# id(s) a document was migrated from (the plan's own header template does
+# this on every single file, e.g. "old FR-SAN-01..13 -> BEH-ZS-281..293") --
+# both line shapes are stripped from the scanned text before matching.
 LEGACY_PATTERN='FR-[A-Z]{3}-[0-9]+|PJ-[A-Z]{3}-[0-9]+|\bINV-[0-9]+\b|\bRG-[0-9]+|\bDEC-[0-9]+\b|\bARB-[0-9]+\b|\bESC-[0-9]+\b|BES-[A-Z]+-[0-9]+|\bPER-[0-9]+\b|ECR-[A-Z]+-[0-9]+|\bJAL-[0-9]+\b|\bKPI-[0-9]+\b|\bR-[0-9]+\b|\bOQ-[0-9]+\b'
-ALIAS_LINE_PATTERN='[Hh]istorical alias(es)?'
+ALIAS_LINE_PATTERN='[Hh]istorical alias(es)?|Change History'
 
 legacy_hits=""
 scan_count=0

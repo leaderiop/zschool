@@ -5,4 +5,13 @@ kind: behaviors
 package: zschool
 infix: ZS
 # Populated in Phase 2 (module fan-out). One entry per BEH-ZS-owning file (behaviors/NN-*.md).
-entries: []
+# The "id" field is a range (this file's own BEH-ZS block covers 13 distinct requirement
+# IDs, not one) -- see spec/behaviors/13-ancillary-services.md's own headings for the
+# individual BEH-ZS-281..293 entries; this registry tracks file<->id-range, not
+# one row per individual requirement (matching the plan's single-row-per-file example).
+entries:
+  - id: "BEH-ZS-281..293"
+    file: "13-ancillary-services.md"
+    title: "Ancillary Services (SAN) — Transport, Canteen and Childcare, Extracurricular Activities, Library, Uniforms and Supplies"
+    status: "Draft"
+    origin: "FR-SAN-01..13"
