@@ -119,10 +119,20 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Every requirement-family ID declared in its owning file is mentioned at
-#    least twice in that file (heading + at least one traceability-table row).
+# 4. Every requirement-family ID DECLARED (via a "### <PREFIX>-NNN" heading) in
+#    its owning file is mentioned at least twice in that file (the heading
+#    itself + at least one more mention, e.g. a summary table row or a
+#    "Related"/body cross-reference from elsewhere in the same file).
 #    Generalized from qadi's urs.md-only check: ZSchool's requirement families
 #    live in several owning files, not one.
+#
+#    Only IDs that are DECLARED (heading) in a file are checked against that
+#    file -- a bare in-prose citation of another file's ID (e.g. a behaviors
+#    file mentioning a foreign module's BEH-ZS-NNN once, in passing) is NOT
+#    required to repeat, since it isn't owned by this file. This was a real
+#    false-positive found while migrating the PED module: cross-module
+#    citations like "the waitlist BEH-ZS-004" (owned by INS) were flagged as
+#    "untraced" even though they're legitimate single-mention references.
 # ---------------------------------------------------------------------------
 declare -a REQ_FAMILIES=(
   "urs.md:URS-ZS"
@@ -159,7 +169,7 @@ for entry in "${REQ_FAMILIES[@]}"; do
     declared=$((declared + 1))
     n=$(grep -c "$id" "$path")
     [[ "$n" -ge 2 ]] || untraced="${untraced} ${id}"
-  done < <(grep -oE "${prefix}-[0-9]{3}" "$path" | sort -u)
+  done < <(grep -oE "^###+ ${prefix}-[0-9]{3}" "$path" | grep -oE "${prefix}-[0-9]{3}" | sort -u)
 
   if [[ $declared -eq 0 ]]; then
     report SKIP "$file -> self-traceability" "no $prefix requirements declared"
@@ -279,7 +289,7 @@ fi
 # id(s) a document was migrated from (the plan's own header template does
 # this on every single file, e.g. "old FR-SAN-01..13 -> BEH-ZS-281..293") --
 # both line shapes are stripped from the scanned text before matching.
-LEGACY_PATTERN='FR-[A-Z]{3}-[0-9]+|PJ-[A-Z]{3}-[0-9]+|\bINV-[0-9]+\b|\bRG-[0-9]+|\bDEC-[0-9]+\b|\bARB-[0-9]+\b|\bESC-[0-9]+\b|BES-[A-Z]+-[0-9]+|\bPER-[0-9]+\b|ECR-[A-Z]+-[0-9]+|\bJAL-[0-9]+\b|\bKPI-[0-9]+\b|\bR-[0-9]+\b|\bOQ-[0-9]+\b'
+LEGACY_PATTERN='\bFR-[A-Z]{3}-[0-9]+|\bPJ-[A-Z]{3}-[0-9]+|\bINV-[0-9]+\b|\bRG-[0-9]+|\bDEC-[0-9]+\b|\bARB-[0-9]+\b|\bESC-[0-9]+\b|\bBES-[A-Z]+-[0-9]+|\bPER-[0-9]+\b|\bECR-[A-Z]+-[0-9]+|\bJAL-[0-9]+\b|\bKPI-[0-9]+\b|\bR-[0-9]+\b|\bOQ-[0-9]+\b'
 ALIAS_LINE_PATTERN='[Hh]istorical alias(es)?|Change History'
 
 legacy_hits=""
