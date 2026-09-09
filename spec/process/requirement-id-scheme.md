@@ -7,10 +7,10 @@
 > | Document ID    | ZSCHOOL-PROC-01                                                |
 > | Revision       | 1.0                                                            |
 > | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
+> | Status         | Effective                                                       |
 > | Author         | ZSchool Product                                                |
 > | Classification | Process Specification                                         |
-> | Change History | 1.0 (2026-09-09): Initial release, adapted from qadi's `process/requirement-id-scheme.md` for Phase 0 of the PRD migration (CCR-ZS-001) |
+> | Change History | 1.0 (2026-09-09): Initial release, adapted from qadi's `process/requirement-id-scheme.md` for Phase 0 of the PRD migration; status promoted from Draft to Effective in Phase 8, once every content phase confirmed the scheme in practice (CCR-ZS-001) |
 
 Adapted from `/Users/mohammadalmechkor/Projects/Perso/qadi/spec/process/requirement-id-scheme.md` — same rigor, same permanence guarantees, a prefix table sized for a product specification rather than a library's public API.
 
@@ -118,11 +118,11 @@ gets a contiguous range sized `max(10, ceil(count / 10) * 10)`, allocated in
 the pre-migration corpus's own file order for that prefix family — e.g.
 `behaviors/07-finance-billing-collections.md` (30 `FR-FIN-*` requirements) got
 a 30-slot range, `behaviors/09-transfers-mobility.md` (13 `FR-TRA-*`) got a
-10-slot range headroom-padded up from 13 → wait, 13 rounds up to 20 under this
-formula. This differs from qadi's literal "blocks of eight" (qadi's files
-hold 4–8 requirements each; ZSchool's hold 11–30), scaled to this corpus's
-actual density while keeping qadi's underlying intent: headroom for later
-insertion without renumbering a neighboring file.
+20-slot range (13 rounds up to 20 under this formula). This differs from
+qadi's literal "blocks of eight" (qadi's files hold 4–8 requirements each;
+ZSchool's hold 11–30), scaled to this corpus's actual density while keeping
+qadi's underlying intent: headroom for later insertion without renumbering a
+neighboring file.
 
 ## 5. Cross-Reference Obligations
 
