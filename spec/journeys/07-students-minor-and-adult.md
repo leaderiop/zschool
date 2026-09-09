@@ -1,0 +1,417 @@
+> **Document Control**
+>
+> | Property       | Value                                                        |
+> | -------------- | ------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-JNY-07                                                 |
+> | Revision       | 1.0                                                            |
+> | Effective Date | 2026-09-09                                                     |
+> | Status         | Draft                                                          |
+> | Author         | ZSchool Product                                                |
+> | Classification | Functional Specification — Persona Journey                    |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/journeys/07-students-minor-and-adult.md` (v0.3), old `PJ-ELE-01..09` -> `JNY-ZS-081..089`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+
+# Journey: Youssef (Minor Middle Schooler) and Salma (Adult High Schooler)
+
+## 1. Purpose and scope
+
+This file describes the detailed journeys of the "student" persona (`ELE`), carried by two profiles:
+
+- **Youssef, 13, Grade 8**: a minor middle schooler who views his timetable, grades, and homework **on the family phone** shared with his father Ahmed (persona `PAR`, `spec/journeys/05-multi-school-parent.md`). His access is governed by **INV-ZS-051** (personal access activated by a legal guardian from a level set by the school, default: Grade 7) and set for his level (Grade 8 beyond the Grade 7 default).
+- **Salma, 18, 2nd-year baccalaureate**: an **adult** high schooler (18 Gregorian years completed, art. 209 of the Family Code). At majority, she becomes **the holder of her own account and rights over her data** (INV-ZS-052, ADR-ZS-001): informed of her rights, restricting parental access to school, disciplinary, and health data, financial access kept for the liable financially responsible parent, transcripts for her post-baccalaureate applications, then permanent access to her published documents after leaving (INV-ZS-080).
+
+The journeys below detail the `JNY-ZS-08N` steps referenced by the map `spec/journeys/00-journey-map.md` (JMP-ZS-004 activation/claim, JMP-ZS-006 grades and report cards, JMP-ZS-009 transfer and departure, JMP-ZS-010 self-service documents). They cover needs **URS-ZS-051 to URS-ZS-058** of `spec/urs.md`.
+
+In scope:
+
+1. Activating student access (JNY-ZS-081).
+2. Daily use: timetable, grades, homework, attendance (JNY-ZS-082).
+3. Notification and viewing a published report card (JNY-ZS-083).
+4. Reaching majority and information on rights (JNY-ZS-084).
+5. Restricting parental access (JNY-ZS-085).
+6. Annual and cumulative transcripts for post-baccalaureate applications (JNY-ZS-086).
+7. Year end: the year-end decision and the achievement certificate (JNY-ZS-087).
+8. Post-baccalaureate departure or a departure outside ZSchool and permanent access to published documents (JNY-ZS-088).
+9. Contesting a grade or an absence (JNY-ZS-089).
+
+Out of scope (handled elsewhere): admission and front-desk enrollment (`spec/journeys/01-school-group-director.md`, `spec/journeys/02-secretary-cashier.md`, JMP-ZS-001); a parent claiming the identity (`spec/journeys/05-multi-school-parent.md`, `spec/journeys/06-custodial-mother-and-guardian.md`, JMP-ZS-004); morning roll call and absence notification to guardians (JMP-ZS-005, `spec/journeys/03-head-supervisor.md`, `spec/journeys/04-part-time-teacher.md`); grade entry and class councils (JMP-ZS-006, `spec/journeys/01-school-group-director.md`, `spec/journeys/04-part-time-teacher.md`); managing the transfer on the schools' side (JMP-ZS-009, `spec/journeys/01-school-group-director.md`, `spec/journeys/02-secretary-cashier.md`); a guardian's finance and payments (JMP-ZS-007, JMP-ZS-008); operational health data (module HEA, V2+, `spec/journeys/00-journey-map.md` §5); e-learning, the digital school passport, transport, and canteen (V2+, `spec/journeys/00-journey-map.md` §5); university pre-enrollment and higher education, out of scope (ADR-ZS-010). Functional requirements and screens are carried by the module chapters `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/03-academic-structure-timetables.md`, `spec/behaviors/04-attendance-student-life-discipline.md`, `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/08-communication-notifications.md`, `spec/behaviors/09-transfers-mobility.md`; this file describes the journeys without duplicating the requirement templates.
+
+---
+
+## 2. Personas and access context
+
+### 2.1 Summary of both profiles
+
+| Attribute | Youssef (a minor, `ELE`) | Salma (an adult, `ELE`) |
+|---|---|---|
+| Baseline profile | 13, Grade 8; views his timetable, grades, and homework on the family phone | 18, 2nd-year baccalaureate; wants her own access and transcripts for her post-baccalaureate applications |
+| Legal access framework | INV-ZS-051: personal access **activated by a legal guardian**, from the level set by the school (default: Grade 7); no minor-specific rule under Law 09.08: consent is given by the legal representative | INV-ZS-052, ADR-ZS-001: the holder of her own account and rights at 18 years completed; informed of her rights at majority and at every re-enrollment; parental access restriction at her own hand (school, disciplinary, health); financial access kept by the liable payer |
+| Device and connection | A shared **family** phone (an Android smartphone), limited data, sometimes unstable network; 91.2% of individuals aged 5 and over use the internet and 78.4% of rural households are connected (ANRT 2024-2025, `spec/appendices/01-review-history.md` research notes) | A **personal** smartphone, an unstable mobile network; a median mobile speed of 60.31 Mbps (DataReportal, `spec/appendices/01-review-history.md` research notes) |
+| Dominant goals | Knowing what to review, where, and when; seeing her grades as soon as published (URS-ZS-051 to URS-ZS-054) | Documentary autonomy: cumulative transcripts, attestations, permanent access after departure (URS-ZS-055 to URS-ZS-058) |
+| What he/she does not see | Unpublished grades, finance, health (`spec/cross-cutting/01-permissions.md` matrix) | Per her own restriction choices for her parents; she herself keeps her full scope |
+
+### 2.2 Cross-cutting access framework
+
+- **One account per person**: no account is shared between two people (INV-ZS-063, INV-ZS-030). On the family phone, Ahmed's account and Youssef's account are two separate accounts with separate sessions and an explicit sign-out between uses.
+- **A login identifier distinct from the contact identifier** (ADR-ZS-048, INV-ZS-003): the mobile phone number is the primary contact identifier, e-mail is optional and never required (ADR-ZS-022, INV-ZS-044); a minor student with no phone of their own gets a **platform-generated login identifier** (readable, not derived from the Massar code), activated by a legal guardian with an OTP to that guardian's number; migrating to a personal number is possible at any time and tracked (OQ-ZS-256 resolved).
+- **Contextual permissions**: the student role carries limited read rights (`spec/cross-cutting/01-permissions.md` matrix: reading the timetable, attendance, published report cards, partial discipline, the record; no finance, no health), refined by the fine-grained permissions of `spec/cross-cutting/01-permissions.md` (least privilege, INV-ZS-091).
+- **Logging**: every write action is historized with author, context, and timestamp from MVP (historical alias D4, ADR-ZS-066); an immutable, exportable audit log also covering sensitive views in V1 (INV-ZS-090, INV-ZS-019, kept 5 years, ADR-ZS-003).
+- **Market reference**: the ministry's Massar apps (Moutamadris, Waliye, Moudaris) have not been updated since 2022 and are rated 3.1/5 with connection complaints dominant (Play Store, `spec/appendices/01-review-history.md` research notes); connection reliability and notification robustness set the entry bar for the student space.
+
+---
+
+## 3. Journey overview
+
+| ID | Journey | Persona | Map journey | Modules involved | Dominant version |
+|---|---|---|---|---|---|
+| JNY-ZS-081 | Activating the student's personal access by a legal guardian | Youssef | JMP-ZS-004 | ADM, INS, COM | MVP |
+| JNY-ZS-082 | Daily use: today's sessions, grades, homework, attendance | Youssef | JMP-ZS-006 | PED, EVA, VSC | MVP (core, grades published progressively); V1 (timetable, homework) |
+| JNY-ZS-083 | Notification and viewing a published report card | Youssef | JMP-ZS-006 | EVA, DOC, COM | MVP (in-app, SMS); V1 (push, QR) |
+| JNY-ZS-084 | Reaching majority: account ownership and information on rights | Salma | JMP-ZS-004 | ADM, INS, COM | MVP (ADR-ZS-051) |
+| JNY-ZS-085 | Parental-access restriction by the adult student | Salma | JMP-ZS-004 | ADM, COM | MVP (ADR-ZS-051) |
+| JNY-ZS-086 | Annual and cumulative transcripts for post-baccalaureate applications | Salma | JMP-ZS-006, JMP-ZS-010 | EVA, DOC | MVP wave 2 (annual transcript); V1 (cumulative transcript, QR, self-service) |
+| JNY-ZS-087 | Year end: the year-end decision and the achievement certificate | Youssef, Salma | JMP-ZS-002, JMP-ZS-006, JMP-ZS-010 | INS, EVA, DOC, COM | MVP wave 2 (decision, COMPLETED status, rollover); V1 (a sealed achievement certificate) |
+| JNY-ZS-088 | Post-baccalaureate departure or a departure outside ZSchool: permanent access to published documents | Salma | JMP-ZS-009, JMP-ZS-010 | TRA, DOC, FIN | MVP (permanent reading, a PDF exit dossier); V1 (a secure link, QR) |
+| JNY-ZS-089 | Contesting a grade or an absence from her student access | Youssef, Salma | JMP-ZS-005, JMP-ZS-006 | VSC, EVA, COM | MVP (ADR-ZS-056, ADR-ZS-062) |
+
+Reading conventions: each journey is described by an attribute table, a numbered step-by-step table, then, for critical flows, Gherkin acceptance criteria pointing to a `.feature` file. Steps refer to modules by code — `spec/behaviors/02-admissions-enrollment-reenrollment.md` (INS), `spec/behaviors/03-academic-structure-timetables.md` (PED), `spec/behaviors/04-attendance-student-life-discipline.md` (VSC), `spec/behaviors/05-assessments-grades-report-cards.md` (EVA), `spec/behaviors/06-documents-certificates.md` (DOC), `spec/behaviors/08-communication-notifications.md` (COM), `spec/behaviors/09-transfers-mobility.md` (TRA) — without duplicating their requirements.
+
+---
+
+## 4. Detailed journeys
+
+### JNY-ZS-081 — Activating the student's personal access by a legal guardian
+
+| Attribute | Value |
+|---|---|
+| Objective | Give an eligible student personal read access to her school data, activated by a legal guardian, with no new identity created and no duplicate of the parent's account, on the available device (here, the family phone) |
+| Actors | The legal guardian (activation), the student (first sign-in), the school (configuring the access level), the platform (creating the account linked to the existing profile, logging) |
+| Map journey | JMP-ZS-004 |
+| Modules involved | ADM (`spec/behaviors/01-administration-onboarding-subscription.md`), INS (`spec/behaviors/02-admissions-enrollment-reenrollment.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-051 |
+| Data | `User`, `Person`, `StudentProfile`, `ParentStudentRelationship` (`spec/domain-model.md`) |
+| Version | MVP (global identities, invitations, and claim; the student dashboard) |
+| Baseline | (→ INV-ZS-051, INV-ZS-063, INV-ZS-090, ADR-ZS-014, ADR-ZS-022; INV-ZS-030, INV-ZS-043, INV-ZS-044) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-081 | An ACTIVE enrollment (INV-ZS-007); an existing student profile with a linked identity; an active legal guardian on the relationship (INV-ZS-064) | Fatima or Ahmed's equivalent at the school | Preconditions checked before the activation action is even offered | Activation only available once preconditions hold | MVP |
+| JNY-ZS-081 | Preconditions met | The school (leadership) | Setting the **student access level** in its settings; the platform default: from Grade 7 (INV-ZS-051, INV-ZS-043); a primary school may set a higher level; the parameter is by entry level, logged on every change | The eligible level configured and logged | MVP |
+| JNY-ZS-081 | Ahmed, a legal guardian, opens Youssef's record | Ahmed (legal guardian) | From his account, the "Enrollment" section, "Student access" tab; the "Activate student access" button only appears if the enrollment's current level (Grade 8) reaches the configured level | Activation action available | MVP |
+| JNY-ZS-081 | Activation started | Ahmed (confirmation), platform (creation) | An activation screen recalls student access's scope (reading: the timetable, published grades, homework, attendance, documents; no finance or health); **Youssef's login identifier**: his own mobile if he has one, otherwise a platform-generated identifier (readable, not derived from the Massar code, ADR-ZS-048); an initial password set by the guardian, to change on first sign-in; a confirmation OTP sent to Ahmed's number | Confirmation gathered with an OTP | MVP |
+| JNY-ZS-081 | Confirmation given | Platform (creation, logging) | Creating the `User` linked to the existing `StudentProfile` (no new identity, INV-ZS-030); historizing the activation (author = the legal guardian, date, school context) | Account created; activation historized | MVP |
+| JNY-ZS-081 | Account created | Youssef (first sign-in) | On the family phone, an account-selection screen on the shared device (Ahmed's/Youssef's accounts); opening a dedicated session; an FR/AR language switch available; a short first-visit tutorial | Youssef signed in on a distinct session | MVP |
+| JNY-ZS-081 | Ongoing | Ahmed (guardian), the school | The legal guardian keeps the ability to suspend student access from the same screen (a logged reason); the school may disable access (departure, an error) with traceability | Suspension/disablement available and logged at all times | MVP |
+
+**Acceptance criteria**: `@REQ-ZS-369` (`features/journeys/ele/jny-zs-081-activating-student-access.feature`).
+
+### JNY-ZS-082 — Daily use: timetable, grades, homework, attendance
+
+| Attribute | Value |
+|---|---|
+| Objective | Give the student a single, reliable daily entry point on her school life, viewable in seconds on an entry-level smartphone with a variable mobile connection, including on the family phone late in the evening |
+| Actors | The student (viewing), teachers and leadership (producing the data: timetable, homework, grades, attendance), the school (publication settings) |
+| Map journey | JMP-ZS-006 |
+| Modules involved | PED (`spec/behaviors/03-academic-structure-timetables.md`), EVA (`spec/behaviors/05-assessments-grades-report-cards.md`), VSC (`spec/behaviors/04-attendance-student-life-discipline.md`) |
+| Needs covered | URS-ZS-052, URS-ZS-053, URS-ZS-054 |
+| Data | `Timetable`, published `Mark`/`PeriodResult`, `Assessment` (homework), `AttendanceRecord` |
+| Version | MVP: the student home screen (declared sessions), grades published progressively and report cards, attendance read-only. V1: a timetable with variants, homework and the lesson log |
+| Baseline | (→ INV-ZS-051, INV-ZS-063, INV-ZS-091; INV-ZS-034) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-082 | An active student account (JNY-ZS-081); data published by the school | Youssef | Opening the student home screen (mobile-first): a "Today" banner (in MVP, today's declared sessions; in V1, courses drawn from the timetable with the active variant shown), the latest published grades and report cards, homework due, recent notifications | An up-to-date home screen in seconds | MVP |
+| JNY-ZS-082 | Home screen viewed | Youssef | Opening the "Timetable" tab (V1): a weekly grid readable in portrait, **period variants** (normal, shortened Ramadan hours, exams) with the active variant explicitly labeled; the week extended to Saturday morning where the school configures it | A readable weekly timetable | V1 |
+| JNY-ZS-082 | Results wanted | Youssef | Opening the "Results" tab: published grades by subject and period, averages and honors as published; **unpublished** grades stay invisible; progressive grade publication before the report card is a school setting from MVP (a "draft/published" mark status, BEH-ZS-129); a contested grade or absence follows JNY-ZS-089 | Only published results visible | MVP |
+| JNY-ZS-082 | Homework wanted (V1) | Youssef | Opening the "Homework" tab: work due and resources from the student's courses' lesson logs | Homework due visible | V1 |
+| JNY-ZS-082 | Attendance wanted | Youssef | Opening the "Attendance" tab: her absences, tardiness, and early departures, excuse status (read-only; excusing stays a parent action) | Attendance history visible, read-only | MVP |
+| JNY-ZS-082 | End of a session on the family phone | Youssef | Returning to the account-selection screen; none of Youssef's data is viewable from Ahmed's session (separate accounts, INV-ZS-063) | Sessions kept strictly separate | MVP |
+| JNY-ZS-082 | Poor connectivity | Platform | Typical pages under 2 s on mobile network; lightweight caching of the timetable and homework to tolerate outages; graceful degradation (image-free lists) in low-bandwidth mode | Usable experience under degraded network | MVP/V1 |
+
+**Acceptance criteria**: covered by the module-level Gherkin in `spec/behaviors/03-academic-structure-timetables.md`, `spec/behaviors/04-attendance-student-life-discipline.md`, and `spec/behaviors/05-assessments-grades-report-cards.md`; no dedicated journey-level `.feature` file for this read-only aggregation journey.
+
+### JNY-ZS-083 — Notification and viewing a published report card
+
+| Attribute | Value |
+|---|---|
+| Objective | Guarantee that the family and student learn of report-card publication through a reliable channel and view an immutable, bilingual, verifiable document, with no paper distribution |
+| Actors | Leadership (period closing and publication), the student and guardians (notification, viewing), the platform (multi-channel routing, immutability) |
+| Map journey | JMP-ZS-006 |
+| Modules involved | EVA (`spec/behaviors/05-assessments-grades-report-cards.md`), DOC (`spec/behaviors/06-documents-certificates.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-053 |
+| Data | `ReportCard` (versions, fingerprint, signatory, QR), `Notification` + `DeliveryLog` |
+| Version | MVP: immutable publication, in-app and SMS notification. V1: push, WhatsApp, a verification QR code |
+| Baseline | (→ INV-ZS-080, INV-ZS-081, INV-ZS-085, ADR-ZS-020, ADR-ZS-023, ADR-ZS-011, ADR-ZS-036; INV-ZS-015) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-083 | The period closed and grades locked (`PeriodClosed`); the report card generated and published (INV-ZS-085, ADR-ZS-020) | Leadership | Publishing the report card | Report card published | MVP |
+| JNY-ZS-083 | Report card published | Platform (routing) | Triggering a notification to **the student and legal guardians and the holder of custody**: in-app and SMS in MVP; in V1, push-first, WhatsApp "utility" for consenting parents, SMS-fallback hierarchy (ADR-ZS-023, ADR-ZS-036) | Every relevant party notified | MVP (in-app/SMS); V1 (push/WhatsApp) |
+| JNY-ZS-083 | Notified on the family phone (Youssef's session) or on Ahmed's channel | Youssef, Ahmed | Viewing the report card: a bilingual AR/FR PDF (names in both scripts), the school's header, seal and signature, **version, fingerprint, signatory, date**, plus, in V1, the verification QR code (INV-ZS-085, INV-ZS-015); opens under 3 s | Report card viewed with full provenance | MVP (core fields); V1 (QR) |
+| JNY-ZS-083 | A correction published | Leadership, Platform | Publishing a new version; the old one stays viewable marked "superseded" | A version history preserved | MVP |
+| JNY-ZS-083 | Any time after publication | Youssef, Salma | Viewing the report card indefinitely in "My documents" (permanent reading, INV-ZS-080, JNY-ZS-088) | Permanent access maintained | MVP |
+
+**Acceptance criteria**: `@REQ-ZS-370` (`features/journeys/ele/jny-zs-083-report-card-publication.feature`).
+
+### JNY-ZS-084 — Reaching majority: account ownership and information on rights
+
+| Attribute | Value |
+|---|---|
+| Objective | Guarantee that at 18 years completed the student becomes the holder of her own account and data rights, that she is clearly and bilingually informed of it **at majority and at every re-enrollment** (INV-ZS-052), and that the school is informed, with nothing else changing by default |
+| Actors | The platform (detecting majority), the adult student (information, ownership), the school (notification, re-enrollments), guardians (no change by default) |
+| Map journey | JMP-ZS-004 |
+| Modules involved | ADM (`spec/behaviors/01-administration-onboarding-subscription.md`), INS (`spec/behaviors/02-admissions-enrollment-reenrollment.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-055 |
+| Data | `Person` (a majority attribute), a tracked information notice |
+| Version | MVP (INV-ZS-042, ADR-ZS-051: INV-ZS-052 is a legal rule and pilots have 2nd-year baccalaureate students reaching 18 in 2026-2027) |
+| Baseline | (→ INV-ZS-052, ADR-ZS-001, Q-02 (`spec/appendices/01-review-history.md`); INV-ZS-042) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-084 | The person's date of birth on file; an ACTIVE enrollment at the time of majority (a student with no active enrollment is covered by JNY-ZS-088) | Platform | Detecting the 18th birthday (18 Gregorian years completed, art. 209 of the Family Code) on `Person` and triggering the majority event (`StudentReachedMajority`) | Majority detected and event produced | MVP |
+| JNY-ZS-084 | Majority detected | Platform, Salma | Informing the student: a bilingual notification and a "Your rights" screen recalling account ownership and rights over her data, the right to restrict at any time her parents' access to school/disciplinary/health data, the default maintenance of guardians' access, the maintenance of the financially responsible parent's financial access, and permanent access to her published documents after departure (INV-ZS-052, ADR-ZS-001, Q-02) | Salma informed in full | MVP |
+| JNY-ZS-084 | Majority detected | Platform | Notifying the director (no action required); the list of students who have reached majority is viewable by leadership | School informed | MVP |
+| JNY-ZS-084 | Every subsequent re-enrollment | Platform | The pre-filled re-enrollment form shows the adult-student rights notice again before confirmation | Rights recalled at every re-enrollment | MVP |
+| JNY-ZS-084 | Ownership transfer | Salma | Salma's account — opened via a guardian-activated access while she was a minor — stops depending on parental activation; if her access had been activated with an identifier generated on the family phone, she migrates to her personal mobile number by double OTP, a tracked operation (ADR-ZS-022, ADR-ZS-048; OQ-ZS-256 resolved) | Ownership and identifier migrated to Salma alone | MVP |
+| JNY-ZS-084 | By default | Platform | No restriction applied automatically: guardians' access is **maintained** while the enrollment is active; the restriction is a voluntary act by the student (JNY-ZS-085) | Default access unchanged | MVP |
+
+**Acceptance criteria**: covered by the module-level Gherkin in `spec/behaviors/01-administration-onboarding-subscription.md` and `spec/behaviors/02-admissions-enrollment-reenrollment.md`; no dedicated journey-level `.feature` file (the source carries no Gherkin block for this step — a real gap in the original PRD, not one to paper over by inventing scenarios; flagged as a candidate for `spec/open-questions.md`).
+
+### JNY-ZS-085 — Parental-access restriction by the adult student
+
+| Attribute | Value |
+|---|---|
+| Objective | Let the adult student restrict **at any time** her guardians' access to school, disciplinary, and health data, while keeping the liable financially responsible parent's financial access, with full logging and notification to the school (INV-ZS-052, ADR-ZS-001) |
+| Actors | The adult student (decision), restricted or unrestricted guardians, the school (notified, the operational arbiter on conflict, INV-ZS-068), the platform (execution, logging) |
+| Map journey | JMP-ZS-004 |
+| Modules involved | ADM (`spec/behaviors/01-administration-onboarding-subscription.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-055, URS-ZS-057 |
+| Data | Restriction state by (student, guardian, block, school); audit entries; consents and revocations (INV-ZS-012) |
+| Version | MVP (INV-ZS-042, ADR-ZS-051). The "health" block only takes effect once the HEA module ships (V2+) |
+| Baseline | (→ INV-ZS-052, INV-ZS-065, INV-ZS-068, INV-ZS-090, ADR-ZS-001, Q-02; INV-ZS-027, INV-ZS-012, INV-ZS-019, INV-ZS-042) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-085 | An adult student holding her own account (JNY-ZS-084); active guardians on the relationship; the enrollment is ACTIVE | Salma | From the "My rights" screen, viewing each guardian's access status by **data block**: school (published grades, report cards, transcripts, attendance), disciplinary (incidents, sanctions, councils, conduct), health (a V2+ module, present in the model from MVP) | Current access status visible by block | MVP |
+| JNY-ZS-085 | Blocks viewed | Salma | Restricting one or more blocks for a given guardian; a confirmation screen recalling the immediate effect, the financially responsible parent's financial access being kept, reversibility at any time, and logging/notification to the school | Restriction confirmed | MVP |
+| JNY-ZS-085 | Restriction confirmed | Platform | Immediate effect: the restricted blocks disappear from the guardian's portal and their matching notifications; the student keeps her own access in full (INV-ZS-052) | Restriction applied immediately | MVP |
+| JNY-ZS-085 | Restriction applied | Platform | Historizing every restriction (and every restoration) with author (the student), the exact scope (blocks, guardian, school), and a timestamp (INV-ZS-090; an exportable audit log in V1, INV-ZS-019) | Full history kept | MVP (core log); V1 (exportable) |
+| JNY-ZS-085 | Restriction applied | Platform, School | Notifying leadership of every change (INV-ZS-052); the school-side student record shows the current state of parental access with the change history (read-only for the school) | School notified and informed | MVP |
+| JNY-ZS-085 | A guardian objects | The school | Acting as the operational arbiter, may record documents (a ruling, correspondence); ZSchool does not decide (INV-ZS-068). For a **minor** student, the only path to restrict a parent's access remains a court ruling recorded by the school with an attachment (INV-ZS-065, INV-ZS-027): the "My rights" facility exists only for adults | Conflicts arbitrated by the school, not the platform | MVP |
+| JNY-ZS-085 | Restoration wanted | Salma | Restoring access in the same way (confirmation, logging, notification to the school) | Access restored, logged, notified | MVP |
+
+**Acceptance criteria**: `@REQ-ZS-372` (`features/journeys/ele/jny-zs-085-parental-access-restriction.feature`).
+
+### JNY-ZS-086 — Annual and cumulative transcripts for post-baccalaureate applications
+
+| Attribute | Value |
+|---|---|
+| Objective | Let Salma build her post-baccalaureate file herself and without delay: bilingual, signed, verifiable annual and cumulative transcripts, self-service downloadable, never withheld for unpaid fees |
+| Actors | The adult student (request and download), leadership (self-service document settings, issuing transcripts), the school (permanent retention), a third-party recipient (verification by QR code) |
+| Map journey | JMP-ZS-006, JMP-ZS-010 |
+| Modules involved | EVA (`spec/behaviors/05-assessments-grades-report-cards.md`), DOC (`spec/behaviors/06-documents-certificates.md`) |
+| Needs covered | URS-ZS-056 |
+| Data | `Transcript` (annual, cumulative), `Certificate`, `PeriodResult`, `YearDecision`, event `DocumentGenerated` |
+| Version | MVP wave 2 for the annual transcript issued by the school (BEH-ZS-128, ADR-ZS-041); V1 for the cumulative transcript, the advanced seal, the QR code, and self-service |
+| Baseline | (→ INV-ZS-080, INV-ZS-085, ADR-ZS-003, ADR-ZS-005, ADR-ZS-010, ADR-ZS-011; INV-ZS-033, INV-ZS-015, INV-ZS-016; ADR-ZS-041, ADR-ZS-060) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-086 | Results published and closed; certifying-exam grades integrated from the ministry's results; the school having enabled document self-service (V1) | Salma | In "My transcripts," picking an **annual** transcript (year by year; MVP wave 2, issued at the front desk then self-service in V1) or a **cumulative** one (a multi-year summary, V1) | A transcript type chosen | MVP wave 2 (annual); V1 (cumulative) |
+| JNY-ZS-086 | Transcript chosen | Platform (generation) | On-demand generation: a bilingual AR/FR PDF, the school's details, civil status in both scripts, the Massar code, subject and general averages with level-and-track coefficients, published remarks, the year-end decision where applicable, the school's advanced electronic seal, a timestamp, numbering, and a **verification QR code** (V1) | A complete transcript generated | MVP (core fields); V1 (seal, QR) |
+| JNY-ZS-086 | 2nd-year baccalaureate | Platform | Showing continuous-assessment grades for their contractual share (25% of the baccalaureate, a configured and versioned national weighting); the baccalaureate's final grade appears only once official results are imported | Weighting shown accurately | MVP |
+| JNY-ZS-086 | Transcript generated | Salma | Downloading and sharing immediately, with an availability notification; no dependency on the front desk or a parent's account | Transcript in Salma's hands with no intermediary | MVP |
+| JNY-ZS-086 | Any balance state | Platform | Guaranteeing **no blocking for unpaid fees** (ADR-ZS-005, INV-ZS-016); the transcript is available even with arrears, with the alert staying on the school-side record | Never blocked by arrears | MVP |
+| JNY-ZS-086 | Post-issuance | The school | Keeping issued transcripts permanently (ADR-ZS-003); they stay accessible to Salma after her departure (INV-ZS-080, JNY-ZS-088) | Permanent retention and access | MVP |
+
+**Acceptance criteria**: covered by the module-level Gherkin in `spec/behaviors/05-assessments-grades-report-cards.md` and `spec/behaviors/06-documents-certificates.md`; no dedicated journey-level `.feature` file (university pre-enrollment itself is out of scope, ADR-ZS-010).
+
+### JNY-ZS-087 — Year end: the year-end decision and the achievement certificate
+
+| Attribute | Value |
+|---|---|
+| Objective | Close the student's year with an explicit decision (promoted, repeating, graduated, streamed, undetermined), inform the family and student, and issue the achievement certificate with no trip needed |
+| Actors | Leadership and the class council (decision), secretariat (rollover, certificates), the student and guardians (information, download) |
+| Map journey | JMP-ZS-002, JMP-ZS-006, JMP-ZS-010 |
+| Modules involved | INS (`spec/behaviors/02-admissions-enrollment-reenrollment.md`, BEH-ZS-041), EVA (`spec/behaviors/05-assessments-grades-report-cards.md`, BEH-ZS-123), DOC (`spec/behaviors/06-documents-certificates.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-056 (documents), URS-ZS-058 (retention) |
+| Data | `YearDecision` (1 — 1 COMPLETED `Enrollment`), the COMPLETED status, `Certificate` (the achievement certificate), notifications |
+| Version | MVP wave 2 (year-end close, RDM-ZS): the COMPLETED status with a decision, council decision entry, rollover, a numbered achievement certificate at the front desk (ADR-ZS-041, ADR-ZS-044). V1: tooled council preparation, a certificate with an advanced seal and QR code |
+| Baseline | (→ INV-ZS-059, INV-ZS-080, INV-ZS-084, ADR-ZS-003, ADR-ZS-005, ADR-ZS-011; INV-ZS-007, INV-ZS-016) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-087 | The second period closed; certifying-exam results imported for the levels involved; class councils held (V1) | The class council, Leadership | Deliberating (promotion, repeating, streaming at the end of a certifying level); recording the **year-end decision** (INV-ZS-059, BEH-ZS-123/BEH-ZS-041, ADR-ZS-041) carried by the enrollment's COMPLETED status; for a certifying level, the decision is first "undetermined" then updated once results are imported in July | Year-end decision recorded | MVP wave 2 |
+| JNY-ZS-087 | Decision recorded | Platform | At closing, notifying the decision to the student (if access is active) and to legal guardians and the holder of custody (in-app and SMS in MVP, ADR-ZS-023, ADR-ZS-036) | All relevant parties notified | MVP wave 2 |
+| JNY-ZS-087 | Promoted or graduated decision | The secretariat, Platform | Issuing the **achievement certificate**: in MVP, a numbered bilingual document issued at the front desk; in V1, an advanced electronic seal, timestamp, and QR code, self-service for the student per the school's settings | Certificate issued | MVP wave 2 (front desk); V1 (self-service, seal) |
+| JNY-ZS-087 | Promoted student | The secretariat | Offering, via the pre-filled re-enrollment campaign, confirmation of her N+1 enrollment, created as PRE-ENROLLED | N+1 enrollment created | MVP wave 2 |
+| JNY-ZS-087 | Graduated student (e.g. Salma) | The secretariat, Platform | No re-enrollment: the COMPLETED status with the "graduated" decision opens the departure file (JNY-ZS-088) | Departure file opened | MVP wave 2 |
+| JNY-ZS-087 | Repeating decision | Platform | Tracking the "repeating" decision; the year's report cards stay viewable (history kept, INV-ZS-080) | History preserved | MVP wave 2 |
+
+**Acceptance criteria**: covered by the module-level Gherkin in `spec/behaviors/02-admissions-enrollment-reenrollment.md` and `spec/behaviors/05-assessments-grades-report-cards.md`; no dedicated journey-level `.feature` file.
+
+### JNY-ZS-088 — Post-baccalaureate departure or a departure outside ZSchool: permanent access to published documents
+
+| Attribute | Value |
+|---|---|
+| Objective | Guarantee that the student — here Salma after her baccalaureate — keeps **lifelong** read access to her **published** school data, regardless of the reason for leaving (graduated, a transfer to a school outside ZSchool, withdrawal), and that the school keeps its archives (INV-ZS-080, ADR-ZS-018, ADR-ZS-004) |
+| Actors | The former student (permanent reading), the origin school (retention, the exit dossier), the receiving school where applicable, the financially responsible parent (settling the balance) |
+| Map journey | JMP-ZS-009, JMP-ZS-010 |
+| Modules involved | TRA (`spec/behaviors/09-transfers-mobility.md`), DOC (`spec/behaviors/06-documents-certificates.md`), FIN (`spec/behaviors/07-finance-billing-collections.md`) |
+| Needs covered | URS-ZS-057, URS-ZS-058 |
+| Data | A read-only closed enrollment (INV-ZS-084, INV-ZS-024), `Certificate` (the leaving certificate), the exit dossier, `TransferRequest`, an expiring secure link, audit entries |
+| Version | MVP: permanent reading of published documents, a PDF exit dossier. V1: a time-limited secure link with a QR code (ADR-ZS-032) |
+| Baseline | (→ INV-ZS-062, INV-ZS-080, INV-ZS-081, INV-ZS-082, INV-ZS-083, INV-ZS-084, INV-ZS-086, ADR-ZS-018, ADR-ZS-019, ADR-ZS-003, ADR-ZS-004, ADR-ZS-005, ADR-ZS-032, H-12 (`spec/appendices/01-review-history.md`); INV-ZS-033, INV-ZS-034, INV-ZS-022, INV-ZS-024, INV-ZS-016, INV-ZS-023) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-088 | The enrollment closed (COMPLETED, TRANSFERRED, or WITHDRAWN); documents published during her time at the school | Salma | Her account switches to a read-only **"My documents"** portal: published report cards (every version), annual and cumulative transcripts, year-end decisions, issued attestations and official documents — exactly the published data covered by INV-ZS-080/INV-ZS-033, within retention periods (ADR-ZS-003) | Read-only permanent portal available | MVP |
+| JNY-ZS-088 | Portal viewed | Platform | Never exposing unpublished internal data (drafts, deliberations, remarks, ongoing disciplinary procedures, INV-ZS-081); attendance stays viewable as published data within its retention period (end of enrollment + 2 years then anonymization, ADR-ZS-003); disciplinary data is not published data: only sanctions notified to the student stay readable by her, at the originating school, within the same retention period, never portable (INV-ZS-081) | Scope strictly limited to published, retained data | MVP |
+| JNY-ZS-088 | Departure to a school outside ZSchool | The secretariat, Platform | Generating the **bilingual PDF exit dossier** (identity, Massar code, years, levels and year-end decisions, the leaving certificate, the annual year-end transcript — the default transfer profile, INV-ZS-083/INV-ZS-022), accessible via a **time-limited secure link with a verification QR code** (ADR-ZS-032, V1; the PDF exit dossier alone exists in MVP); the link is personal, expiring, revocable, and every access is logged | Exit dossier issued and access-tracked | MVP (PDF); V1 (secure link, QR) |
+| JNY-ZS-088 | Exit dossier generated | Platform | Never transferring disciplinary and health data automatically (INV-ZS-083, ADR-ZS-019); no further sharing to a third party without explicit, logged, bounded, revocable consent (INV-ZS-082, INV-ZS-012) | Sensitive data never leaks by default | MVP |
+| JNY-ZS-088 | Any balance state | Platform | The leaving certificate and official documents are **never** withheld for unpaid fees (ADR-ZS-005, INV-ZS-016); the financially responsible parent keeps access to the payment history and is the **only** recipient of the account statement, delivered separately from the exit dossier | Financial access separated and never used to block documents | MVP |
+| JNY-ZS-088 | School closure or long inactivity | Platform | Permanent access survives the school's possible closure (export, 90-day read-only, operational-data deletion at 12 months; global identities and published documents maintained, ADR-ZS-004, INV-ZS-023); acceptance of this permanent access remains to be confirmed with pilots (H-12) | Durability guaranteed structurally | MVP |
+| JNY-ZS-088 | Transfer to another ZSchool school | Platform | Reusing the identity (no new identity, INV-ZS-023); the receiving school only sees what the adult student chose to share (for a minor, chosen by the legal guardian) | No duplicate identity; scoped sharing | MVP |
+
+**Acceptance criteria**: `@REQ-ZS-373` (`features/journeys/ele/jny-zs-088-post-departure-permanent-access.feature`).
+
+### JNY-ZS-089 — Contesting a grade or an absence from her student access
+
+| Attribute | Value |
+|---|---|
+| Objective | Let the student (a minor with activated access, or an adult) flag an absence recorded when she was present, or a published grade that does not match her paper, in a moderated setup, and track the correction tracked by the school |
+| Actors | The student (contesting), the course's teacher or student life (correction), leadership (a post-closing correction, a new report-card version), guardians (informed for a minor) |
+| Map journey | JMP-ZS-005, JMP-ZS-006 |
+| Modules involved | VSC (`spec/behaviors/04-attendance-student-life-discipline.md`), EVA (`spec/behaviors/05-assessments-grades-report-cards.md`), COM (`spec/behaviors/08-communication-notifications.md`) |
+| Needs covered | URS-ZS-053; the counterpart of URS-ZS covered in `spec/journeys/05-multi-school-parent.md` |
+| Data | `AttendanceRecord`, `Mark`, `ReportCard` (versions), `Thread`, `Message`, `Notification`; correction historization |
+| Version | MVP (moderated in-app threads ADR-ZS-034; a correction notice ADR-ZS-056; a new version INV-ZS-015) |
+| Baseline | (→ INV-ZS-085, INV-ZS-090, ADR-ZS-034; INV-ZS-015; ADR-ZS-056, ADR-ZS-058, ADR-ZS-062) |
+
+**Steps.**
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-089 | Active student access (JNY-ZS-081); moderated in-app threads enabled (ADR-ZS-034) | The student | From the absence or grade screen, choosing "Contest" with a short reason; a moderated thread opens with student life (an absence) or the course's teacher (a grade); for a minor, legal guardians see the thread | A moderated thread opened | MVP |
+| JNY-ZS-089 | Absence contested | Student life | If the roll call is corrected, sending a correction notice to guardians on the original channel; the absence disappears from the history with the correction tracked (ADR-ZS-056) | Absence corrected and traced | MVP |
+| JNY-ZS-089 | A grade contested before closing | The teacher | Correcting with a trace (before/after value) or explaining; the republished grade replaces the old one | Grade corrected transparently | MVP |
+| JNY-ZS-089 | A grade contested after closing or a published report card | Leadership | Deciding; any correction creates a new report-card version, with the old one staying viewable marked "superseded" (INV-ZS-015, ADR-ZS-058) | New version created, old one preserved | MVP |
+| JNY-ZS-089 | Any contest | Platform | Never letting ZSchool itself decide; any change is a tracked school action (INV-ZS-090) | School remains sole decision-maker | MVP |
+
+**Acceptance criteria**: `@REQ-ZS-374` (`features/journeys/ele/jny-zs-089-contesting-a-grade-or-absence.feature`).
+
+---
+
+## 5. Cross-cutting confidentiality, permissions, and logging
+
+The journeys in this file draw on a shared set of confidentiality rules, detailed below and carried by `spec/cross-cutting/01-permissions.md` (permissions) and `spec/cross-cutting/02-security-privacy.md` (security):
+
+| Subject | Rule applied | References |
+|---|---|---|
+| Individual accounts | One account per person, separate sessions on a shared device, an explicit sign-out | INV-ZS-063, INV-ZS-030 |
+| Identification | Mobile phone as the primary contact identifier, e-mail optional; a generated login identifier for a minor with no phone of her own, a tracked migration to a personal number at majority | ADR-ZS-022, INV-ZS-044, INV-ZS-003, ADR-ZS-048 |
+| A minor student's scope | Reading: the timetable, published grades, attendance, partial discipline, the record; never finance or health | `spec/cross-cutting/01-permissions.md`; INV-ZS-091 |
+| An adult student's scope | Same as a minor, plus: ownership, a parental restriction, full document self-service | INV-ZS-052, ADR-ZS-001 |
+| A minor's parental restriction | Only on a court ruling recorded by the school, an attachment, and traceability | INV-ZS-065, INV-ZS-027 |
+| An adult's parental restriction | At the student's own hand, by block (school, disciplinary, health), financial access kept for the liable payer, logged and notified to the school | INV-ZS-052, ADR-ZS-001, Q-02 |
+| Conflicts between guardians | Flagged to the school, which stays the operational arbiter; ZSchool does not decide | INV-ZS-068 |
+| Internal data | Unpublished grades, drafts, deliberations, remarks: invisible to the student and non-portable | INV-ZS-081, INV-ZS-034 |
+| Post-departure data | Permanent reading of published data; non-portable beyond consented sharing; views logged | INV-ZS-080, INV-ZS-082, INV-ZS-033 |
+| Audit log | MVP: immutable historization of entries (activations, restrictions, document generations); V1: an exportable log also covering sensitive views and post-departure accesses; 5 years | INV-ZS-090, INV-ZS-019, ADR-ZS-003, ADR-ZS-066 |
+| Consents | Any sharing beyond the default is logged, bounded in scope and duration, revocable | INV-ZS-082, INV-ZS-012 |
+| Retention | Official documents permanent; attendance/discipline end of enrollment + 2 years; finance 10 years; anonymization rather than deleting registers | ADR-ZS-003, INV-ZS-086 |
+
+---
+
+## 6. Morocco specifics
+
+- **Time zone**: Morocco **permanently returns to UTC+0 on 20/09/2026 at 2:00 a.m.** (Decree No. 2.26.530, Official Gazette No. 7521 of 29/06/2026), with no seasonal switch or Ramadan exception. Student journeys therefore show times in permanent UTC+0 (`Africa/Casablanca`); the **Ramadan variant** remains a pedagogical need (shortened hours shown in Youssef's timetable) but is no longer a time-zone issue (OQ-ZS-252).
+- **School calendar**: classes mandatory for everyone from Monday, 07/09/2026; four weeks of breaks plus mid-year; the national baccalaureate exam 01-03/06/2027; Saturday morning available as a configuration option. The student timetable reflects these periods and variants.
+- **Baccalaureate weightings**: 25% 2nd-year continuous assessment + 25% 1st-year regional exam + 50% national exam; configurable, school-year-versioned weightings. Salma's transcripts state the calculation basis as configured by the school.
+- **Massar code and post-baccalaureate**: the Massar code has replaced the CNE since 2015 as the candidate identifier for university pre-enrollment; it appears on Salma's transcripts and attestations. Pre-enrollment itself is out of scope (ADR-ZS-010).
+- **Civil majority**: 18 Gregorian years completed (art. 209 of the Family Code); the Family Code reform stays an **unvoted report of proposals**: no impact on INV-ZS-052, with legal-tutor/holder-of-custody qualities staying recorded separately (INV-ZS-066, INV-ZS-028).
+- **Bilingualism**: every document and screen in the student journeys is available in FR and AR with full RTL support, names in both scripts on official documents (ADR-ZS-021); English is V2.
+- **Usage and the digital divide**: Android-first mobile-first, iOS well handled (Android 67.96%/iOS 32.02% of web traffic share, StatCounter); an SMS fallback for poorly connected households (rural household internet: 78.4%, ANRT 2024-2025); the phone stays the primary contact identifier (ADR-ZS-022).
+
+---
+
+## 7. Data and events used
+
+Model entities (`spec/domain-model.md`) used by these journeys, without redefinition:
+
+| Domain | Entities | Journeys |
+|---|---|---|
+| Identity | `User`, `Person`, `StudentProfile` | JNY-ZS-081, JNY-ZS-084 |
+| Relations | `Enrollment` (ACTIVE/COMPLETED/TRANSFERRED/WITHDRAWN), `ParentStudentRelationship`, `TransferRequest` | JNY-ZS-081, JNY-ZS-084, JNY-ZS-085, JNY-ZS-087, JNY-ZS-088 |
+| School | `Level` (an access parameter), `Timetable`/`TimetableSlot` (variants), `EvaluationPeriod` | JNY-ZS-081, JNY-ZS-082 |
+| School data | `Mark`, `PeriodResult`, `YearDecision`, `ReportCard`, `Transcript`, `Certificate`, `AttendanceRecord` | JNY-ZS-082, JNY-ZS-083, JNY-ZS-086, JNY-ZS-087, JNY-ZS-088 |
+| Communication | `Notification`, `DeliveryLog` | JNY-ZS-083, JNY-ZS-084, JNY-ZS-087 |
+| Platform | `AuditLog` (cross-cutting logging) | All |
+
+Domain events consumed or produced (`spec/domain-model.md` §7): `ReportCardPublished` (notifying the student + guardians), `StudentReachedMajority` (information on rights, notifying the school), `DocumentGenerated` (transcripts, attestations, the exit dossier), `EnrollmentStatusChanged` (COMPLETED with a decision), `TransferValidated` (departure), `ConsentGranted`/`ConsentRevoked` (sharing beyond the default). The adult student's restrictions add to the audit entries described in JNY-ZS-085.
+
+---
+
+## 8. Key screens
+
+Screens described in text, mobile-first, bilingual FR/AR with full RTL (`SCR-ZS-…` identifiers are carried by the module chapters):
+
+1. **Account selection on a shared device**: a list of accounts already open on the device (avatars and first names), entering the secret on every session opening, no switching without first signing out; an FR/AR language choice from the home screen.
+2. **Student home screen**: a "Today" banner (today's classes, room, active timetable variant), the latest publications (grades, report card, homework), recent notifications; empty (no publication) and offline (the latest cached content, with an age note) states.
+3. **Timetable (V1)**: a weekly grid readable in portrait, a week selector, a variant selector (normal, Ramadan, exams) with an explicit label, course detail on tap.
+4. **Results**: a list by period then by subject; grade, average, published remark; an explicit note when a grade is not yet published; access to the PDF report card from each period.
+5. **Report card (viewing)**: a bilingual PDF with a version history ("superseded"), a QR verification button, download and system sharing.
+6. **Your rights (adult student)**: for each guardian, block status (school, disciplinary, health) with a restriction toggle; an information panel before confirmation; a chronological history of restrictions and restorations; a permanent note on the liable payer's financial access.
+7. **My transcripts**: a list of available annual and cumulative transcripts, a generate/download button, generation status, a visible QR code.
+8. **My documents (after departure)**: a read-only portal grouping report cards, transcripts, decisions, and official documents; a banner explaining retention and durations; no write action.
+9. **Notifications**: an in-app notification center, channel preferences for the adult student (a minor's channels are her guardians').
+
+---
+
+## 9. Integrations
+
+- **Notifications**: multi-channel routing of these journeys' events (in-app, SMS in MVP; push, WhatsApp "utility," an SMS fallback in V1) per ADR-ZS-023 and ADR-ZS-036, with costs charged to the school; the `INT-SMS` and `INT-WAP` integrations carried by `spec/cross-cutting/06-external-integrations.md`.
+- **E-mail messaging**: a secondary channel only (`INT-EML`); never required for a student account (ADR-ZS-022, INV-ZS-044).
+- **Massar**: no direct dependency; a transfer to another school goes through the ministerial procedure outside ZSchool in V1, and university pre-enrollment is out of scope (ADR-ZS-010). The Massar code appears on issued documents.
+- **Signature and seal**: an advanced electronic seal and timestamp on transcripts and attestations in V1, a qualified seal via an accredited provider in V2 (ADR-ZS-011; `INT-SIG`, `spec/cross-cutting/06-external-integrations.md`).
+
+---
+
+## 10. Specific non-functional requirements
+
+NFR domains carried by `spec/cross-cutting/03-non-functional-requirements.md`, cited without numbering:
+
+- **Performance**: typical pages under 2 s on 4G mobile network; a report card opens under 3 s; a publication notification delivered school-wide within the bulk-publication window (2,000 students under 10 minutes).
+- **Availability**: 99.5% outside announced maintenance, windows outside the start of year and exams; semester-end publications must not degrade student viewing.
+- **Mobile and offline**: PWA in MVP, native apps in V2; a low-bandwidth mode and lightweight caching of the timetable and homework; an entry-level family phone supported.
+- **Languages**: FR and AR with full RTL from MVP; bilingual content (names, documents); EN in V2 (ADR-ZS-021).
+- **Documents**: bilingual PDFs, correct Arabic fonts, A4/A5, batch printing on the school side.
+- **Security and confidentiality**: sessions and devices managed, a generated login identifier and password for student accounts with no phone (an OTP to the guardian's number), protection against Massar-code enumeration, encryption in transit and at rest, immutable historization of entries; data hosted in Morocco.
+- **Accessibility**: contrast, adjustable font sizes, and keyboard navigation on the main journeys; readability for teenagers on small screens (adapted typography templates, `spec/cross-cutting/05-ux-ui-mobile-first-rtl.md`).
+
+Candidate success indicators for these journeys (student-access activation rate, median delay between report-card publication and first viewing, transcript-generation seasonality, "My documents" usage by leavers, parental-restriction counts and turnaround, sign-in failure rate) are tracked in `spec/metrics.md`, not invented here.
+
+---
+
+## Open questions
+
+Open questions for this journey (OQ-ZS-251 through OQ-ZS-257) are consolidated in `spec/open-questions.md` (built in Phase 6 of the migration), not tracked locally in this file.
+
+## Traceability
+
+Full cross-reference coverage for this journey is consolidated in `spec/traceability.md` (built in Phase 7 of the migration).
