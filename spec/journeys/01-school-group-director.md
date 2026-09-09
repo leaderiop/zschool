@@ -1,0 +1,447 @@
+> **Document Control**
+>
+> | Property       | Value                                                        |
+> | -------------- | ------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-JNY-01                                                 |
+> | Revision       | 1.0                                                            |
+> | Effective Date | 2026-09-09                                                     |
+> | Status         | Draft                                                          |
+> | Author         | ZSchool Product                                                |
+> | Classification | Functional Specification — Persona Journey                    |
+> | Change History | 1.0 (2026-09-09): Migrated from `prd/journeys/01-school-group-director.md` (v0.3), old `PJ-DIR-01..08` -> `JNY-ZS-001..008`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
+
+# Detailed Journeys: Si Abdellah, School Group Director (`DIR`)
+
+## 1. Purpose and reading conventions
+
+This file describes the detailed journeys of persona `DIR` (Si Abdellah, general director of a private school group of 1,800 students across three sites, from preschool to high school, with a national track and an International Baccalaureate track, `PROJECT.md` §5.2). It answers point 2 of baseline chapter 18 for this persona and details the steps announced by the map `spec/journeys/00-journey-map.md` (umbrella journeys `JMP-ZS-001` to `JMP-ZS-011`), which is authoritative for the titles.
+
+- **Steps**: each journey is broken into numbered steps `JNY-ZS-NNN`, each carrying four fields: **starting condition**, **actor**, **action**, **expected outcome**; the **Version** column refers to the `spec/roadmap.md` scope (MVP / V1 / V2+).
+- **Cross-references**: the umbrella journeys `JMP-ZS-NNN` are carried by `spec/journeys/00-journey-map.md`; needs `URS-ZS-NNN` by `spec/urs.md`; invariants `INV-ZS-NNN` by `spec/invariants.md`; behaviors `BEH-ZS-NNN` remain carried by the module files `spec/behaviors/01-administration-onboarding-subscription.md` to `spec/behaviors/14-health-sensitive-data.md`, never here. Integrations are cited by domain (e.g. `INT-FAT`) without a number, their carrying file being `spec/cross-cutting/06-external-integrations.md`.
+- **Screens**: named in text, without a `SCR-ZS-…` identifier (that namespace is reserved for module chapters). Each name comes with a brief description of zones, states, and behavior, in the spirit of mobile-first and bilingual FR/AR (ADR-ZS-021).
+- **External figures**: sourced only from the frozen baseline (`spec/appendices/00-project-baseline.md`) or from the research notes preserved in `spec/appendices/01-review-history.md`, with a source reference.
+- **Frustrations / target experience**: each journey contrasts the current situation (Excel files, paper registers, double entry, inconsistent local software, §2.1 and §2.11) with the target ZSchool experience.
+
+---
+
+## 2. Persona snapshot and needs map
+
+| Attribute | Content |
+|---|---|
+| Profile | General director of a private school group in Casablanca: 1,800 students across three sites, preschool to high school, national track and International Baccalaureate track (§5.2). |
+| Operating context | Multi-site legal entity, separate authorizations per site, one head per site, consolidated accounting (§2.11). Currently managed with Excel files, paper registers, and inconsistent local software (§2.1, §2.11). |
+| Devices and network | Computer at the office, mobile between sites; sometimes unstable connections (§2.10; `spec/urs.md` §2.1). |
+| Baseline role | Carries the "Group administrator" profile (consolidated views, managing the group's schools, subscription) and, per site, "Director/administrator" of the tenant (§8.1). |
+| Pilot positioning | A profile close to ADR-ZS-035's "multi-site group of over 2,000 students" pilot, going live mid-year from 01/02/2027 (RDM-ZS-001); the organization is set up from MVP in **read-only consolidated view** (creation, linking tenants, consolidated dashboard), with shared administration and organization-level SaaS billing arriving in V1 (ADR-ZS-041; §11, ADR-ZS-024, ADR-ZS-009). |
+
+`BES-DIR` needs map (carried by `spec/urs.md` §3.1) and the journeys covering them in this file:
+
+| Need | Title | Covering journey |
+|---|---|---|
+| URS-ZS-001 | Multi-site consolidated dashboard | JNY-ZS-003 |
+| URS-ZS-002 | Steering collections and graduated reminders | JNY-ZS-004 |
+| URS-ZS-003 | Massar-compliant files, end of double entry | JNY-ZS-005 |
+| URS-ZS-004 | Steering the group without merging data | JNY-ZS-003, JNY-ZS-001, JNY-ZS-007 |
+| URS-ZS-005 | Running the start of year: campaign, rollover, assignments | JNY-ZS-002 |
+| URS-ZS-006 | Period closings and validated, locked report cards | JNY-ZS-005 |
+| URS-ZS-007 | Roles made of fine-grained permissions by module and scope | JNY-ZS-007, JNY-ZS-001 |
+| URS-ZS-008 | Compliance check before closing (checks per subject and period) | JNY-ZS-005 |
+| URS-ZS-009 | Mobility: inter-site transfers, tracked arrivals and departures | JNY-ZS-006 |
+
+---
+
+## 3. Director's journey map
+
+| ID | Journey | Umbrella journey (`spec/journeys/00-journey-map.md`) | Needs | Modules involved | Dominant version |
+|---|---|---|---|---|---|
+| JNY-ZS-001 | Group onboarding: organization, schools, structure, import, mid-year resumption | JMP-ZS-003 | URS-ZS-004, URS-ZS-007 | ADM, PED, FIN, COM | MVP (school, read-only consolidated organization, parent contracts, mid-year resumption); V1 (shared administration, advanced signature, Fatourati) |
+| JNY-ZS-002 | Multi-site year rollover: bulk decisions and assignments | JMP-ZS-002 | URS-ZS-005 | INS, PED, FIN, COM, RAP | MVP (wave 2 — year-end close, RDM-ZS-003); V1 (campaign reminders) |
+| JNY-ZS-003 | Consolidated cross-site steering: dashboards and comparison | No dedicated PC (supports JMP-ZS-002, JMP-ZS-006, JMP-ZS-007, JMP-ZS-008) | URS-ZS-001, URS-ZS-004 | RAP, ADM, MAS, COM | MVP (leadership, read-only consolidated); V1 (enriched comparison, threshold alerts, ESISE) |
+| JNY-ZS-004 | Multi-site arrears tracking and collections | JMP-ZS-007, JMP-ZS-008 | URS-ZS-002 | FIN, COM, DOC, RAP | MVP (core, cheques, account statement); V1 (aged balance, cash sessions, bursaries, Fatourati) |
+| JNY-ZS-005 | Period closings and report card publication | JMP-ZS-006 | URS-ZS-003, URS-ZS-006, URS-ZS-008 | EVA, PED, MAS, DOC, COM, RAP | MVP (grades, report cards, compliance warning); MVP wave 2 (council decisions, Massar exports); V1 (tooled councils, blocking compliance, QR) |
+| JNY-ZS-006 | Managing an inter-site transfer, an arrival, and a departure | JMP-ZS-009 | URS-ZS-009 (supports BES-SEC, BES-PAR) | TRA, ADM, DOC, FIN, MAS | MVP (simple transfer with full statuses, PDF dossier, Massar reference); V1 (secure link, QR, full log) |
+| JNY-ZS-007 | Administering roles, access, and the subscription | Extends JMP-ZS-003 | URS-ZS-007, URS-ZS-004 | ADM, CAR, RAP | MVP (affiliations, role templates, leadership MFA, historization); V1 (audit log, termination cycle, public-sector outside teachers) |
+| JNY-ZS-008 | Tooled admission: file, tests, waitlist, decision | JMP-ZS-001, variant b | URS-ZS-005 | INS, COM, FIN | V1 |
+
+---
+
+## 4. Detailed journeys
+
+### JNY-ZS-001 — School group onboarding: organization, schools, structure, and import
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Get the group into production cleanly and quickly: organization created, one tenant per school (INV-ZS-073), academic structures instantiated from the national and international models (INV-ZS-076), initial data imported from Excel with duplicate control (G-18), staff authorized, fee schedule and payment connection ready; shorten the time to first value (first enrollment, first payment). |
+| Actors | Si Abdellah (general director), ZSchool team (provisioning and support, tracked access G-32), site directors, secretariats (reviewing import reports), legal tutors (parent contracts). |
+| Umbrella journey | JMP-ZS-003 (School onboarding, `spec/journeys/00-journey-map.md`). |
+| Trigger and seasonality | Adoption decision; two windows: April to August before the start of the year, or mid-year with resumption of data from a semester already in progress (pilots: from 01/02/2027, RDM-ZS-001, ADR-ZS-043); one-off per school, repeated for each new site in the group. |
+| Modules involved | `spec/behaviors/01-administration-onboarding-subscription.md` (tenant, wizard, imports, users, subscription), `spec/behaviors/03-academic-structure-timetables.md` (models, year, periods, grading scales), `spec/behaviors/07-finance-billing-collections.md` (fee schedule, contracts), `spec/behaviors/08-communication-notifications.md` (invitations), `spec/cross-cutting/06-external-integrations.md` (`INT-FAT`). |
+| Current frustrations | Three sites on disconnected tools: one Excel file per site, document templates redone by hand, no shared structure, raw imports with no duplicate control, impossible to bring historical data over without re-entry (§2.1, §2.11). |
+| Target experience | A guided wizard per school: legal information entered once, national structure model (and international for the International Baccalaureate track) instantiated then adapted, controlled Excel import with an error report and matching suggestions, template roles assigned, fee schedule and contracts generated; the group sees onboarding progress site by site. |
+| Version | JNY-ZS-001 to 01.9 and 01.11: MVP (school onboarding, Excel import with duplicate merging by ZSchool support, structure model, identities and template roles, core finance with sibling discount, read-only consolidated organization, Law 59.21 parent contracts by electronic acceptance, mid-year resumption — ADR-ZS-041, ADR-ZS-043); advanced-level signature (ADR-ZS-011), shared group administration, and Fatourati connection (ADR-ZS-031): V1 (JNY-ZS-001). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-001 | Onboarding request logged; free trial available with demo data (§11) | ZSchool (provisioning), Si Abdellah | Creation of the leadership account (mobile phone as the primary identifier, ADR-ZS-022), MFA enabled (§9); creation of the group's pilot school | Tenant created, setup wizard screen offered, trial subscription active | MVP |
+| JNY-ZS-001 | Tenant created | Si Abdellah (assisted by ZSchool) | Entry of the school's legal information (INV-ZS-074: name in AR/FR, authorization number, AREF and provincial education office, authorized cycles, ICE, IF, RC, business license, CNSS, address, logo, seal, signatories, bank details), choice of FR/AR languages and channels (ADR-ZS-021, ADR-ZS-023) | Complete, verified legal record; school identifiable on bilingual documents | MVP |
+| JNY-ZS-001 | Legal record saved | Si Abdellah, site academic directors | Instantiating the structure from the supplied models (INV-ZS-076: national per cycle; international for the International Baccalaureate track), choosing the school year, periods (semesters, or trimesters for a track that requires them), grading scales and calculation rules, coefficients by level and track (INV-ZS-078); year calendar pre-loaded from published ministry dates, religious holidays "to be confirmed" updated during the year, Saturday morning available as a configuration option (`spec/appendices/01-review-history.md` (research notes); permanent UTC+0 time zone, see OQ-ZS-191) | Ready, consistent academic structure per track; year and periods configured | MVP |
+| JNY-ZS-001 | Structure ready; historical Excel files available | Si Abdellah, secretariats | Bulk import from Excel (students, parents, teachers, classes, historical grades; G-18); reading the error report, correcting rejected rows, handling strong-match suggestions (Massar code) and probable-duplicate alerts (INV-ZS-055, INV-ZS-006, INV-ZS-005); guardian matching by an identical mobile number (suggestion only, never creation) and intra-file de-duplication of sibling guardians (ADR-ZS-050); duplicate merges confirmed by ZSchool support, an audited operation (INV-ZS-056, INV-ZS-020, MVP — ADR-ZS-041); exit state: enrollments set to ACTIVE via a tracked "import activation" (ADR-ZS-043), with a legal guardian and a financially responsible guardian required in the file | Initial data integrated with no silent duplicates; import report archived; active enrollments | MVP |
+| JNY-ZS-001 | Data imported | Si Abdellah | Inviting internal users by phone number (ADR-ZS-022), assigning editable template roles (site director, secretariat, accounting, student life, teacher, homeroom teacher; §8.1, INV-ZS-089, INV-ZS-041), activation after mutual acceptance (INV-ZS-070, INV-ZS-031), MFA for school-level roles (§9) | Staff for all three sites operational, each within their least-privilege scope (INV-ZS-091) | MVP |
+| JNY-ZS-001 | Users in place | Si Abdellah, group accountant | Entering the initial fee schedule by year, level, track, and option, ancillary fees, automatic sibling discount (§7.7; BEH-ZS-154, MVP — ADR-ZS-041), a pro-ration rule (a part-month owed in full by default, ADR-ZS-061 (ARB-20c)); preparing standard payment schedules | Fee schedule ready for billing | MVP |
+| JNY-ZS-001 | Fee schedule saved | Si Abdellah | End-to-end check on a real case: first front-desk enrollment by a secretary (certificate, receipt issued immediately), first tracked payment | First value delivered; trial convertible to an active subscription | MVP |
+| JNY-ZS-001 | Pilot school validated | Si Abdellah, ZSchool | Creating the group organization and linking schools (BEH-ZS-004, MVP in read-only consolidated view — ADR-ZS-041); replicating onboarding across the other two sites; group dashboard visible in read-only (BEH-ZS-249); shared administration and an organization-level billable subscription in V1 (§11, ADR-ZS-024) | Group set up: consolidated views without merging data (INV-ZS-073, ADR-ZS-013) | MVP (read-only consolidated); V1 (shared administration, group billing) |
+| JNY-ZS-001 | Fee schedules finalized | Si Abdellah | Generating annual written parent contracts (Law 59.21: Official Gazette No. 7485 of 23/02/2026, mandatory contract, copy to parents, archiving; art. 49: publication of the fee list; `spec/appendices/01-review-history.md` (research notes)) signed by the legal tutor and countersigned by the financially responsible parent if different (ADR-ZS-061 (ARB-20h)): tracked electronic acceptance in MVP (BEH-ZS-152, ADR-ZS-041), advanced-level signature in V1 (ADR-ZS-011); archived in the student's file | Contracts accepted and archived, enforceable, available for AREF inspection | MVP (electronic acceptance); V1 (advanced signature) |
+| JNY-ZS-001 | Subscription active | Si Abdellah | Decision to connect online payment: the school subscribes to the Fatourati creditor contract (Aggregator offering launched 17/02/2026; ZSchool is not involved in the funds or the regulatory framework; `spec/appendices/01-review-history.md` (research notes)), configuring the `INT-FAT` integration (reference generation, daily reconciliation) | Online payment rail ready for the start of the year (V1, ADR-ZS-031) | V1 |
+| JNY-ZS-001 | School joining ZSchool mid-year (pilots, February 2027) | Si Abdellah, secretariats, ZSchool | Resuming the semester already in progress (ADR-ZS-043): importing payment schedules with amounts already paid per student and per installment (date, method), cheques in hand (number, bank, due date, amount), current-semester grades linked to the current enrollment (a "published" or "draft" status per column), and aggregated absences; activation via import (a logged "data resumption" reason); acceptance of the internal rules and Law 09.08 notices deferred to account claiming, with a follow-up reminder; a cross-check of balances by site before going live | Accurate payment schedules from day one; no double entry for the semester already completed; balances checked | MVP |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **School setup wizard**: A queue of numbered steps (legal, structure, import, users, finance), progress status, resumes where it left off; bilingual FR/AR.
+- **School legal record**: Form organized in blocks (identity, authorization, tax, bank details, seal and logo), completeness check against the INV-ZS-074 fields, states "incomplete/complete".
+- **Academic structure wizard**: Gallery of models (national per cycle, international), editable Section–Cycle–Level–Track–Class tree, period and grading-scale settings, preview of the pre-loaded calendar.
+- **Bulk import and error report**: File selection, column mapping, counters (rows imported, rejected, probable duplicates), filterable anomaly list with row-by-row correction, downloadable import log.
+- **User and role management**: List of affiliations by site, phone-based invitations, template roles with permission detail, states "invited/active/suspended/terminated".
+- **Fee schedule**: Table by level and track, ancillary fees, sibling discount, fee-schedule version history.
+- **Group dashboard**: Cards per school (onboarding status, headcount, subscription), access to consolidated views (V1).
+- **Parent contracts**: Bulk generation, signature queue, statuses (generated, signed, archived), viewing an archived contract.
+- **Subscription and usage**: Status (trial, active, overdue), active students for the month, remaining consumables, SaaS invoice history.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-055, INV-ZS-056, INV-ZS-070, INV-ZS-073, INV-ZS-074, INV-ZS-076, INV-ZS-078, INV-ZS-089, INV-ZS-091; ADR-ZS-013, ADR-ZS-021, ADR-ZS-022, ADR-ZS-023, ADR-ZS-024, ADR-ZS-009, ADR-ZS-011, ADR-ZS-031, ADR-ZS-035; G-06, G-18, G-32; INV-ZS-006, INV-ZS-005, INV-ZS-020, INV-ZS-031, INV-ZS-041; §2.8, §6.6, §6.7, §7.1, §7.7, §11, §12; `spec/appendices/01-review-history.md` #1, #2, #7, #17; `spec/appendices/01-review-history.md` (research notes), `spec/appendices/01-review-history.md` (research notes), `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-275` (`features/journeys/dir/jny-zs-001-school-group-onboarding.feature`).
+
+---
+
+### JNY-ZS-002 — Multi-site year rollover: bulk decisions and assignments
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Produce year N+1 across the three sites without re-entry: a secure spring re-enrollment campaign, year-end decisions entered in bulk (INV-ZS-059), N+1 enrollments created (promoted, repeating), departures handled (transfers, withdrawals), class assignment, and N+1 payment schedules ready before the start of year. |
+| Actors | Si Abdellah (steering and validation), site directors, class councils upstream (decisions and remarks entered in MVP wave 2, tooled preparation in V1), secretariats (campaign, assignment), parents (confirmation and deposit), group accountant (N+1 fee schedules and payment schedules). |
+| Umbrella journey | JMP-ZS-002 (Bulk re-enrollment and year N-to-N+1 rollover, `spec/journeys/00-journey-map.md`). |
+| Trigger and seasonality | Seasonal: re-enrollment campaign in spring (re-enrollment fees often paid in spring with a deposit, §2.8), decisions and rollover in June before students leave, adjustments through September. |
+| Modules involved | `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/03-academic-structure-timetables.md`, `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`, `spec/behaviors/11-dashboards-reporting.md`. |
+| Current frustrations | Promotion decisions written notebook by notebook then copied into Excel; manual class reassignment drawn on paper; students leaving with no trace; N+1 fee schedules and payment schedules redone by hand in three disconnected files; level mistakes at the start of the year (§2.11). |
+| Target experience | A rollover console per school, consolidated at group level: N+1 structure cloned in one action, decisions entered in bulk from a single screen, N+1 enrollments created in batch with automatic uniqueness checks, assisted assignment (target headcounts, options, language groups), payment schedules generated from the N+1 fee schedule; the director sees progress site by site and any gaps. |
+| Version | **MVP (wave 2 — year-end close, RDM-ZS-003)**: pre-filled forms and a deposit, structure cloning (BEH-ZS-057, INV-ZS-013), bulk decisions and closing to COMPLETED (BEH-ZS-041), creation of N+1 enrollments as PRE-ENROLLED, class assignment (BEH-ZS-043, BEH-ZS-044), N+1 payment schedules and contracts (ADR-ZS-041, ADR-ZS-044); V1: automated campaign reminders and tooled council preparation (BEH-ZS-122). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-002 | Year N in progress, third term; promotion decisions being prepared | Si Abdellah, site directors | Opening the re-enrollment campaign per school: pre-filled forms sent to guardians, a deposit expected (§7.2); tracking response and conversion rates per site; automated reminders in V1 | Campaign launched, per-site tracking dashboards available | MVP (wave 2); V1 (automated reminders) |
+| JNY-ZS-002 | Campaign in progress | Si Abdellah, academic directors | Cloning the N+1 structure from year N per school (levels, subjects, coefficients, grading scales, without students; INV-ZS-077, INV-ZS-013, BEH-ZS-057); adjusting N+1 grading scales and coefficients; loading the ministry's N+1 calendar as soon as published, religious holidays "to be confirmed" (`spec/appendices/01-review-history.md` (research notes)) | N+1 school year ready in each tenant, with no students | MVP (wave 2) |
+| JNY-ZS-002 | Annual report cards and results available (see JNY-ZS-005) | Class councils, site directors, Si Abdellah | Bulk entry of year-end decisions per class and level (promoted to the next level, repeating, graduated, streamed, undetermined; INV-ZS-059) from the rollover console; for certifying levels, an "undetermined" decision updated when the ministry's results are imported in July, before the end of the INV-ZS-024 grace period (ADR-ZS-058 (ARB-17i)); validated by the site director, then a consolidated view for the general director | Every ACTIVE or SUSPENDED enrollment of year N carries its decision (`YearDecision` entity); anomalies flagged (students without a decision) | MVP (wave 2) |
+| JNY-ZS-002 | Decisions validated | System (batch processing), secretariats | Closing to COMPLETED **every** ACTIVE or SUSPENDED enrollment present at year end, each with its decision (INV-ZS-059, ADR-ZS-044 (ARB-03c)); bulk creation of N+1 enrollments **as PRE-ENROLLED only** (ADR-ZS-044 (ARB-03f)): promoted students to the next level, repeating students to the same level, **streamed students to their chosen track** (streaming is not a departure, ADR-ZS-044 (ARB-03d)); graduates get no N+1 enrollment; any student who already has an N+1 enrollment in a non-terminal state (from the JNY-ZS-002 campaign) is skipped with no duplicate; automatic uniqueness check (INV-ZS-058, ADR-ZS-002, INV-ZS-007); no enrollment that has been ACTIVE is ever deleted (INV-ZS-060, INV-ZS-008) | N+1 enrollments created in batch as PRE-ENROLLED; students without a confirmed re-enrollment isolated in a "departures at the next start of year" list | MVP (wave 2) |
+| JNY-ZS-002 | N+1 enrollments created; departures identified | Secretariats, site directors | Handling departures: a student who leaves the school **at the next start of year** stays COMPLETED with their decision and simply has no N+1 enrollment (never moved to TRANSFERRED or WITHDRAWN, which are reserved for mid-year departures, ADR-ZS-044 (ARB-03c)); a ZSchool transfer with an effective date of "start of year" is recorded as a `TransferRequest` (see JNY-ZS-006); the financial relationship survives until settled (INV-ZS-062, INV-ZS-018) | Year-end departures tracked with no loss of the year-end decision; balances kept | MVP (wave 2) |
+| JNY-ZS-002 | N+1 enrollments without a class | Site directors, Si Abdellah | Assisted class assignment (BEH-ZS-043): target headcounts per class (capacity checked, an override on leadership approval, ADR-ZS-065 (ARB-24b)), balancing, accounting for options and language groups, siblings; unassignment and replay possible until publication; homeroom teachers designated (§7.3) | N+1 class lists published per site; later mid-year changes tracked in the class history with no new enrollment (INV-ZS-061, INV-ZS-025) | MVP (wave 2) |
+| JNY-ZS-002 | Assignments published | Group accountant, Si Abdellah | Activating the N+1 fee schedule (any increase can only apply to year N+1: no fee change during the year on an active enrollment, Law 59.21, §7.7, INV-ZS-017); generating N+1 payment schedules, N+1 parent contracts, and the sibling discount; the N+1 PRE-ENROLLED-to-ACTIVE move follows the ordinary conditions (complete file, initial payment, guardians, acceptances) | N+1 payment schedules and contracts ready; no invoice issued on the N+1 fee schedule for year N | MVP (wave 2) |
+| JNY-ZS-002 | Start of year approaching | Si Abdellah | Reviewing the N+1 headcount table by site, cycle, level, and class; headcount alerts (under- or over-capacity); decisions to open or close classes; communicating the start of year to families (per-school announcement, ADR-ZS-023) | N+1 headcounts controlled and arbitrated at group level; families informed | MVP (wave 2) |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Re-enrollment campaign — tracking**: Funnel per site (sent, confirmed, deposits received, reminders in progress), detail by class, manual reminder available; bilingual.
+- **N-to-N+1 rollover console**: Step queue (cloning, decisions, creation, assignments, finance), per-site progress counters, an explicit block if a prior step is incomplete.
+- **Bulk entry of year-end decisions**: Grid by class with a default value (promoted), cell-by-cell or batch editing, list of students without a decision, change log.
+- **N+1 structure cloning**: Selecting the source year, checkboxes per structure element, a cloning report, warnings on detected differences.
+- **Class assignment**: View by level with unassigned students, headcount and option constraints, a preview before publication, publication history.
+- **N+1 contracts and payment schedules**: Preview of the generated contract, signature queue, payment-schedule table by class, fee-schedule checks.
+- **N+1 headcounts by site**: Cross-table site × level × class with headcount alerts, trend charts, export.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-058, INV-ZS-059, INV-ZS-060, INV-ZS-061, INV-ZS-062, INV-ZS-077, INV-ZS-078; ADR-ZS-017, ADR-ZS-023, ADR-ZS-002; G-07; INV-ZS-007, INV-ZS-008, INV-ZS-025, INV-ZS-018, INV-ZS-017, INV-ZS-013; §2.8, §2.11, §6.7, §7.2, §7.3, §7.7, §12; Law 59.21 via `spec/appendices/01-review-history.md` #2; `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-276` (`features/journeys/dir/jny-zs-002-multi-site-year-rollover.feature`).
+
+---
+
+### JNY-ZS-003 — Consolidated cross-site steering: dashboards and comparison
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Give the general director a fresh, single, comparable view of the three sites: headcounts, attendance, results, arrears, occupancy, with drill-down to named detail within his scope; support decisions (headcounts, classes, financial trade-offs) and prepare regulatory statistics. |
+| Actors | Si Abdellah (primary user), site directors (their site dashboards), group accountant (financial indicators), ZSchool (stable indicator definitions). |
+| Umbrella journey | No dedicated PC (supports JMP-ZS-002, JMP-ZS-006, JMP-ZS-007, JMP-ZS-008): this journey uses data produced by JMP-ZS-002 (headcounts), JMP-ZS-006 (results), and JMP-ZS-007/JMP-ZS-008 (collections); it materializes §7.11 (leadership: cross-site comparison). |
+| Trigger and seasonality | Daily (at 8 a.m., before the round of sites, see `spec/urs.md` §2.1), weekly for the comparison, monthly for collections, annual for regulatory statistics (May census). |
+| Modules involved | `spec/behaviors/11-dashboards-reporting.md`, `spec/behaviors/01-administration-onboarding-subscription.md` (organization), `spec/behaviors/12-massar-regulatory-exports.md` (regulatory statistics), `spec/behaviors/08-communication-notifications.md` (alerts). |
+| Current frustrations | No overview without manual Excel consolidation every week; figures not comparable because each site keeps its own file with its own definitions; headcount decisions made several days late; ministry statistics rebuilt by hand (§2.1, §2.11, §5.2). |
+| Target experience | In the morning, a single page shows the three sites' indicators with the same definitions; one click drills from group to site, site to class, class to the named list; the cross-site comparison places indicators side by side; thresholds (an attendance drop, arrears drifting) trigger alerts; ESISE data is prepared with no re-entry. |
+| Version | Leadership dashboards and the read-only consolidated group dashboard (organization MVP, ADR-ZS-041): MVP; enriched cross-site comparison, threshold alerts, consolidated aged balance: V1 (§12; §7.11); ESISE regulatory statistics: V1 (§12). Single definition of the attendance rate: ADR-ZS-065 (ARB-24a) (BEH-ZS-241). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-003 | School day in progress; roll calls validated progressively | Si Abdellah | Morning review of the group's consolidated dashboard (read-only, BEH-ZS-249): today's headcount, absentees by site, attendance rate computed on declared sessions (ADR-ZS-065 (ARB-24a)), student-life alerts, the previous day's payments | A single up-to-date view; every figure carries a freshness timestamp | MVP |
+| JNY-ZS-003 | Consolidated indicator reviewed | Si Abdellah | Drilling down from group to site, from site to cycle, level, and class, down to a named list within his rights scope (INV-ZS-073: consolidation without merging; data stays in its tenant) | Named detail accessible without leaving the dashboard, with sensitive-view historization (MVP) then an audit log (V1, INV-ZS-090) | MVP (read-only); V1 (log of views) |
+| JNY-ZS-003 | End of week | Si Abdellah, site directors | Reviewing the cross-site comparison: headcounts, attendance rate, results by subject and period, arrears and collection rate, room occupancy, teacher activity (§7.11), shown side by side with the same indicator definitions | Cross-site gaps made objective; comparison exported for the leadership meeting | V1 |
+| JNY-ZS-003 | Start of month | Si Abdellah, group accountant | Reviewing the consolidated collections section: outstanding amounts by site, monthly trend, top debtor accounts, collection rate (processing detail in JNY-ZS-004) | The group's financial position readable in a few minutes | V1 (consolidated aged balance) |
+| JNY-ZS-003 | Threshold crossed (attendance drop at a level, arrears drift at a site) | System | Triggering an alert to the general director and the relevant site director per the configured thresholds (channels ADR-ZS-023) | Alert logged, viewable, linked to its source indicator | V1 |
+| JNY-ZS-003 | May census | Si Abdellah, secretariats | Preparing ESISE regulatory data from the consolidated data: private-school census, HR reference file, year-end results (H-10; three ESISE applications, `spec/appendices/01-review-history.md` (research notes)); exporting the prepared tables, transmission through the official channel outside ZSchool | Group data ready for the ministry's e-filing, with no re-entry from Excel | V1 |
+| JNY-ZS-003 | Need to share (management board, owner) | Si Abdellah | Excel/PDF export of any view (§10: interoperability); printing tables | Reports shareable outside the platform | MVP (exports); V1 (exportable consolidated views) |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Consolidated group dashboard**: Period-selector header, indicator cards side by side per site, alert zones; mobile-friendly for viewing between sites (§2.10, §10); bilingual FR/AR.
+- **Site dashboard**: Per-school version with the same indicator definitions as the group view, filters by cycle and level.
+- **Cross-site comparison**: Cross-table of sites × indicators, mini trend charts, indicator selection, flagging significant gaps.
+- **Consolidated aged balance**: Arrears age brackets by site and consolidated, drilling into accounts (see JNY-ZS-004).
+- **ESISE preparation**: Checklist of required tables, completeness status per school, preview before export, transmission log.
+- **Thresholds and alerts**: Threshold settings per indicator and per site, history of alerts raised.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-073, INV-ZS-090; ADR-ZS-013, ADR-ZS-023; G-04, G-08 (statistics component), G-21; INV-ZS-001, INV-ZS-019; §7.11, §7.12, §10, §11; H-10 via `spec/appendices/01-review-history.md`; `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-277` (`features/journeys/dir/jny-zs-003-consolidated-cross-site-steering.feature`).
+
+---
+
+### JNY-ZS-004 — Multi-site arrears tracking and collections
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Maximize the group's collections (cash flow): arrears visible by site and consolidated, automatic graduated reminders, Fatourati online payment to ease settlement, cheques tracked through to deposit, discounts and bursaries approved at the right level — never blocking official documents for unpaid fees (ADR-ZS-005). |
+| Actors | Si Abdellah (steering, approvals), group accountant, secretary-cashiers (payments, local reminders, `spec/journeys/02-secretary-cashier.md`), financially responsible parents (payment, possibly different from the legal guardians, INV-ZS-064). |
+| Umbrella journey | JMP-ZS-007 (Collecting a monthly payment and chasing arrears) and JMP-ZS-008 (Online payment via Fatourati), `spec/journeys/00-journey-map.md`. |
+| Trigger and seasonality | Monthly over ten months (September to June, §2.4), peaking at the start of each month and the start of the year; cheques handed over at the start of the year with due dates (§2.8); daily review of payments, weekly review of reminders. |
+| Modules involved | `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`, `spec/behaviors/06-documents-certificates.md` (arrears alerts), `spec/behaviors/11-dashboards-reporting.md`, `spec/cross-cutting/06-external-integrations.md` (`INT-FAT`). |
+| Current frustrations | Manual phone-by-phone reminders with no trace; cheque logs kept by hand; heavy payment delays and bounced cheques (§2.8; about 972,000 bounced cheques per year in Morocco, `spec/appendices/01-review-history.md` (research notes)); withholding documents for unpaid fees: a common practice but a source of disputes and now legally risky (2020 summary-proceedings rulings with daily penalties; Law 59.21: fines up to 10,000 DH for refusing to issue documents, `spec/appendices/01-review-history.md` (research notes)); no group-level view of arrears without manual Excel consolidation (§2.11). |
+| Target experience | The director opens the day's financial dashboard: the previous day's payments from every source, arrears by site, reminders already sent automatically; the aged balance sorts accounts by age; parents pay via Fatourati from their bank, an ATM, a wallet, or a cash agent (32 banks and payment institutions, over 25,000 points, `spec/appendices/01-review-history.md` (research notes)) and reconciliation is daily; every reminder, every discount approval is tracked. |
+| Version | Core finance (payment schedules, payments, numbered receipts, arrears, in-app and SMS reminders), **cheque lifecycle** (BEH-ZS-162), sibling discount, account statement, payment voiding via a reversal entry: MVP (§12, ADR-ZS-041, ADR-ZS-061); aged balance, cash sessions, compliant invoices, negotiated discounts and bursaries, postal mail: V1 (§12); Fatourati from V1 (ADR-ZS-031, which overrides the "later version" wording in §7.7 and §12); card with a stored card and direct debits: V2, outside this journey (ADR-ZS-031). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-004 | Day started | Si Abdellah, group accountant | Reviewing the day's financial section: the previous day's payments from every source (cash, cheques, transfers, online), cash-session discrepancies by site | Cash position for the day known, discrepancies flagged | MVP (payments); V1 (cash sessions) |
+| JNY-ZS-004 | Monthly installments due | Si Abdellah | Reviewing the aged balance by site and consolidated: age brackets, top debtor accounts by financially responsible parent, by class and level (§7.7) | Priority accounts objectively identified | V1 |
+| JNY-ZS-004 | Automated reminders scheduled | System | Triggering graduated reminders on unpaid installments per the school's configured tiers: in-app and SMS notification in MVP, in the financially responsible parent's language and within the allowed sending windows (ADR-ZS-062 (ARB-21c)/e); WhatsApp, push, and mail in V1 (ADR-ZS-023, ADR-ZS-036, ADR-ZS-062 (ARB-21b)); bilingual templates (ADR-ZS-021); a parent who replied "STOP" no longer receives reminders but keeps attendance and security notifications (ADR-ZS-062 (ARB-21d)); each send tracks channel, status, and the cost charged to the school (§7.8) | Reminders sent with no manual action; reminder log viewable (event `ReminderSent`, `spec/domain-model.md` §7) | MVP (in-app, SMS); V1 (WhatsApp, push, mail) |
+| JNY-ZS-004 | Critical accounts after automated reminders | Si Abdellah, site secretariat | Targeted reminder: a call or message from the account record, tracked content (INV-ZS-090); a dated payment promise logged | Human contact documented; a committing due date logged | MVP |
+| JNY-ZS-004 | Discount or bursary request filed | Group accountant, Si Abdellah | Processing the request through the approval workflow: reason, amount, the account's payment history; approval, a reasoned refusal, or a counter-offer (§7.7) | Approval decision tracked with author and date; payment schedule recalculated | V1 |
+| JNY-ZS-004 | Fatourati rail connected (V1, ADR-ZS-031) | System, parents | Tracking Fatourati receivables: references generated per enrollment, payments received from banking channels, cash agents, and wallets, daily reconciliation with duplicate rejection (`spec/appendices/01-review-history.md` (research notes)); a `PaymentReceived` event on every payment (`spec/domain-model.md` §7) | Online payments automatically reconciled; receipts issued; front-desk workload reduced | V1 |
+| JNY-ZS-004 | Cheques in hand | Group accountant, secretariats | Tracking the cheque lifecycle: handed over, deposited, cleared, bounced, resolved (§7.7; `spec/appendices/01-review-history.md` (research notes); BEH-ZS-162, MVP — ADR-ZS-041); a specific reminder on a bounce; escalation to legal action decided at group level | Cheques tracked through to deposit; bounces handled with no manual log | MVP |
+| JNY-ZS-004 | Debtor account requesting a document | Secretariat, Si Abdellah | Compliance check: generating the enrollment certificate or leaving certificate is never blocked for unpaid fees (ADR-ZS-005, INV-ZS-016); arrears shown as an alert on the record and summarized in an account statement given to the **financially responsible parent only** (BEH-ZS-174, MVP — ADR-ZS-061 (ARB-20e)); requests and issuances historized in MVP, a written register and audit log in V1 (`spec/appendices/01-review-history.md` #16) | Documents issued per the ministry's position; financial dispute separated from document issuance | MVP (non-blocking, statement); V1 (audit log) |
+| JNY-ZS-004 | Closing an enrollment with a balance | Si Abdellah, group accountant | Tracking settlement: the financial account of a closed enrollment stays active until the balance is zero, the parent keeps access to their history (INV-ZS-062, INV-ZS-018); payment-conditional services limited to non-mandatory services, available from V2 (transport, canteen, activities, §7.7, §12) | Post-departure receivables tracked through to settlement or a legal decision (litigation handled outside the platform) | MVP (account survival); V2 (conditioning ancillary services) |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Day's financial dashboard**: Payments by source and by site, cash discrepancies, SMS/WhatsApp credit alerts; mobile view for review between sites.
+- **Aged balance (site and consolidated)**: Configurable age brackets, sorting by amount and age, filters by class and level, direct access to the account record.
+- **Financial account record**: Enrollment payment schedule, payments and receipts, reminders sent with channel and status, payment commitments, a persistent arrears alert, tracked history.
+- **Reminder-tier settings**: Tiers (days after due date), channels per tier, editable bilingual templates, message preview, activation per school.
+- **Discount and bursary approval**: Request queue by site, account and history detail, a reasoned decision, approval log.
+- **Fatourati tracking**: References generated, the day's payments, reconciliation anomalies, rail usage rate by site.
+- **Cheque tracking**: Wallet by status (handed over, deposited, cleared, bounced, resolved), upcoming due dates, deposit and resolution actions.
+- **Account arrears alert**: A non-blocking alert banner on the student record and at document issuance, an account statement generated in one action.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-062, INV-ZS-064, INV-ZS-090; ADR-ZS-021, ADR-ZS-023, ADR-ZS-024, ADR-ZS-005, ADR-ZS-009, ADR-ZS-031, ADR-ZS-036; G-15, G-16; INV-ZS-018, INV-ZS-016, INV-ZS-017; §2.8, §2.4, §7.7, §7.8, §12; H-09, H-11; `spec/appendices/01-review-history.md` #7, #16; `spec/appendices/01-review-history.md` (research notes), `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-278` (`features/journeys/dir/jny-zs-004-multi-site-collections.feature`).
+
+---
+
+### JNY-ZS-005 — Period closings and report card publication
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Produce, across the three sites, reliable and immutable bilingual report cards at every period close: compliance with the national continuous-assessment framework checked before closing (at least two assessments per subject per semester), tooled class councils, bulk publication to families with QR verification, then Massar grade exports with no double entry. |
+| Actors | Si Abdellah (closing, publication, oversight), site academic directors (council preparation), teachers (entry, `spec/journeys/04-part-time-teacher.md`), head supervisors (conduct, `spec/journeys/03-head-supervisor.md`), parents and students (viewing, `spec/journeys/05-multi-school-parent.md` to `spec/journeys/07-students-minor-and-adult.md`). |
+| Umbrella journey | JMP-ZS-006 (Grade entry, class council, report card publication, `spec/journeys/00-journey-map.md`). |
+| Trigger and seasonality | Two annual closings on a semester calendar (December–January and June); generation and publication peaks; continuous entry in steady state; import of certifying exam results in June (§7.5, §7.12); the trimester track would shift and triple the peak (ADR-ZS-035). |
+| Modules involved | `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/03-academic-structure-timetables.md` (periods, grading scales), `spec/behaviors/12-massar-regulatory-exports.md`, `spec/behaviors/06-documents-certificates.md` (QR), `spec/behaviors/08-communication-notifications.md`, `spec/behaviors/11-dashboards-reporting.md`. |
+| Current frustrations | Report cards assembled by hand in a word processor, copy-pasted from Excel, late delivery to families; continuous-assessment compliance checked by eye; grades re-entered in Massar from the same files (`spec/appendices/01-review-history.md` (research notes): fragile re-import of Massar Excel files); corrections lost, no proof of who validated what (§2.6, §2.11, H-04). |
+| Target experience | A week before closing, the compliance table shows, by class and subject, missing assessments and late entries; closing locks the grades; councils prepare remarks and decisions; generation produces signed, immutable bilingual report cards; publication notifies each family; a third party verifies a printed report card by QR code; Massar exports are derived from the same grades, validated before submission. |
+| Version | Entry, averages (ADR-ZS-058 rules), published immutable bilingual report cards, progressive grade publication, and dashboards: MVP (§12); council decision and remark entry with a simplified minutes (BEH-ZS-123), the annual transcript (BEH-ZS-128), and Massar exports (BEH-ZS-262, BEH-ZS-263, BEH-ZS-264, BEH-ZS-265): MVP wave 2 (ADR-ZS-041); tooled council preparation (BEH-ZS-122), verification QR (ADR-ZS-011, ADR-ZS-060), blocking compliance check, regulatory statistics, cumulative transcript: V1 (§12). Compliance check: a warning only in MVP; a blocking check at closing in V1 (carried by BEH-ZS-116). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-005 | Week before period closing; entry in progress | Si Abdellah, academic directors | Reviewing the pre-closing compliance table: number of assessments per subject and period compared against the framework minimum (at least two assessments per subject per semester, §7.12), missing entries per teacher, pre-closing alerts (URS-ZS-008); a non-blocking warning in MVP; blocked closing unless a reasoned exception in V1 (BEH-ZS-116) | Compliance gaps visible per site; reminders sent to late teachers | MVP (warning); V1 (blocking) |
+| JNY-ZS-005 | Late entries flagged | Academic directors, teachers | Reminding teachers via a targeted announcement or message (channels ADR-ZS-023); tracking pending entries by class and subject through to completion (teachers enter on web and mobile, §7.5) | Entry completion rate raised to the required level before closing | MVP |
+| JNY-ZS-005 | Completeness reached; councils held or pending | Site director | Closing the period per school: locking the period's grades (§7.5); event `PeriodClosed` (`spec/domain-model.md` §7) | Entries locked; no more direct edits to the period's grades | MVP |
+| JNY-ZS-005 | Period closed; results computed | Class councils, academic directors | Holding councils: entering general remarks, end-of-period and end-of-year decisions, a simplified minutes (BEH-ZS-123, MVP wave 2 — ADR-ZS-041); tooled preparation (per-student file, situations) in V1 (BEH-ZS-122) (§7.5) | Councils documented; remarks integrated into the period results (`PeriodResult`) | MVP (wave 2: decisions, remarks, simplified minutes); V1 (tooled preparation) |
+| JNY-ZS-005 | Results validated | System, Si Abdellah | Bulk generation of bilingual report cards (FR/AR, ADR-ZS-021) with the school's seal and signature; MVP calculation rules applied (an unexcused absence counts as 0 by default, scales rebased to 20, ungraded subjects excluded and marked "NG", rank within the current class, rank exclusion via a flag — ADR-ZS-058); every published report card is fixed (version, fingerprint, signatory, date), any correction creates a new version marked "superseded", with no exception or grace period (INV-ZS-085, ADR-ZS-020, INV-ZS-015, ADR-ZS-058 (ARB-17g)); verification QR added in V1 (ADR-ZS-011, ADR-ZS-060) | Report cards generated and immutable; performance held: generation under 3 s per report card, publication for a 2,000-student school under 10 minutes (§10) | MVP (immutable report cards); V1 (QR) |
+| JNY-ZS-005 | Report cards generated | Si Abdellah | Bulk publication to families per school; publication notification (`ReportCardPublished` event; in MVP, in-app and SMS in each recipient's language, general push and WhatsApp in V1, ADR-ZS-023/ADR-ZS-036, ADR-ZS-062); the school can also publish grades progressively before the report card (BEH-ZS-129, MVP, ADR-ZS-058 (ARB-17f)); publication log | Families notified; report cards viewable on the parent and student portals (permanent read access, INV-ZS-080); adult student in control of her own access (INV-ZS-052, ADR-ZS-001, MVP — ADR-ZS-051) | MVP |
+| JNY-ZS-005 | Correction needed after publication | Site director, Si Abdellah | Correcting via a new version: the old version stays viewable marked "superseded", the new one carries its own fingerprint and QR code (INV-ZS-085, INV-ZS-015) | Error corrected without destroying the history; full version traceability | MVP (versioning); V1 (QR on new versions) |
+| JNY-ZS-005 | A printed report card in circulation | Third-party verifier (employer, another school, an administration) | Verifying the QR code through the public verification service: the document's authenticity and version confirmed | A printed document authenticable without contacting the school | V1 |
+| JNY-ZS-005 | Period closed; final grades | Si Abdellah, secretariats | Generating Massar exports of the lists and continuous-assessment grades by subject, class, and semester, in the format of the Massar module's import files (H-04: no API, file channel only; BEH-ZS-262, BEH-ZS-263, BEH-ZS-264, BEH-ZS-265, MVP wave 2 — ADR-ZS-041); for the trimester track, a period-to-Massar-semester correspondence table configured by the school, with semester averages recalculated from dated grades (ADR-ZS-058 (ARB-17h)); a validation check before submission, since file re-import is fragile (`spec/appendices/01-review-history.md` (research notes)); submission by the administration then entry into Massar outside ZSchool | Double entry eliminated: grades entered once feed report cards and exports; an export log produced | MVP (wave 2) |
+| JNY-ZS-005 | Year end; certifying exam results published (July) | Secretariats, Si Abdellah | Entering or importing the ministry's results (certifying exams 6AP, 3AC, baccalaureate) into student records (§7.5, §7.12; manual entry BEH-ZS-120 MVP, import with a report BEH-ZS-121 V1); checking the weightings configured per level (baccalaureate 25/25/50; 3AC 30/30/40; 6AP 50% continuous assessment, 25% school exam, 25% provincial exam, `spec/appendices/01-review-history.md` (research notes), wording ADR-ZS-059); updating "undetermined" decisions entered at the June rollover (ADR-ZS-058 (ARB-17i)); annual report cards and annual transcripts produced | Certifying results integrated; complete records for rollover decisions (JNY-ZS-002) and post-baccalaureate applications (annual transcripts MVP wave 2, cumulative transcripts V1, §7.5) | MVP (entry, annual transcript in wave 2); V1 (import with report, cumulative transcript) |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Pre-closing compliance table**: A classes × subjects matrix with an assessment counter, a minimum threshold, status (compliant, insufficient), a list of missing entries per teacher.
+- **Period closing**: A per-school closing checklist, a summary of any blocking checks, the director's confirmation, closing history.
+- **Class council console**: Per-student file (averages, absences, conduct, remarks), decision entry, minutes generated.
+- **Report card generation and publication console**: School × period selection, generation counters, real-time progress, a publish button, a publication log with timestamps.
+- **QR verification**: A public verification page (scan or enter the reference), the authenticity result, the current version, and a "superseded" note where applicable.
+- **Massar exports**: Subject × class × semester selection, a preview of the generated file, a validation report (columns, formats, missing values), an export log.
+- **Publication and version log**: Per-student history of report card versions with fingerprint, signatory, and correction reason.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-052, INV-ZS-078, INV-ZS-080, INV-ZS-081, INV-ZS-085; ADR-ZS-020, ADR-ZS-021, ADR-ZS-023, ADR-ZS-001, ADR-ZS-035, ADR-ZS-036; G-12, G-19; INV-ZS-034, INV-ZS-015, INV-ZS-014; §2.6, §7.5, §7.12, §10, §12; H-04, H-16; `spec/appendices/01-review-history.md` #3, #4; `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-279` (`features/journeys/dir/jny-zs-005-period-closings-and-report-cards.feature`).
+
+---
+
+### JNY-ZS-006 — Managing an inter-site transfer and a student's departure
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Handle mobility cleanly: an internal transfer between two group sites on the same global identity, with consent and a shared scope chosen by the legal tutor; a departure to a school outside ZSchool with a secure exit dossier; non-blocking balances, certificates issued, complete legal records. |
+| Actors | Any legal guardian, the custodian, or the adult student (initiation), legal tutor or adult student (signature and consent; required signer, INV-ZS-066, ADR-ZS-063), Si Abdellah and site directors (origin validation, acceptance or reasoned refusal of an arrival, INV-ZS-068 conflict arbitration), secretariats (issuing, closing), parents (information). |
+| Umbrella journey | JMP-ZS-009 (Inter-school transfer within ZSchool and exit dossier outside ZSchool, `spec/journeys/00-journey-map.md`). |
+| Trigger and seasonality | One-off throughout the year, heavily concentrated in June–September (relocations, moves, streaming decisions, §2.11). |
+| Modules involved | `spec/behaviors/09-transfers-mobility.md`, `spec/behaviors/01-administration-onboarding-subscription.md` (identities), `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/07-finance-billing-collections.md` (balance, statement), `spec/behaviors/12-massar-regulatory-exports.md` (transfer log). |
+| Current frustrations | Departures discovered late or with no trace; records copied by hand for the receiving site; leaving certificates withheld for unpaid fees, a practice that causes disputes and is now legally risky (2020 summary-proceedings rulings, including one in Tangier with a 500 DH per-day penalty; Law 59.21: fines up to 10,000 DH, `spec/appendices/01-review-history.md` (research notes)); no trace of consents between sites of the same group (§2.11). |
+| Target experience | A transfer request handled in one sitting: identity kept (no new record), a shared scope chosen and logged, origin validation with a non-blocking balance check, a leaving certificate generated, the receiving enrollment created at the destination site, the payment schedule at the receiving site and the prior balance tracked at the origin site; for a departure outside ZSchool, a bilingual PDF exit dossier accessible via a time-limited secure link with a QR code. |
+| Version | A simple transfer between two ZSchool schools with full statuses (initiated, validated by the origin, accepted by the destination, activated, refused, cancelled, expired — ADR-ZS-063), the PDF exit dossier, the Massar transfer reference (BEH-ZS-039), and arrival from a school outside ZSchool (declared prior history): MVP (§12); the time-limited secure link with QR (ADR-ZS-032), the full audit log, and bulk transfers when a school closes: V1 (§12; the Massar ministerial procedure stays outside ZSchool, §7.9). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-006 | A family wanting to move a student from one group site to another (e.g. preschool to primary, or a move) | Legal guardian, custodian, or adult student (initiation), secretariat | Filing the transfer request: from the parent portal or at the front desk; naming the receiving school (in the group or outside it, via the minimal directory); identifying the student by their existing global identity (INV-ZS-054; no new identity will be created, INV-ZS-023); the request waits for the legal tutor's (or adult student's) signature before validation (ADR-ZS-063) | Request "initiated" with the requester, origin, and destination; the tutor's signature required | MVP |
+| JNY-ZS-006 | Request signed | Legal tutor (or adult student) | Choosing the shared scope: default transfer profile (identity, Massar code, schools attended, years, levels and year-end decisions, official documents; detailed grades, absences, and discipline require explicit sharing; health never automatic, INV-ZS-083, INV-ZS-022; intra-group transfer: same default profile, ADR-ZS-063); consent logged with its author, bounded and revocable (INV-ZS-012; events `ConsentGranted`/`ConsentRevoked`) | Scope consented to and tracked; no data crosses outside this scope (INV-ZS-082) | MVP (default); V1 (fine-grained consent management) |
+| JNY-ZS-006 | Scope consented to | Origin site director | Origin validation: balance check (an alert and account statement to the financially responsible parent, never blocking, ADR-ZS-005, INV-ZS-016), returning school equipment, a leaving certificate generated and signed (§7.9); the origin can only refuse for a missing tutor signature, never for a financial reason (ADR-ZS-063); in case of a conflict between parents, arbitration by the school respecting the recorded qualities (INV-ZS-065, INV-ZS-068, INV-ZS-027) | Status "validated by the origin", reasoned and dated; leaving certificate prepared | MVP |
+| JNY-ZS-006 | Origin validation recorded | Receiving site director, system, secretariats | Acceptance by the destination (or a reasoned refusal: capacity, unauthorized cycle, incomplete file; status "refused", the origin stays ACTIVE); at the effective date, **activation** in one transaction: closing the origin enrollment to TRANSFERRED with a reason and date and activating the receiving enrollment on the same identity (INV-ZS-060, INV-ZS-007, INV-ZS-023); with no activation within 30 days of validation, the request **expires**, the origin stays ACTIVE, and both parties are notified; the tutor may cancel before activation; a departure with an effective date of "next start of year" closes the year as COMPLETED (ADR-ZS-044 (ARB-03c), ADR-ZS-063); event `TransferValidated` (`spec/domain-model.md` §7) | Transfer materialized: origin closed and destination active simultaneously, a single identity kept; no student left without an active enrollment | MVP |
+| JNY-ZS-006 | Receiving enrollment created | Receiving site secretariat | Onboarding at the destination: class assignment (historized where applicable, INV-ZS-061), the receiving site's payment schedule and fee schedule; the prior balance stays tracked by the origin site's financial account until settled (INV-ZS-062, INV-ZS-018); documents shared per the consented scope made available to the destination | Student operational at the receiving site; both sites' accounting kept separate and accurate | MVP |
+| JNY-ZS-006 | Transfer validated | Secretariat | Recording the Massar transfer reference (field and attachment, BEH-ZS-039, MVP; the ministerial procedure carried out outside ZSchool through the parent's Massar portal and provincial validation, `spec/appendices/01-review-history.md` (research notes)); feeding the transfer log with Massar references (§7.12, V1) | Official procedure tracked by its reference; log viewable | MVP (reference); V1 (log) |
+| JNY-ZS-006 | Departure to a school outside ZSchool | Secretariat, Si Abdellah | Generating the bilingual PDF exit dossier (report cards, annual transcript, year-end decision, official documents within scope — MVP wave 2 for the transcript and decision, ADR-ZS-041); made available via a time-limited secure link with a verification QR code (ADR-ZS-032, V1); the account statement delivered separately to the financially responsible parent only, never included in the dossier given to another guardian (ADR-ZS-061 (ARB-20e)) | Complete, secure exit dossier; clean closing | MVP (PDF); V1 (secure link, QR) |
+| JNY-ZS-006 | Transfers and departures handled | Si Abdellah | Reviewing the group's consolidated arrivals-and-departures log: origins, destinations, reasons, Massar references; per-site retention indicators in reporting | Group mobility visible and steered; informed retention decisions | V1 |
+| JNY-ZS-006 | Student arriving from a school outside ZSchool (the majority case at launch) | Receiving site secretariat, legal tutor | Entering the declared prior history (ADR-ZS-063; detail in JNY-ZS-020): previous school, years, levels, year-end decisions, documents (a paper leaving certificate, transcripts); items marked "unverified" until an attachment is provided; no disciplinary or health data brought over | Student history usable for ESISE and the school passport, with no duplicate identity | MVP |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Transfer requests**: A queue by status (initiated, awaiting the tutor's signature, validated by the origin, accepted by the destination, activated, refused, cancelled, expired), filters by site and period, access to the request detail, an expiry countdown.
+- **Transfer validation wizard**: Summary of the student and the requested scope, a balance check with a non-blocking alert, an equipment-return checklist, generating the leaving certificate, a reasoned confirmation.
+- **Shared-scope selection**: The parent-side view (portal) listing the default profile's data categories, explicit-extension checkboxes, a summary before consent, a consent trail.
+- **Leaving certificate**: Bilingual preview, numbering, seal and signature, QR code, issuance history.
+- **Exit dossier**: Dossier composition (documents included), bilingual PDF generation, creating the secure link with a duration, a log of link access.
+- **Group transfer log**: Timeline of transfers and departures with Massar references, filters by site, export.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-052, INV-ZS-054, INV-ZS-060, INV-ZS-061, INV-ZS-062, INV-ZS-065, INV-ZS-066, INV-ZS-068, INV-ZS-073, INV-ZS-082, INV-ZS-083, INV-ZS-084; ADR-ZS-018, ADR-ZS-019, ADR-ZS-001, ADR-ZS-005, ADR-ZS-032; G-08; INV-ZS-007, INV-ZS-018, INV-ZS-027, INV-ZS-022, INV-ZS-012, INV-ZS-024, INV-ZS-016, INV-ZS-023; §6.9, §7.7, §7.9, §7.12, §12; `spec/appendices/01-review-history.md` #2, #16; `spec/appendices/01-review-history.md` (research notes), `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-280` (`features/journeys/dir/jny-zs-006-inter-site-transfer.feature`).
+
+---
+
+### JNY-ZS-007 — Administering the group's roles, access, and subscription
+
+#### Journey profile
+
+| Field | Value |
+|---|---|
+| Business objective | Ensure that every staff member across the three sites has the right role, the right scope, and traceable access, and that the group's subscription (active students, consumables, lifecycle) is under control: strengthened authentication, affiliations kept current, immediate access removal on departure, communication costs visible. |
+| Actors | Si Abdellah (group administrator and tenant director, §8.1), site directors, group accountant (consumables), affected staff (accepting affiliations), ZSchool (tracked support G-32, SaaS billing). |
+| Umbrella journey | Extends JMP-ZS-003 (onboarding sets up roles and the subscription; this journey covers their ongoing administration). |
+| Trigger and seasonality | Continuous: staff arrivals and departures all year; a rights review at the start of the year; monthly usage tracking (SaaS billing from September to June, ADR-ZS-009). |
+| Modules involved | `spec/behaviors/01-administration-onboarding-subscription.md`, `spec/behaviors/10-teacher-career-network.md` (teaching affiliations), `spec/behaviors/11-dashboards-reporting.md` (usage), `spec/cross-cutting/01-permissions.md` (the detailed `PER-…` matrix carried by this file). |
+| Current frustrations | Accounts and passwords shared across secretariats; "all or nothing" rights in local software; no log of who changed what; staff departing with access left open; opaque SMS bills with no per-site breakdown (§2.1, §2.11). |
+| Target experience | Roles assigned per person and per site from editable template roles (fine-grained permissions by module and scope); every write and every sensitive view logged; immediate access removal on closing an affiliation; the group's SaaS usage and invoice readable by site with threshold alerts; ZSchool support reachable only through an audited ticket. |
+| Version | Affiliations, template roles and fine-grained permissions, MFA for leadership, administration, and accounting roles (optional for teachers and supervisors, 90-day trusted devices, ADR-ZS-066 (ARB-25l)), support access on a ticket with the director's approval (ADR-ZS-066 (ARB-25k)), historization of writes: MVP (§12); an exportable audit log, formalized compliance, "public-sector outside teacher" status and the AREF cap (BEH-ZS-231, BEH-ZS-232): V1 (§12; INV-ZS-019); the full subscription lifecycle including termination (export, 90-day read-only, deletion at 12 months): V1 (INV-ZS-045, ADR-ZS-004). |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-007 | A staff member joins (teacher, secretary, supervisor…) | Si Abdellah, site director | Creating the affiliation (`SchoolMembership`): invitation by phone (ADR-ZS-022), roles and contract type (permanent, part-time, trainee; qualification declared to the employer for ESISE, ADR-ZS-064 (ARB-23b)), activation after both parties accept (INV-ZS-070, INV-ZS-031); simultaneous multi-site, multi-role affiliations allowed (INV-ZS-069, INV-ZS-009); in V1, a "public-sector outside teacher" status with AREF authorization tracking and a binary over-the-8-hour-cap alert if the teacher has consented to share their total hours (BEH-ZS-231, BEH-ZS-232, ADR-ZS-064 (ARB-23a), `spec/appendices/01-review-history.md` #18) | Staff authorized to the right scope; contract statuses tracked | MVP; V1 (public-sector outside teachers) |
+| JNY-ZS-007 | Affiliation active; specific permission needs | Si Abdellah | Adjusting roles: editable template roles made of fine-grained permissions by module and scope (class, level, school; INV-ZS-089, INV-ZS-041); checking least privilege (INV-ZS-091) and multiple contexts (a Site A teacher who is a parent at Site B; INV-ZS-088, INV-ZS-040) | Precise, reviewable permissions, with no shared generic account (INV-ZS-063, INV-ZS-030) | MVP |
+| JNY-ZS-007 | Suspected error, dispute, or audit | Si Abdellah | In MVP, reviewing the record-level historization of writes (author, timestamp, before/after value — ADR-ZS-066 (ARB-25j)); in V1, an immutable audit log of writes and sensitive views with author, context, and timestamp (INV-ZS-090, INV-ZS-019) and exporting the log for a dispute or audit (§9; 5-year retention, ADR-ZS-003) | Traceable proof of actions taken; exportable in V1 | MVP (historization); V1 (audit log) |
+| JNY-ZS-007 | A staff member's departure or end of contract | Site director, Si Abdellah | Closing the affiliation: immediate access removal (INV-ZS-071, INV-ZS-010); data produced kept at the school and attributed to its author; event `AffiliationClosed` (`spec/domain-model.md` §7) | No residual access; data assets intact | MVP |
+| JNY-ZS-007 | Accounts to secure (onboarding, an incident, hardening) | Si Abdellah | Administering account security: MFA mandatory for leadership, administration, accounting, and system administrator roles, optional for teachers and supervisors, 90-day trusted devices (§9, ADR-ZS-066 (ARB-25l)); front-desk number change with identity verification and leadership approval (ADR-ZS-049, BEH-ZS-020); the local system administrator can neither create nor reset a leadership-role account (ADR-ZS-066 (ARB-25m)); reviewing sessions and devices; on an incident, ZSchool support only intervenes on a ticket with the director's explicit in-app approval, a bounded duration, and historization (G-32, ADR-ZS-066 (ARB-25k)) | Accounts protected; every support access tracked | MVP |
+| JNY-ZS-007 | Every month from September to June | Group accountant, Si Abdellah | Tracking the group's subscription: active students counted per school and in total (billing unit, ADR-ZS-024; a single plan at 5 MAD per active student per month, i.e. 9,000 MAD per month for 1,800 students, ADR-ZS-009, §11); SMS and WhatsApp bundles and storage (consumables) with per-school counters and threshold alerts; monthly SaaS invoices in MAD (see OQ-ZS-195 for where group bundles are purchased) | SaaS bill understood and anticipated; no interruption in notification credit | MVP (basic counters); V1 (consolidated per-site tracking) |
+| JNY-ZS-007 | Deteriorating situation (unpaid SaaS bill, termination decided) | Si Abdellah | Managing the subscription lifecycle: trial, active, overdue (read-only mode after a delay), termination: a full data export given to the school, read-only for 90 days, operational data deleted at 12 months, global identities and access to published documents maintained (ADR-ZS-004, INV-ZS-045; event `SubscriptionSuspendedOrTerminated`) | Continuity of personal rights guaranteed even on exit; known, tracked deadlines | V1 |
+
+#### Screens involved (names, no `ECR` identifier)
+
+- **Staff affiliations**: List by site with roles, contracts, statuses (invited, active, suspended, terminated), dates, a filter by role; phone-based invitations; change history.
+- **Roles and permissions**: Catalog of template roles, permission detail by module and scope, duplicating and editing a role, a per-person summary matrix.
+- **Audit log**: Search by author, period, action type, and school; timestamped detail; log export.
+- **Subscription and usage**: Subscription status, active students per school and total, SMS/WhatsApp and storage counters with thresholds, monthly SaaS invoices, history.
+- **Account invitations**: Queue of pending invitations, a reminder, cancellation; activation log.
+
+#### Rules and decisions cited
+
+(→ INV-ZS-063, INV-ZS-069, INV-ZS-070, INV-ZS-071, INV-ZS-088, INV-ZS-089, INV-ZS-090, INV-ZS-091; ADR-ZS-016, ADR-ZS-022, ADR-ZS-024, ADR-ZS-028, ADR-ZS-003, ADR-ZS-004, ADR-ZS-009; G-05, G-06, G-24, G-32; INV-ZS-030, INV-ZS-009, INV-ZS-031, INV-ZS-010, INV-ZS-040, INV-ZS-041, INV-ZS-019, INV-ZS-045; §7.1, §8, §9, §11, §12; `spec/appendices/01-review-history.md` #18; `spec/appendices/01-review-history.md` (research notes))
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-281` (`features/journeys/dir/jny-zs-007-administering-roles-and-subscription.feature`).
+
+---
+
+### JNY-ZS-008 — Tooled admission: application file, tests, waitlist, decision (V1)
+
+#### Journey profile
+
+| Attribute | Value |
+|---|---|
+| Business objective | Tool up JMP-ZS-001 (variant b) of admission for a selective group: application file submitted online or at the front desk, documents checked, admission tests scheduled, a waitlist by level capacity, a tracked and notified site-leadership decision, opening pre-enrollment. |
+| Actors | Site directors (decision), Si Abdellah (admission policy, capacities), secretariats (files, summons), parents and legal tutor (submission, documents), applicants. |
+| Umbrella journey | JMP-ZS-001, variant b (`spec/journeys/00-journey-map.md`). |
+| Trigger and seasonality | Admission campaign from March to September; bottlenecks in July–August. |
+| Modules involved | `spec/behaviors/02-admissions-enrollment-reenrollment.md` (BEH-ZS-021 to BEH-ZS-025), `spec/behaviors/08-communication-notifications.md` (summons, decisions), `spec/behaviors/07-finance-billing-collections.md` (application fee, deposit). |
+| Current frustrations | Paper files, tests scheduled by phone, waitlists kept on a spreadsheet, untracked decisions, families called back one by one. |
+| Target experience | One CANDIDATE file per student, completeness visible, a tracked test summons, a reasoned decision in one action, a waitlist ordered by level capacity (the sum of class capacities, ADR-ZS-065 (ARB-24b)), an automatic move to PRE-ENROLLED once the deposit is paid; cancellation possible to the CANCELLED terminal state (ADR-ZS-044 (ARB-03b)). |
+| Version | V1 (§12 V1: admissions; CANDIDATE and CANCELLED states). In MVP, admission follows the JMP-ZS-001, variant a front-desk variant (JNY-ZS-011) with an implicit leadership decision. |
+
+#### Steps
+
+| No. | Starting condition | Actor | Action | Expected outcome | Version |
+|---|---|---|---|---|---|
+| JNY-ZS-008 | Admission campaign open | Si Abdellah, site directors | Configuring the admission policy per site: open levels, capacities per level, required documents, any tests, application fees | Policy published on the school's public portal | V1 |
+| JNY-ZS-008 | Interested family | Parent, secretariat | Submitting the application file online or at the front desk (BEH-ZS-021): identity matched (INV-ZS-055), documents submitted and checked (BEH-ZS-022), declared prior history (JNY-ZS-020); enrollment created in the CANDIDATE state | CANDIDATE file with visible completeness | V1 |
+| JNY-ZS-008 | Complete file | Secretariat, site director | Organizing admission tests (BEH-ZS-023): sessions, tracked summons with read receipts, results entered | Candidates tested, results recorded | V1 |
+| JNY-ZS-008 | Results available; level capacity reached | System, site director | Ordered waitlist (BEH-ZS-024); a place automatically freed when a pre-enrollment is cancelled; families notified of their rank | Transparent waitlist | V1 |
+| JNY-ZS-008 | Decision made | Site director | Recording the admission decision (BEH-ZS-025): admitted (opening pre-enrollment, deposit expected), rejected (an internal reason, a neutral notification), waitlisted; cancelling an application to the CANCELLED state, keeping the history (ADR-ZS-044 (ARB-03b)) | Decision tracked and notified; move from CANDIDATE to PRE-ENROLLED on payment of the deposit | V1 |
+
+#### Acceptance criteria (critical flows)
+
+**Acceptance criteria**: `@REQ-ZS-282` (`features/journeys/dir/jny-zs-008-tooled-admission.feature`).
+
+---
+
+## Open questions
+
+Open questions for this journey (OQ-ZS-191 through OQ-ZS-195, including the escalated baseline-update items OQ-ZS-191/192/193) are consolidated in `spec/open-questions.md` (built in Phase 6 of the migration), not tracked locally in this file.
+
+## Traceability
+
+Full cross-reference coverage for this journey is consolidated in `spec/traceability.md` (built in Phase 7 of the migration).

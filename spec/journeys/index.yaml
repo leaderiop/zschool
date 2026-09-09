@@ -11,3 +11,8 @@ entries:
     title: "End-to-End Journey Map"
     status: "Draft"
     origin: "PC-01..11"
+  - id: "JNY-ZS-001..008"
+    file: "01-school-group-director.md"
+    title: "Detailed Journeys: Si Abdellah, School Group Director (DIR)"
+    status: "Draft"
+    origin: "PJ-DIR-01..08"
