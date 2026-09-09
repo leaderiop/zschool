@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZSchool — Organizing BDD tests and Gherkin specs — Reference brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f1e7;
+  --paper-deep:#efe7d7;
+  --panel:#fbf8f1;
+  --ink:#1d1710;
+  --ink-soft:#5d5243;
+  --ink-faint:#8a7c66;
+  --accent:#b4491f;
+  --accent-deep:#8c3312;
+  --green:#21694b;
+  --red:#a03a2c;
+  --gold:#c79a3b;
+  --line:#d9cdb4;
+  --line-soft:#e7dcc6;
+  --code-bg:#241c12;
+  --code-ink:#f0e6d2;
+  --code-dim:#a89575;
+  --code-green:#8fc7a5;
+  --code-amber:#e5b567;
+  --code-red:#e08c78;
+  --code-blue:#9db8d9;
+  --serif:"Newsreader", Georgia, "Times New Roman", serif;
+  --display:"Fraunces", "Newsreader", Georgia, serif;
+  --mono:"IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--paper);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(180,73,31,.06), transparent),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(29,23,16,.012) 2px 4px);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:1.06rem;
+  line-height:1.72;
+  font-optical-sizing:auto;
+}
+::selection{background:rgba(180,73,31,.22)}
+
+/* ---------- layout ---------- */
+.shell{max-width:1240px;margin:0 auto;padding:0 2.5rem}
+.grid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:3.2rem;align-items:start}
+@media(max-width:1020px){.grid{grid-template-columns:1fr}.toc{display:none}}
+main{padding-bottom:6rem;min-width:0}
+section{scroll-margin-top:2rem;margin-top:4.5rem}
+
+/* ---------- cover ---------- */
+.cover{padding:4.2rem 0 2.8rem;border-bottom:3px double var(--line)}
+.kicker{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--accent);display:flex;align-items:center;gap:.9rem;margin-bottom:1.4rem;
+}
+.kicker::before{content:"";width:2.6rem;height:1px;background:var(--accent)}
+h1{
+  font-family:var(--display);font-weight:560;font-size:clamp(2.1rem,4.6vw,3.35rem);
+  line-height:1.08;letter-spacing:-.015em;margin:0 0 1.1rem;max-width:22ch;
+}
+h1 em{font-style:italic;color:var(--accent-deep)}
+.cover p.lede{font-size:1.22rem;line-height:1.6;color:var(--ink-soft);max-width:62ch;margin:0 0 2.2rem}
+.meta{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0;
+  border:1px solid var(--line);background:var(--panel);
+}
+.meta>div{padding:.75rem 1.1rem;border-right:1px solid var(--line-soft)}
+.meta>div:last-child{border-right:none}
+.meta dt{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 .2rem}
+.meta dd{margin:0;font-size:.92rem;font-weight:500}
+.zellige{height:7px;margin-top:2.4rem;background:
+  repeating-linear-gradient(90deg,
+    var(--accent) 0 14px, transparent 14px 22px,
+    var(--gold) 22px 30px, transparent 30px 38px,
+    var(--green) 38px 46px, transparent 46px 60px);
+  opacity:.75}
+
+/* ---------- toc ---------- */
+.toc{position:sticky;top:2rem;padding-top:4.6rem;font-size:.86rem}
+.toc h2{font-family:var(--mono);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 1rem}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.45rem 0}
+.toc a{color:var(--ink-soft);text-decoration:none;display:flex;gap:.6rem;align-items:baseline;line-height:1.35}
+.toc a:hover{color:var(--accent)}
+.toc a .n{font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);min-width:1.35rem}
+.toc a.active{color:var(--accent-deep);font-weight:600}
+.toc a.active .n{color:var(--accent)}
+
+/* ---------- headings ---------- */
+h2{
+  font-family:var(--display);font-weight:520;font-size:1.9rem;line-height:1.15;
+  letter-spacing:-.01em;margin:0 0 1.3rem;padding-top:.35rem;
+  display:flex;gap:1rem;align-items:baseline;
+}
+h2 .secno{
+  font-family:var(--mono);font-size:.82rem;font-weight:500;color:var(--accent);
+  letter-spacing:.08em;flex:none;transform:translateY(-.35rem);
+}
+h3{font-family:var(--display);font-weight:560;font-size:1.28rem;margin:2.6rem 0 .7rem;letter-spacing:-.005em}
+h3 .tagchip{vertical-align:middle;margin-left:.5rem;transform:translateY(-.15rem)}
+h4{font-family:var(--mono);font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin:2rem 0 .6rem}
+p{margin:0 0 1.05rem;max-width:74ch}
+ul,ol.flow{max-width:74ch;margin:0 0 1.1rem;padding-left:1.35rem}
+li{margin:.3rem 0}
+strong{font-weight:640}
+a{color:var(--accent-deep)}
+small{color:var(--ink-faint)}
+.rule{border:none;border-top:1px solid var(--line);margin:2.6rem 0}
+
+/* ---------- chips & badges ---------- */
+.chip{
+  display:inline-block;font-family:var(--mono);font-size:.66rem;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;padding:.18rem .55rem;border:1px solid;
+  border-radius:2px;vertical-align:middle;white-space:nowrap;
+}
+.chip.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 45%,transparent);background:color-mix(in srgb,var(--green) 8%,transparent)}
+.chip.bad{color:var(--red);border-color:color-mix(in srgb,var(--red) 45%,transparent);background:color-mix(in srgb,var(--red) 8%,transparent)}
+.chip.lang{color:var(--accent-deep);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.chip.tag{color:#6b5b23;border-color:color-mix(in srgb,var(--gold) 60%,transparent);background:color-mix(in srgb,var(--gold) 14%,transparent);text-transform:none}
+sup a{font-family:var(--mono);font-size:.62rem;text-decoration:none;color:var(--accent);padding:0 .1rem}
+sup a:hover{text-decoration:underline}
+
+/* ---------- code blocks ---------- */
+pre{
+  font-family:var(--mono);font-size:.815rem;line-height:1.62;
+  background:var(--code-bg);color:var(--code-ink);
+  padding:1.1rem 1.3rem;overflow-x:auto;margin:1.1rem 0 1.4rem;
+  border-left:3px solid var(--accent);
+  tab-size:2;
+}
+pre.plain{border-left-color:var(--gold)}
+pre.good{border-left-color:var(--green)}
+pre.bad{border-left-color:var(--red)}
+pre .c{color:var(--code-dim);font-style:italic}
+pre .k{color:var(--code-amber);font-weight:500}
+pre .s{color:var(--code-green)}
+pre .t{color:var(--code-blue)}
+pre .e{color:var(--code-red)}
+code{
+  font-family:var(--mono);font-size:.82em;background:var(--paper-deep);
+  padding:.08em .38em;border-radius:3px;color:var(--accent-deep);
+}
+pre code{background:none;color:inherit;padding:0;font-size:inherit}
+.codetitle{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--code-dim);
+  background:var(--code-bg);margin:1.1rem 0 0;padding:.5rem 1.3rem .0rem;
+  text-transform:lowercase;
+}
+.codetitle + pre{margin-top:0}
+
+/* ---------- panels ---------- */
+.panel{border:1px solid var(--line);background:var(--panel);padding:1.3rem 1.5rem;margin:1.2rem 0 1.6rem}
+.panel.tint{background:color-mix(in srgb,var(--accent) 5%,var(--panel));border-left:3px solid var(--accent)}
+.panel .panel-h{font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-deep);margin:0 0 .6rem}
+
+/* ---------- ecosystem cards ---------- */
+details.eco{border:1px solid var(--line);background:var(--panel);margin:0 0 1.1rem;overflow:hidden}
+details.eco summary{
+  cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:1rem;
+  padding:1rem 1.4rem;user-select:none;
+}
+details.eco summary::-webkit-details-marker{display:none}
+details.eco summary .lang{
+  font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--paper);background:var(--ink-soft);padding:.3rem .6rem;flex:none;border-radius:2px;
+}
+details.eco summary .name{font-family:var(--display);font-weight:560;font-size:1.12rem;flex:1}
+details.eco summary .tools{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);white-space:nowrap}
+details.eco summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:1.2rem;flex:none;transform:translateY(.1rem)}
+details.eco[open] summary::after{content:"–"}
+details.eco summary:hover{background:color-mix(in srgb,var(--accent) 4%,var(--panel))}
+details.eco .body{padding:.4rem 1.4rem 1.5rem;border-top:1px dashed var(--line)}
+details.eco h4{margin-top:1.4rem}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.6rem;font-size:.9rem;background:var(--panel)}
+th{
+  font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  text-align:left;color:var(--paper);background:var(--ink-soft);padding:.6rem .8rem;vertical-align:bottom;
+}
+td{padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--paper-deep) 45%,transparent)}
+td code,th code{font-size:.86em}
+.tblwrap{overflow-x:auto}
+
+/* ---------- good / bad duos ---------- */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin:1.1rem 0 1.5rem}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+.duo .side{display:flex;flex-direction:column}
+.duo .lbl{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin:0 0 .45rem;display:flex;align-items:center;gap:.5rem}
+.duo .lbl::before{content:"";width:.95rem;height:.95rem;flex:none;border-radius:50%}
+.duo .side.good .lbl{color:var(--green)}.duo .side.good .lbl::before{border:2px solid var(--green);background:color-mix(in srgb,var(--green) 25%,transparent)}
+.duo .side.bad .lbl{color:var(--red)}.duo .side.bad .lbl::before{border:2px solid var(--red);background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--red) 20%,transparent) 0 3px,transparent 3px 6px)}
+.duo pre{margin:0;flex:1}
+
+/* ---------- tree annotation ---------- */
+.tree{position:relative}
+.tree .why{
+  font-family:var(--serif);font-size:.9rem;color:var(--code-dim);font-style:italic;
+}
+
+/* ---------- pyramid ---------- */
+.pyr{display:flex;flex-direction:column;align-items:center;gap:.45rem;margin:1.6rem 0 2rem}
+.pyr .row{display:flex;flex-direction:column;align-items:center}
+.pyr .band{
+  font-family:var(--mono);font-size:.74rem;color:var(--paper);padding:.55rem 1rem;text-align:center;
+  clip-path:polygon(4% 0,96% 0,100% 100%,0 100%);min-width:52%;
+}
+.pyr .band b{display:block;font-size:.8rem;letter-spacing:.06em}
+.pyr .band small{color:rgba(246,241,231,.75);font-size:.66rem}
+.pyr .b1{background:var(--accent-deep);min-width:34%}
+.pyr .b2{background:var(--accent)}
+.pyr .b3{background:color-mix(in srgb,var(--accent) 62%,var(--ink));min-width:66%}
+.pyr .b4{background:var(--ink);min-width:80%}
+.pyr .cap{font-size:.82rem;color:var(--ink-soft);max-width:58ch;text-align:center}
+
+/* ---------- flow / action plan ---------- */
+ol.flow{counter-reset:step;list-style:none;padding-left:0}
+ol.flow>li{
+  counter-increment:step;position:relative;padding:.55rem 0 .55rem 3.4rem;border-bottom:1px dashed var(--line-soft);
+}
+ol.flow>li::before{
+  content:counter(step,decimal-leading-zero);position:absolute;left:0;top:.5rem;
+  font-family:var(--mono);font-size:.95rem;font-weight:600;color:var(--accent);
+}
+ol.flow>li::after{content:"";position:absolute;left:1.05rem;top:2.3rem;bottom:-.6rem;width:1px;background:var(--line)}
+ol.flow>li:last-child::after{display:none}
+ol.flow b{font-weight:640}
+
+/* ---------- footer / sources ---------- */
+.sources{font-size:.84rem}
+.sources li{margin:.42rem 0;color:var(--ink-soft)}
+.sources li a{word-break:break-all}
+footer{border-top:3px double var(--line);margin-top:5rem;padding:2rem 0 3.5rem;color:var(--ink-faint);font-size:.82rem}
+footer .shell{display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff;font-size:10pt}
+  .toc{display:none}
+  .grid{grid-template-columns:1fr}
+  pre{background:#2b2216 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  details.eco{break-inside:avoid}
+  details.eco:not([open]) .body{display:block}
+  details.eco summary::after{display:none}
+  section{break-inside:auto}
+  h2,h3{break-after:avoid}
+  table,pre,.duo{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="shell cover">
+  <p class="kicker">ZSchool · Engineering brief · BDD</p>
+  <h1>Organizing <em>Gherkin</em> tests: a multi-ecosystem survey &amp; the chosen structure</h1>
+  <p class="lede">How major open-source projects organize their <code>.feature</code> specs — TypeScript, .NET, Java, Python, Go, Ruby, PHP — how to write a good Gherkin spec, and the <code>features/</code> structure proposed for ZSchool with <code>@effect-cucumber/vitest</code>.</p>
+  <dl class="meta">
+    <div><dt>Date</dt><dd>2026-09-09</dd></div>
+    <div><dt>Status</dt><dd>0.2 — English translation (2026-09-09); Gherkin convention updated to English</dd></div>
+    <div><dt>Foundation</dt><dd>STACK.md §8–§9 (BDD <code>@effect-cucumber/vitest</code>, <code>features/</code> at the monorepo root)</dd></div>
+    <div><dt>Related</dt><dd>prd/00-conventions.md · PRD-REVIEW-2026-09-09.md</dd></div>
+  </dl>
+  <div class="zellige" aria-hidden="true"></div>
+</header>
+
+<div class="shell grid">
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>Summary</a></li>
+    <li><a href="#s2"><span class="n">02</span>Method and scope</a></li>
+    <li><a href="#s3"><span class="n">03</span>Ecosystem survey</a></li>
+    <li><a href="#s4"><span class="n">04</span>Observed convergences</a></li>
+    <li><a href="#s5"><span class="n">05</span>Writing a good spec</a></li>
+    <li><a href="#s6"><span class="n">06</span>Anti-patterns</a></li>
+    <li><a href="#s7"><span class="n">07</span>ZSchool proposal</a></li>
+    <li><a href="#s8"><span class="n">08</span>Alternatives considered</a></li>
+    <li><a href="#s9"><span class="n">09</span>Action plan</a></li>
+    <li><a href="#s10"><span class="n">10</span>Sources</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ================================================================ 01 -->
+<section id="s1">
+  <h2><span class="secno">01</span>Summary</h2>
+  <p>Seven ecosystems, about a dozen reference projects (cucumber-*, Reqnroll, GitLab <small>(Cucumber era)</small>, Sylius, Moodle, VCR, godog, behave, webdriverio-boilerplate…) converge on the same invariants. The ZSchool structure follows directly from them; no invention is needed.</p>
+  <div class="panel tint">
+    <p class="panel-h">Proposed decisions</p>
+    <ol>
+      <li><strong>One single <code>features/</code> tree at the monorepo root</strong>, one subfolder per PRD module code (<code>adm</code>…<code>san</code>) — the "functional area, grouped by capability" split that wins the official Cucumber review<sup><a href="#src-38">38</a></sup> and already matches the PRD's own organization.</li>
+      <li><strong>One <code>.feature</code> file per <code>FR-…</code> requirement</strong> (the PRD's "Feature" block), never a file per scenario or per user story.</li>
+      <li><strong>Colocated pair</strong> <code>&lt;id&gt;-&lt;slug&gt;.feature</code> + <code>&lt;id&gt;-&lt;slug&gt;.steps.test.ts</code> — required by <code>@effect-cucumber/vitest</code>'s <code>loadFeature(import.meta.url)</code> and confirmed by every ecosystem's own conventions.</li>
+      <li><strong>Glue shared by domain concept</strong> under <code>features/support/</code> (<code>steps/</code>, <code>layers/</code>, <code>fixtures/</code>, hooks) via <code>defineSteps</code> — never step files that mirror a single <code>.feature</code> file.</li>
+      <li><strong>Traceability through tags</strong>: <code>@FR-FIN-03</code>, <code>@INV-18</code>, <code>@PER-04</code>, <code>@PJ-DIR-01</code>, version tags <code>@mvp</code>/<code>@v1</code>/<code>@v2</code> — with a CI gate that counts coverage (the effect-cucumber pattern, validated by a Moodle-style <code>.gherkin-lintrc</code>).</li>
+      <li><strong>Everything in standard English Gherkin</strong>: normalized keywords (<code>Feature</code>, <code>Background</code>, <code>Rule</code>, <code>Scenario Outline</code>…), declarative style aligned with the PRD's own vocabulary. English is the domain-expert language for this project per the product owner's 2026-09-09 instruction (<code>PROJECT.md</code> v1.2) — see the note at the top of §5.6 for what that changed in this report.</li>
+    </ol>
+  </div>
+  <pre class="plain"><span class="c"># The proposal at a glance — detail and rationale in §07</span>
+features/
+├─ fin/
+│  ├─ fin-03-installment-schedule.feature       <span class="c"># FR spec (PRD, verbatim)</span>
+│  └─ fin-03-installment-schedule.steps.test.ts <span class="c"># colocated glue pair</span>
+├─ cross-cutting/{per,i18n,hosting}/             <span class="c"># PER matrix, RTL/AR, data-residency</span>
+├─ journeys/                                     <span class="c"># PJ-* end to end (UAT stage)</span>
+└─ support/{steps,layers,fixtures}/hooks.ts      <span class="c"># glue shared by domain concept</span></pre>
+</section>
+
+<!-- ================================================================ 02 -->
+<section id="s2">
+  <h2><span class="secno">02</span>Method and scope</h2>
+  <p><strong>Scope.</strong> Only the organization of Gherkin specs (<code>.feature</code>) and the glue that exists solely for them (step definitions, hooks, support, fixtures): no unit-test layout, no CI beyond what enforces the structure.</p>
+  <p><strong>Evidence.</strong> Every tree cited is <em>verbatim</em> (captured via the GitHub contents API / git ls-tree on 2026-09-09) or taken from the tool's official documentation; sources are listed in §10. ZSchool's own constraints come from <code>STACK.md</code> §8–§9 (runner <code>@effect-cucumber/vitest</code> 0.4, English <code>.feature</code> files, an ephemeral Neon branch per run, scenarios = the PRD's own acceptance criteria) and from <code>prd/00-conventions.md</code> (English, exclusive <code>FR-&lt;MOD&gt;-NN</code> IDs…, ASCII naming).</p>
+  <p><strong>The decisive mechanical constraint.</strong> The chosen runner discovers nothing on its own: a test module calls <code>loadFeature(path)</code> at module scope, and the upstream repo's own convention resolves that path <em>relative to the module</em> via <code>import.meta.url</code> — so the spec and its glue form a <strong>colocated pair</strong><sup><a href="#src-9">9</a></sup>. This is the exact equivalent of the generated code-behind sitting <em>next to</em> the <code>.feature</code> file in Reqnroll<sup><a href="#src-16">16</a></sup>, or the <code>example.feature</code>+<code>example.spec.ts</code> colocation in vitest-cucumber<sup><a href="#src-8">8</a></sup>.</p>
+</section>
+
+<!-- ================================================================ 03 -->
+<section id="s3">
+  <h2><span class="secno">03</span>Ecosystem survey</h2>
+  <p>For each ecosystem: the canonical structure (official templates), what actually <em>forces</em> it (file discovery, step binding), and known real-world projects.</p>
+
+  <details class="eco" open>
+    <summary><span class="lang">TypeScript / JS</span><span class="name">cucumber-js &amp; the vitest ecosystem</span><span class="tools">@cucumber/cucumber · @effect-cucumber/vitest</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> The default discovery glob <code>features/**/*.{feature,feature.md}</code> (resolved from the project root) is <em>the</em> reason the <code>features/</code> folder is everywhere. As long as specs live there, glue under <code>features/</code> is loaded automatically (<code>features/**/*.@(js|cjs|mjs)</code>) — steps, hooks, and world require zero configuration. Spec language is set globally (<code>language: "fr"</code>) or per file (<code># language: fr</code>). In parallel, the unit of scheduling is the scenario (pickle), not the file: parallelism imposes no folder split<sup><a href="#src-1">1</a></sup>.</p>
+      <div class="codetitle">cucumber-js — canonical skeleton (official docs, nodejs v7 example)</div>
+      <pre><span class="t">features/</span>
+  simple_math.feature        <span class="c"># 1 file = 1 subject: 1 Scenario + 1 Scenario Outline</span>
+  <span class="t">support/</span>
+    world.js                 <span class="c"># setWorldConstructor — shared step state</span>
+    steps.js</pre>
+      <p><strong>Famous project #1 — cucumber-js dogfoods itself</strong> (~80 flat files)<sup><a href="#src-2">2</a></sup>:</p>
+      <div class="codetitle">github.com/cucumber/cucumber-js → features/</div>
+      <pre><span class="t">features/</span>
+  background.feature · hooks.feature · i18n.feature · rule.feature
+  scenario_outlines.feature · data_tables.feature · doc_string.feature …  <span class="c"># ~80 flat files, kebab-case</span>
+  <span class="t">step_definitions/</span>          <span class="c"># glue by subject: cli_steps.ts, file_steps.ts, formatter_steps.ts…</span>
+  <span class="t">support/</span>                   <span class="c"># hooks.ts, world.ts, helpers.ts</span>
+  <span class="t">fixtures/</span>                  <span class="c"># test data (formatters), not specs</span></pre>
+      <p><strong>Famous project #2 — webdriverio/cucumber-boilerplate</strong>, the reference WDIO+Cucumber skeleton (glue split by <code>given/when/then</code> + action/check helpers)<sup><a href="#src-4">4</a></sup>:</p>
+      <div class="codetitle">github.com/webdriverio/cucumber-boilerplate</div>
+      <pre><span class="t">src/</span>
+  <span class="t">features/</span>            <span class="c"># ~31 flat files: click.feature, checkTitle.feature, wait.feature…</span>
+  <span class="t">steps/</span>               <span class="c"># given.ts · when.ts · then.ts  (wired in wdio.conf.ts)</span>
+  <span class="t">support/</span>             <span class="c"># action/ (~22 modules) · check/ (~18 modules)</span></pre>
+      <p><strong>Playwright-BDD</strong> (<code>features/</code> + <code>steps/</code> per project, or a shared root tree in multi-project setups) and dogfooding <strong>amiceli/vitest-cucumber</strong> (colocated <code>example.feature</code> + <code>example.spec.ts</code>) round out the picture<sup><a href="#src-5">5</a> <a href="#src-7">7</a> <a href="#src-8">8</a></sup>. In monorepos, two placements coexist: <code>features/</code> per package (dominant) or a shared root tree with per-project globs<sup><a href="#src-6">6</a></sup>.</p>
+      <h4>The runner ZSchool has chosen: @effect-cucumber/vitest</h4>
+      <p>No auto-discovery: <code>loadFeature(path)</code> is expected at module scope, binding <em>one</em> <code>.feature</code> to <em>one</em> <code>describeFeature</code> block; the repo's own convention is the colocated pair, and the project tests its own spec through <code>*.feature</code> + <code>*.steps.test.ts</code> pairs<sup><a href="#src-9">9</a></sup>. Distinctive traits: state via <strong>Effect Layers</strong> (<code>shared</code> per Feature / <code>perScenario</code> per scenario) instead of a mutable World object; reusable steps via <code>defineSteps&lt;R&gt;</code> modules; Gherkin tags → native vitest tags (<code>@skip</code>, <code>@only</code>, <code>excludeTags</code>); <code>Rule</code> extends the Layer; column-typed Scenario Outlines<sup><a href="#src-9">9</a> <a href="#src-10">10</a></sup>. The parser ships the official French dialect too (<code>dialect-fr.feature</code> fixtures), for any future non-English module<sup><a href="#src-11">11</a></sup>.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">.NET</span><span class="name">Reqnroll (SpecFlow's successor)</span><span class="tools">Reqnroll · MSTest/NUnit/xUnit</span></summary>
+    <div class="body">
+      <p><strong>Context.</strong> SpecFlow (Tricentis) was pulled from GitHub; <strong>Reqnroll is its direct continuation</strong> (same v4 codebase, documented migration)<sup><a href="#src-19">19</a></sup>.</p>
+      <p><strong>What forces the structure.</strong> <code>.feature</code> files can live anywhere in the project, but the documented convention is a <code>Features/</code> folder (free-form subfolders). Each file compiles to a generated <code>*.feature.cs</code> test class <em>placed right next to it</em> — so the <code>.feature</code> file is the "test class" unit. <code>[Binding]</code> classes (steps, hooks, transforms) are assembly-global: placement under <code>StepDefinitions/</code> is purely organizational; fine-grained targeting goes through <code>[Scope(Tag=…)]</code>. Language: <code>#language: fr-FR</code> per file or <code>reqnroll.json</code> → <code>{"language":{"feature":"fr-FR"}}</code><sup><a href="#src-15">15</a> <a href="#src-16">16</a> <a href="#src-18">18</a></sup>.</p>
+      <div class="codetitle">dotnet new reqnroll-project — official template</div>
+      <pre><span class="t">reqnroll-project/</span>
+├─ <span class="t">Features/</span>
+│  └─ Calculator.feature          <span class="c"># file name = Feature title</span>
+├─ <span class="t">StepDefinitions/</span>
+│  └─ CalculatorStepDefinitions.cs
+└─ Template.csproj</pre>
+      <p><strong>Real project #1 — Reqnroll dogfoods itself</strong> (<code>Tests/Reqnroll.Specs</code>)<sup><a href="#src-17">17</a></sup>:</p>
+      <div class="codetitle">github.com/reqnroll/Reqnroll → Tests/Reqnroll.Specs/</div>
+      <pre><span class="t">Features/</span>
+├─ <span class="t">Contexts/</span>        <span class="c"># AccessingContexts.feature, ScenarioInfo/{Arguments,Description,Tags}.feature…</span>
+├─ <span class="t">Execution/</span>       <span class="c"># BasicExecution, ScenarioOutlines, ScopedSteps…</span>
+├─ <span class="t">Hooks/</span> · <span class="t">Parser/</span> · <span class="t">RegressionTests/</span> · <span class="t">UnitTestProviderSpecific/</span>
+<span class="t">StepDefinitions/</span>    <span class="c"># FLAT: BindingSteps.cs, ExecutionSteps.cs… (never a mirror of the Features tree)</span>
+<span class="t">Drivers/</span>            <span class="c"># documented intermediate layer (driver pattern) between steps and the SUT</span>
+<span class="t">Support/</span>            <span class="c"># Hooks.cs, StepArgumentTransformations.cs, TestFileManager.cs</span>
+<span class="t">TestFiles/</span>          <span class="c"># raw Gherkin fixtures: background.feature, french.feature, scenariooutline.feature…</span></pre>
+      <p><strong>Real project #2 — SpecOverflow</strong>, the SpecFlow creator's own demo project: three spec projects, one per SUT layer (<code>Specs.API</code>, <code>Specs.Controller</code>, <code>Specs.WebUI</code>), flat files for the smaller domains, one subfolder for the large <code>Question/</code> domain, <code>Drivers/</code> (page-drivers) and <code>Support/</code> (contexts, factories, hooks)<sup><a href="#src-20">20</a></sup>.</p>
+      <p><strong>Notable practice:</strong> xUnit parallelism is ordered by <em>Feature</em> (Feature-level hooks require it), which reinforces the <code>.feature</code> file as the isolation unit<sup><a href="#src-21">21</a></sup>.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">Java / JVM</span><span class="name">Cucumber-JVM</span><span class="tools">cucumber-jvm · JUnit Platform · Serenity BDD</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> <code>.feature</code> files are classpath resources discovered via <code>@SelectPackages("com.example.project")</code>: the canonical structure <strong>mirrors the glue package</strong> — <code>src/test/resources/com/example/project/belly.feature</code> ↔ <code>src/test/java/com/example/project/StepDefinitions.java</code>. Glue is declared by package (<code>cucumber.glue=com.example.project</code>) with name filters (<code>.*StepDefinitions?|.*Hooks?</code>) that make class suffixes a real convention. Parallelism is optional: the unit is the scenario/example, with tag-based locks<sup><a href="#src-22">22</a> <a href="#src-23">23</a></sup>.</p>
+      <div class="codetitle">github.com/cucumber/cucumber-jvm-starter-maven-java — official starter</div>
+      <pre>src/main/java/com/example/project/Belly.java
+src/test/java/com/example/project/RunCucumberTest.java     <span class="c"># @Suite @IncludeEngines("cucumber") @SelectPackages(…)</span>
+src/test/java/com/example/project/StepDefinitions.java
+src/test/resources/com/example/project/belly.feature        <span class="c"># exact mirror of the glue package</span>
+src/test/resources/cucumber.properties                       <span class="c"># cucumber.glue / cucumber.plugin</span></pre>
+      <p><strong>Multiple canonical examples</strong> (cucumber-jvm-examples, calculator): several <code>snake_case</code> <code>.feature</code> files per package (<code>basic_arithmetic.feature</code>, <code>date_calculator.feature</code>, <code>shopping.feature</code>), one glue class per domain (<code>ShoppingSteps</code>, <code>DateStepDefinitions</code>…), and in <code>basic_arithmetic.feature</code>: a <code>Background</code> + scenarios + a Scenario Outline with <strong>two named Examples blocks</strong> (<code>Single digits</code> / <code>Double digits</code>)<sup><a href="#src-24">24</a></sup>.</p>
+      <p><strong>Real project — eugenp/tutorials</strong> (~57k stars, cucumber module): folders organized by tag+layer (<code>tags/acceptance/{api,ui}</code>) mirroring glue sub-packages, <em>page objects</em> under <code>ui/pages/</code>, hooks scoped by tag (<code>@Before("@ui")</code>), scenario state via <code>ScenarioContext</code><sup><a href="#src-25">25</a></sup>. <strong>Serenity BDD starter</strong> (official): <code>src/test/resources/features/search/*.feature</code> + <code>stepdefinitions/</code> + task/helper packages<sup><a href="#src-26">26</a></sup>.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">Python</span><span class="name">behave</span><span class="tools">behave</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> Default paths = a <code>features</code> folder; behave loads <em>every</em> <code>*.py</code> file under <code>features/steps/</code> (file names are free); hooks exist <strong>only</strong> in <code>features/environment.py</code> (<code>before/after_all|feature|scenario|step|tag</code>), fixtures via <code>@fixture</code>/<code>use_fixture</code><sup><a href="#src-27">27</a></sup>.</p>
+      <div class="codetitle">behave — docs (tutorial): canonical structures</div>
+      <pre><span class="c"># minimum</span>                                <span class="c"># more realistic</span>
+<span class="t">features/</span>                                <span class="t">features/</span>
+  everything.feature                        signup.feature · login.feature · account_details.feature
+  <span class="t">steps/</span>                                    environment.py              <span class="c"># hooks (the only place)</span>
+    steps.py                                <span class="t">steps/</span>
+                                              website.py · utils.py</pre>
+      <p><strong>Real project — behave dogfoods itself</strong> (3.5k stars): flat <code>features/</code> but named by subject prefix (<code>userdata.feature</code>, <code>scenario_outline.basics.feature</code>, <code>runner.use_substep_dirs.feature</code>) — file names carry the hierarchy when folders stay flat<sup><a href="#src-28">28</a></sup>.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">Go</span><span class="name">godog</span><span class="tools">cucumber/godog</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> "Same as <strong>go test</strong>, godog respects package level isolation. All your step definitions should be in your tested package root directory." Specs live in a <code>features/</code> folder inside the package (explicit paths in <code>Options.Paths</code>), glue is any <code>_test.go</code> file at the package root, registered in <code>InitializeScenario</code>. <code>go:embed features/*</code> can bundle specs into the binary<sup><a href="#src-29">29</a></sup>.</p>
+      <div class="codetitle">github.com/cucumber/godog — README + _examples/</div>
+      <pre><span class="t">godogs/</span>                          <span class="c"># one package = one bounded context</span>
+├─ <span class="t">features/</span>
+│  ├─ godogs.feature
+│  └─ nodogs.feature
+├─ godogs.go
+└─ godogs_test.go                 <span class="c"># TestSuiteInitializer + InitializeScenario (steps)</span></pre>
+      <p><strong>Real project — godog dogfoods itself</strong>: <code>features/*.feature</code> at the root plus the famous <code>suite_context_test.go</code> (~40 KB) of meta-tests<sup><a href="#src-30">30</a></sup>. The <code>_examples/</code> folder (<code>api</code>, <code>db</code>…) shows the "one package, its own features" pattern.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">Ruby</span><span class="name">Original Cucumber</span><span class="tools">cucumber-ruby</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> <code>cucumber --init</code> generates the world's canonical tree: <code>features/step_definitions/</code> + <code>features/support/env.rb</code> (env.rb loads first, then every <code>*.rb</code> under support and step_definitions — file names are free, steps are global blocks)<sup><a href="#src-31">31</a></sup>.</p>
+      <p><strong>Famous project #1 — GitLab (Cucumber era, v8.17)</strong>: folders per domain (<code>admin/ dashboard/ explore/ group/ profile/ project/ snippets/</code>) plus flat top-level files (<code>groups.feature</code>, <code>user.feature</code>, <code>search.feature</code>); glue under <code>steps/</code> <strong>mirrors</strong> the domains (<code>steps/shared/</code>, <code>steps/project/</code>); support: <code>env.rb</code>, <code>capybara.rb</code>, <code>db_cleaner.rb</code>. <code>user.feature</code>: one setup <code>Background</code> + ~7 <code>@javascript</code> scenarios segmented by role<sup><a href="#src-32">32</a></sup>. <strong>Cautionary lesson:</strong> GitLab later <em>dropped</em> Gherkin in favor of RSpec — "click-path" style scenarios did not survive<sup><a href="#src-33">33</a></sup> (see §05, declarative style).</p>
+      <p><strong>Famous project #2 — VCR</strong>: <code>features/</code> organized as subject folders (<code>cassettes/ configuration/ hooks/ record_modes/ request_matching/…</code>) plus shared <code>step_definitions/</code> and <code>support/</code><sup><a href="#src-34">34</a></sup>. <strong>cucumber-ruby</strong> itself: <code>features/docs/**</code> mirrors the user manual chapter by chapter, glue lives in <code>features/lib/</code><sup><a href="#src-35">35</a></sup>.</p>
+    </div>
+  </details>
+
+  <details class="eco">
+    <summary><span class="lang">PHP</span><span class="name">Behat: Sylius &amp; Moodle at scale</span><span class="tools">Behat 3/4</span></summary>
+    <div class="body">
+      <p><strong>What forces the structure.</strong> <code>behat --init</code> generates <code>features/bootstrap/FeatureContext.php</code> (a PSR-0 autoload folder: support classes sit right next to it); <code>behat.yml</code> maps <em>suites</em> → paths + contexts<sup><a href="#src-36">36</a></sup>.</p>
+      <p><strong>Famous project #1 — Sylius</strong> (major PHP e-commerce platform, Behat-first): <code>features/</code> = one folder per domain (<code>account/ cart/ checkout/ payment/ product/ shipping/…</code>), verb-phrase file names (<code>cart/viewing_total_quantity_of_the_cart.feature</code>); and above all: <strong>the glue lives OUTSIDE the spec tree</strong> (<code>src/Sylius/Behat/{Context,Page,Element}</code> — page objects and elements); ~120 suite files by domain×layer (<code>suites/{api,cli,domain,ui}/&lt;domain&gt;/&lt;capability&gt;.yml</code>) filtered by tags like <code>@shopping_cart&amp;&amp;@ui</code>: <strong>the same spec tree serves every test layer</strong><sup><a href="#src-37">37</a></sup>.</p>
+      <p><strong>Famous project #2 — Moodle</strong> (the largest distributed <code>.feature</code> corpus known: <strong>1,499 files</strong>): specs <em>inside each component</em> (<code>mod/assign/tests/behat/</code>: 62 files, <code>mod/quiz/tests/behat/</code>: 59…), specs and shared step classes centralized under <code>lib/tests/behat/</code>, and <strong>a root-level <code>.gherkin-lintrc</code></strong> locking down style (<code>no-dupe-feature-names</code>, <code>no-unnamed-features</code>, <code>outline-must-have-examples</code>…)<sup><a href="#src-12">12</a> <a href="#src-13">13</a></sup>.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ================================================================ 04 -->
+<section id="s4">
+  <h2><span class="secno">04</span>Observed convergences</h2>
+  <p>Seven ecosystems, three decades of tooling, and the same invariants keep coming back. This is the empirical foundation for the §07 proposal.</p>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Ecosystem</th><th>Tool</th><th>Where .feature files live</th><th>Glue</th><th>Reference example</th></tr></thead>
+    <tbody>
+      <tr><td>TypeScript/JS</td><td>cucumber-js</td><td>root <code>features/</code> (default glob)</td><td><code>features/step_definitions/</code> + <code>support/</code> (auto-loaded)</td><td>cucumber-js (dogfood)</td></tr>
+      <tr><td>TypeScript/JS</td><td>@effect-cucumber/vitest</td><td>colocated spec+glue pair (path via <code>import.meta.url</code>)</td><td><code>*.steps.test.ts</code> pairs + <code>defineSteps</code> modules</td><td>effect-cucumber (dogfood)</td></tr>
+      <tr><td>.NET</td><td>Reqnroll</td><td><code>Features/</code> (convention), code-behind alongside</td><td>flat <code>StepDefinitions/</code> + <code>Drivers/</code> + <code>Support/</code></td><td>Reqnroll.Specs, SpecOverflow</td></tr>
+      <tr><td>Java</td><td>Cucumber-JVM</td><td><code>src/test/resources</code> mirroring the glue package</td><td><code>*Steps</code>/<code>*StepDefinitions</code> classes per domain</td><td>cucumber starters, eugenp/tutorials</td></tr>
+      <tr><td>Python</td><td>behave</td><td>root <code>features/</code></td><td><code>features/steps/</code> + hooks in <code>environment.py</code></td><td>behave (dogfood)</td></tr>
+      <tr><td>Go</td><td>godog</td><td><code>features/</code> inside the package</td><td><code>_test.go</code> at the package root</td><td>godog (dogfood + _examples)</td></tr>
+      <tr><td>Ruby</td><td>cucumber-ruby</td><td>root <code>features/</code>, folders per domain</td><td><code>features/step_definitions/</code> + <code>support/env.rb</code></td><td>GitLab (historical), VCR</td></tr>
+      <tr><td>PHP</td><td>Behat</td><td><code>features/</code> per domain (Sylius) or <code>&lt;component&gt;/tests/behat/</code> (Moodle)</td><td><code>bootstrap/FeatureContext</code>; Sylius: glue outside the tree (<code>src/Sylius/Behat</code>)</td><td>Sylius, Moodle (1,499 .feature)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The eight invariants</h3>
+  <ol class="flow">
+    <li><b>One identifiable root folder holds every spec</b> — <code>features/</code> is the common denominator (default glob for cucumber-js/behave/godog, convention for Reqnroll, mirrored classpath in Java). Anywhere else always requires explicit configuration.</li>
+    <li><b>Glue lives right next to the specs, never far away</b> — <code>step_definitions/</code>, <code>support/</code>, <code>bootstrap/</code>, <code>steps/</code>: a sibling of the specs in every ecosystem; auto-loaded when it sits under <code>features/</code> (cucumber-js).</li>
+    <li><b>Splitting by functional domain wins at scale</b> — GitLab, VCR, Sylius, Reqnroll.Specs, eugenp: one subfolder per functional area once the file count passes a handful; below that, flat is enough.</li>
+    <li><b>"Functional area, grouped by capability" is the officially winning organization</b> — the option the Cucumber review favors; Matt Wynne: it's the only one that doesn't let solution-domain vocabulary leak into the tree<sup><a href="#src-38">38</a></sup>.</li>
+    <li><b>One .feature file = one capability</b> (never a file per scenario, never per user story<sup><a href="#src-39">39</a></sup>); several scenarios per file; <code>Background</code> for shared preconditions; <code>Scenario Outline</code> + <code>Examples</code> for data variation.</li>
+    <li><b>Glue is NOT a mirror of the spec tree</b> — flat glue or glue organized by domain concept (Reqnroll.Specs, cucumber-js); steps tied to one specific feature are called out as an official anti-pattern<sup><a href="#src-41">41</a></sup>.</li>
+    <li><b>Spec file naming: behavior names</b>, <code>snake_case</code> (Java) or <code>kebab-case</code> (JS), sometimes verb-phrases (Sylius); glue files carry the subject name (<code>cli_steps.ts</code>, <code>ShoppingSteps.java</code>).</li>
+    <li><b>Mature projects lock the style down</b> — Moodle lints Gherkin in CI; effect-cucumber counts its requirement tags on every push; tags act as a cross-cutting index (view by module, by layer, by version)<sup><a href="#src-13">13</a> <a href="#src-9">9</a> <a href="#src-38">38</a></sup>.</li>
+  </ol>
+</section>
+
+<!-- ================================================================ 05 -->
+<section id="s5">
+  <h2><span class="secno">05</span>Writing a good Gherkin spec</h2>
+  <p>A synthesis of the official sources (cucumber.io: the Gherkin reference, "Writing better Gherkin", anti-patterns, the #GivenWhenThenWithStyle blog series) checked against what the ZSchool PRD already does. Every rule is verifiable in the "do / avoid" blocks below.</p>
+
+  <div class="panel tint">
+    <p class="panel-h">Note on the examples below</p>
+    <p style="margin:0">The original 2026-09-09 draft of this report wrote its Gherkin examples in French, arguing (§5.6, §8) that Gherkin's language should match the domain experts' own language — French, at the time. On 2026-09-09 the product owner instructed that the whole project's documentation and specs move to English (<code>PROJECT.md</code> v1.2); this revision translates that decision through the report, including the worked examples in §7.4. The underlying reasoning in §5.6 about Gherkin's localization support is kept as background, with a note on what it means for ZSchool now.</p>
+  </div>
+
+  <h3>5.1 Describe behavior, not implementation</h3>
+  <p>The foundational official rule: a spec describes the observable <em>what</em>, never the <em>how</em>. The test question: "would this wording need to change if the implementation changed?" — if yes, rewrite it<sup><a href="#src-40">40</a></sup>.</p>
+  <div class="duo">
+    <div class="side bad">
+      <p class="lbl">Avoid — imperative (UI-bound)</p>
+      <pre class="bad">When I type "Fatima" into the field
+  "guardian's first name"
+And I click the "Save" button
+Then I see the message
+  "Guardian saved"</pre>
+    </div>
+    <div class="side good">
+      <p class="lbl">Do — declarative (functional requirement)</p>
+      <pre class="good">When the secretary adds a guardian
+  to Youssef's enrollment file
+Then the guardian appears on the file
+  and receives an invitation by SMS</pre>
+    </div>
+  </div>
+  <p>The imperative version breaks on the first screen redesign; the declarative version survives UI overhauls and reads as living documentation. This is exactly the documented failure of GitLab's "click-path" era<sup><a href="#src-33">33</a></sup>. <em>ZSchool consistency:</em> the PRD's own acceptance criteria are already declarative ("When the enrollment becomes ACTIVE…") — reuse them verbatim, never rewritten as UI gestures<sup><a href="#src-42">42</a></sup>.</p>
+
+  <h3>5.2 The semantics of Given / When / Then</h3>
+  <ul>
+    <li><strong>Given</strong> — the initial state of the world (data, context, permissions). No action.</li>
+    <li><strong>When</strong> — <em>a single</em> meaningful action, the one the scenario is testing.</li>
+    <li><strong>Then</strong> — the observable outcome for the actor; use concrete data ("ten installments of 1,200 DH"), never "it works" or "the system is correct".</li>
+    <li><strong>And / But</strong> — to chain steps without disguised conjunctions (see anti-patterns §06).</li>
+    <li>3 to 5 steps per scenario is the official comfort zone<sup><a href="#src-43">43</a></sup>.</li>
+  </ul>
+
+  <h3>5.3 Background, Rule, Scenario Outline: the three factoring tools</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Tool</th><th>Use it for</th><th>Official guardrails</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>Background:</code></td>
+        <td>The Given steps <em>shared by every scenario in the file</em> — the repeated "incidental details".</td>
+        <td>Short (&lt; 4 lines), lively, no complicated state; if it scrolls off screen, split the file; if it only applies to some scenarios, it doesn't belong in the Background<sup><a href="#src-43">43</a></sup>.</td>
+      </tr>
+      <tr>
+        <td><code>Rule:</code></td>
+        <td>Group the scenarios of one business rule within a capability; carries its own Background, its own hooks, and (with effect-cucumber) can extend the Layer.</td>
+        <td>One Background per Feature <em>or</em> per Rule — if two scenarios need different Backgrounds, they're different Rules or different files<sup><a href="#src-43">43</a></sup>.</td>
+      </tr>
+      <tr>
+        <td><code>Scenario Outline:</code> + <code>Examples:</code></td>
+        <td>Collapses copy-pasted scenarios that differ <em>only in values</em>; the table edge: concrete, named examples.</td>
+        <td>Never hide two different behaviors inside one outline; named Examples blocks (the cucumber-jvm calculator pattern); an outline with no Examples is a lint error (Moodle)<sup><a href="#src-24">24</a> <a href="#src-13">13</a></sup>.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="duo">
+    <div class="side bad">
+      <p class="lbl">Avoid — outline hijacked (two behaviors)</p>
+      <pre class="bad">Scenario Outline: Installment schedule
+  Given an enrollment in state &lt;state&gt;
+  When the installment schedule is generated
+  Then &lt;outcome&gt;
+  Examples:
+    | state       | outcome                       |
+    | ACTIVE      | ten installments created      |
+    | closed      | an error is raised            |</pre>
+    </div>
+    <div class="side good">
+      <p class="lbl">Do — two named scenarios</p>
+      <pre class="good">Scenario: Generating the schedule for an active enrollment
+  Given an ACTIVE enrollment
+  When the installment schedule is generated
+  Then ten monthly installments are created
+
+Scenario: Generation refused for a closed enrollment
+  Given a WITHDRAWN enrollment
+  When the installment schedule is generated
+  Then a "closed enrollment" error is raised</pre>
+    </div>
+  </div>
+
+  <h3>5.4 Steps: reusable, parameterized, in domain vocabulary</h3>
+  <ul>
+    <li><strong>Organize steps by domain concept</strong>, never by <code>.feature</code> file ("feature-coupled step definitions", an official anti-pattern — an explosion of duplicated glue)<sup><a href="#src-41">41</a></sup>.</li>
+    <li><strong>Parameterize variable values</strong> via cucumber-expressions (<code>{string}</code>, <code>{int}</code>, custom types <code>{amount}</code>, <code>{moroccoDate}</code>): one step definition, a thousand uses.</li>
+    <li><strong>One step = one idea</strong>; two distinguishable assertions in the glue beat one "And" that hides a second one (the effect-cucumber repo's pattern: split explicitly so failures stay readable)<sup><a href="#src-10">10</a></sup>.</li>
+    <li><strong>Test logic lives in services, not in steps</strong> — STACK.md §8: steps are thin adapters to domain services through Layers. This is the Effect-flavored version of the universal advice "keep bindings short, delegate to drivers/contexts" (the Reqnroll guide, Baeldung's ScenarioContext, Sylius page objects).</li>
+    <li><strong>Avoid "I" and ambient actors</strong>: name the actor ("the secretary", "Khadija") — the PRD already does this, and the PER matrix makes the actor meaningful (permissions).</li>
+  </ul>
+
+  <h3>5.5 Tags: the ZSchool taxonomy</h3>
+  <p>Tags are the cross-cutting "index" of the specs<sup><a href="#src-38">38</a></sup>. With <code>@effect-cucumber/vitest</code> they become native vitest tags (filtering, <code>@skip</code>, <code>@only</code>, <code>excludeTags</code>)<sup><a href="#src-9">9</a></sup>. Proposed taxonomy (all derived from PRD conventions — no invented vocabulary):</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Tag</th><th>PRD source</th><th>Scope</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>@FR-FIN-03</code>, <code>@INV-18</code>, <code>@PER-04</code>, <code>@SEC-11</code>, <code>@INT-HEB-01</code>, <code>@ECR-FIN-02</code></td><td>requirement/invariant/permission… namespaces</td><td>Feature (all its scenarios)</td><td><strong>Traceability</strong>: the CI gate counts coverage of PRD IDs (effect-cucumber's own pattern: its requirement tags are counted on every push<sup><a href="#src-9">9</a></sup>)</td></tr>
+      <tr><td><code>@mvp</code> / <code>@v1</code> / <code>@v2</code></td><td>the FR's Version attribute</td><td>Feature</td><td>Filter runs by wave (<code>vitest --tags-include mvp</code>)</td></tr>
+      <tr><td><code>@PJ-DIR-01</code></td><td>journey steps</td><td>Feature under the <code>journeys/</code> folder</td><td>End-to-end suites</td></tr>
+      <tr><td><code>@uat</code></td><td>—</td><td>journeys &amp; hosting</td><td>Requires the deployed API (UAT stage) — excluded from PR runs</td></tr>
+      <tr><td><code>@wip</code></td><td>—</td><td>scenario in progress</td><td><code>excludeTags: ["@wip"]</code> in CI; merging an <em>active</em> <code>@wip</code> is forbidden</td></tr>
+      <tr><td><code>@skip</code></td><td>—</td><td>scenario</td><td>native runner keyword (becomes <code>it.effect.skip</code>)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>5.6 Gherkin's language support, and what ZSchool does with it</h3>
+  <p>Gherkin is localized into 70+ languages, and the official guidance is clear: "the language of Gherkin should be the language of your domain experts"<sup><a href="#src-44">44</a></sup>. That is the reasoning the original draft of this report used to recommend French for ZSchool, since the PRD was French at the time. Since then, the product owner has instructed that the whole project — PRD, documentation, and specs alike — move to English (<code>PROJECT.md</code> v1.2, 2026-09-09); under the same official rule, that now means <strong>ZSchool's Gherkin is written in standard English</strong>, with no <code># language:</code> header needed at all, since English is Gherkin's default dialect. The keyword table below is kept for reference — French remains available in the parser for any future non-English module, but it is not ZSchool's active convention:</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Gherkin (EN)</th><th>Official French</th><th>Accepted variants</th><th>ZSchool usage</th></tr></thead>
+    <tbody>
+      <tr><td>Feature</td><td><code>Fonctionnalité:</code></td><td>—</td><td>not used (English default)</td></tr>
+      <tr><td>Background</td><td><code>Contexte:</code></td><td>—</td><td>not used (English default)</td></tr>
+      <tr><td>Rule</td><td><code>Règle:</code></td><td>—</td><td>not used (English default)</td></tr>
+      <tr><td>Scenario</td><td><code>Scénario:</code></td><td><code>Exemple:</code></td><td>not used (English default)</td></tr>
+      <tr><td>Scenario Outline</td><td><code>Plan du scénario:</code></td><td>—</td><td>not used (English default)</td></tr>
+      <tr><td>Examples</td><td><code>Exemples:</code></td><td>—</td><td>not used (English default)</td></tr>
+      <tr><td>Given</td><td><code>Étant donné</code></td><td><code>Soit</code>, <code>Sachant que</code>, <code>Étant donnée/donnés/données</code>, <code>Étant donné que</code></td><td><strong>"Given" invariable</strong> (a single form = greppable)</td></tr>
+      <tr><td>When</td><td><code>Quand</code></td><td><code>Lorsque</code>, <code>Lorsqu'</code></td><td><code>When</code> only</td></tr>
+      <tr><td>Then</td><td><code>Alors</code></td><td><code>Donc</code></td><td><code>Then</code> only</td></tr>
+      <tr><td>And / But</td><td><code>Et</code> / <code>Mais</code></td><td><code>Et que</code>, <code>Mais que</code>, <code>*</code></td><td><code>And</code> / <code>But</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Activation note (kept for reference): a <code># language: fr</code> header on the first line of a file is the standard, portable, self-documenting way to opt a single file into the French dialect — <code>@effect-cucumber/gherkin</code>'s parser relies on the official <code>@cucumber/gherkin</code> package, which reads that dialect (upstream <code>dialect-fr.feature</code> fixtures)<sup><a href="#src-11">11</a> <a href="#src-14">14</a></sup>. This mechanism stays available if a future module ever needs it; ZSchool's own <code>.feature</code> files carry no such header today.</p>
+
+  <h3>5.7 Concrete data, independent scenarios</h3>
+  <ul>
+    <li><strong>Concrete, meaningful data</strong>: "320 students including 4 duplicates", "1,200 DH", "+212661234567" — as the PRD already does. Vague values ("a few", "some data") make a failure impossible to interpret.</li>
+    <li><strong>A scenario must be able to run alone</strong>: no ordering dependency between scenarios (the runner builds a fresh world per scenario — <code>perScenario</code> layer + an isolated TestClock<sup><a href="#src-9">9</a></sup>); state only flows through the Layer between steps (never a mutable closure — a dedicated gate enforces this in the effect-cucumber repo<sup><a href="#src-10">10</a></sup>).</li>
+    <li><strong>Time determinism</strong>: every scenario gets a TestClock — scenarios like "September 5", "quiet hours 8pm–8am", "a started month still owed" become deterministic (STACK §8: DateTime always UTC, displayed in Africa/Casablanca).</li>
+    <li><strong>The scenario title is a behavior sentence</strong>: "Mid-year arrival with the started month due in full", not "Installment test 3".</li>
+  </ul>
+</section>
+
+<!-- ================================================================ 06 -->
+<section id="s6">
+  <h2><span class="secno">06</span>Anti-patterns</h2>
+  <p>A consolidated catalog (official sources + empirical findings from the projects studied). Each row gives the symptom, the risk, and the remedy.</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Anti-pattern</th><th>Symptom</th><th>Risk</th><th>Remedy</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Imperative specs (click-paths)</td><td>steps like "type into the field", "click"</td><td>break on every UI redesign; GitLab eventually <em>abandoned</em> this style entirely</td><td>declarative style; the UI lives in the glue/page objects</td><td><a href="#src-40">S40</a> <a href="#src-33">S33</a></td></tr>
+      <tr><td>Feature-coupled steps</td><td>one step file per <code>.feature</code>, one-off text that can't be reused</td><td>glue explosion and duplication</td><td>organize by domain concept; <code>defineSteps</code> modules</td><td><a href="#src-41">S41</a></td></tr>
+      <tr><td>Conjunction steps</td><td>"Given X and Y and Z"</td><td>overly specific steps that can't be reused; unreadable failures</td><td>atomic steps chained with <code>And</code>; compose in the glue if needed</td><td><a href="#src-41">S41</a></td></tr>
+      <tr><td>One file per user story</td><td>disposable per-sprint files, resliced with every change</td><td>dead documentation, maintenance load</td><td>one file per capability; stories are slices, capabilities endure</td><td><a href="#src-39">S39</a></td></tr>
+      <tr><td>Giant Background</td><td>10+ lines of setup that "scroll off screen"</td><td>unreadable scenarios, global coupling</td><td>Background &lt; 4 lines; otherwise Rules or separate files</td><td><a href="#src-43">S43</a></td></tr>
+      <tr><td>Dependent / ordered scenarios</td><td>scenario B fails if A no longer passes</td><td>flakiness, no parallelism possible</td><td>fresh world per scenario (<code>perScenario</code> layer); Background per file</td><td><a href="#src-43">S43</a> <a href="#src-10">S10</a></td></tr>
+      <tr><td>Hijacked Scenario Outline</td><td>a generic "expected outcome" column</td><td>two behaviors hidden inside one template</td><td>separate scenarios; outlines vary data only</td><td><a href="#src-43">S43</a></td></tr>
+      <tr><td>Buried assertions</td><td>"Then the contract is generated and archived and notified"</td><td>ambiguous failures, non-reusable step</td><td>one <code>Then</code> per observable; separate assertions in the glue</td><td><a href="#src-41">S41</a> <a href="#src-10">S10</a></td></tr>
+      <tr><td>Solution vocabulary in the spec</td><td>"API", "POST", "table X", "reducer"</td><td>solution-domain leaks into living documentation</td><td>PRD vocabulary; implementation stays inside packages/*</td><td><a href="#src-38">S38</a></td></tr>
+      <tr><td>State via mutable closure between steps</td><td>shared module-level variables</td><td>cross-scenario leaks, non-reproducible retries</td><td>state only through Layer services (<code>shared</code>/<code>perScenario</code>)</td><td><a href="#src-10">S10</a></td></tr>
+      <tr><td>Vague data</td><td>"a few students", "an amount"</td><td>uninterpretable failures, tests that decide nothing</td><td>concrete, meaningful values, as the PRD already uses</td><td><a href="#src-40">S40</a></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ================================================================ 07 -->
+<section id="s7">
+  <h2><span class="secno">07</span>ZSchool proposal</h2>
+
+  <h3>7.1 Place in the test pyramid</h3>
+  <p><code>features/</code> is <em>the</em> BDD acceptance suite for the monorepo; the other levels don't change (STACK §8):</p>
+  <div class="pyr" role="img" aria-label="Pyramid: k6 at the bottom, unit tests, BDD features/, end-to-end journeys at the top">
+    <div class="row"><div class="band b4"><b>journeys/ — PJ-* end to end</b><small>deployed UAT API + Playwright (wave 1) — @uat tag</small></div></div>
+    <div class="row"><div class="band b3"><b>features/ — BDD acceptance (this folder)</b><small>one .feature per PRD requirement · ephemeral Neon branch per run</small></div></div>
+    <div class="row"><div class="band b2"><b>packages/* — @effect/vitest unit tests</b><small>it.effect, no database; next to the code (the effect repo's own convention)</small></div></div>
+    <div class="row"><div class="band b1"><b>k6 — performance campaigns</b><small>separate from the BDD suite (JAL-02, DEC-35 sizing)</small></div></div>
+    <p class="cap">BDD is a per-module acceptance net: neither disguised unit tests nor E2E. Critical PC journeys stay above it.</p>
+  </div>
+
+  <h3>7.2 The annotated <code>features/</code> tree</h3>
+  <pre class="tree"><span class="t">zshcool/</span>
+├─ apps/{web,api,workers}/                    <span class="c"># no BDD tests here — application code</span>
+├─ packages/{domain,db,clients,infra}/
+│  └─ src/**/__tests__|*.test.ts              <span class="c"># @effect/vitest unit tests, next to the code</span>
+├─ <span class="k">features/</span>                                  <span class="c"># ← THE BDD FOLDER (STACK §9 decision, detailed in this report)</span>
+│  ├─ <span class="t">adm/</span>  <span class="t">ins/</span>  <span class="t">ped/</span>  <span class="t">vsc/</span>  <span class="t">eva/</span>  <span class="t">doc/</span>     <span class="c"># one folder per PRD module code &lt;MOD&gt;</span>
+│  ├─ <span class="t">fin/</span>  <span class="t">com/</span>  <span class="t">tra/</span>  <span class="t">car/</span>  <span class="t">rap/</span>  <span class="t">mas/</span>     <span class="c">#   → "functional area" split (§04, invariant 3-4)</span>
+│  ├─ <span class="t">san/</span>  <span class="t">hea/</span>
+│  │  ├─ fin-01-fee-schedules.feature                    <span class="c"># spec: 1 file per FR-… requirement</span>
+│  │  └─ fin-01-fee-schedules.steps.test.ts              <span class="c"># colocated glue pair (loadFeature constraint)</span>
+│  ├─ <span class="t">cross-cutting/</span>                          <span class="c"># cross-cutting requirements with scenarios</span>
+│  │  ├─ <span class="t">per/</span>                                 <span class="c">#   PER-* matrix (12 roles × domains) — @qadi/testing</span>
+│  │  ├─ <span class="t">i18n/</span>                                <span class="c">#   FR/AR bilingualism (DEC-10, NFR-I18N)</span>
+│  │  └─ <span class="t">hosting/</span>                             <span class="c">#   INT-HEB-01: data-residency check replayed in CI (STACK §2.6)</span>
+│  ├─ <span class="t">journeys/</span>                               <span class="c"># PJ-*: end-to-end suites (@uat tag, deployed API)</span>
+│  └─ <span class="t">support/</span>                                <span class="c"># shared glue — by DOMAIN CONCEPT, never by .feature file</span>
+│     ├─ <span class="t">layers/</span>                              <span class="c">#   deterministic layers: TestClock, OTP_TRANSPORT=log,</span>
+│     │                                       <span class="c">#     SMS/WhatsApp/CMI stubs, @qadi/testing resolvers, Neon branch</span>
+│     ├─ <span class="t">steps/</span>                               <span class="c">#   defineSteps modules: authentication, enrollment,</span>
+│     │                                       <span class="c">#     installment schedule, notifications, calls, documents…</span>
+│     ├─ <span class="t">fixtures/</span>                            <span class="c">#   builders (student, enrollment, fee schedule) + anonymized test sets</span>
+│     └─ hooks.ts                             <span class="c">#   global hooks: ephemeral Neon branch, kept on failure</span>
+└─ vitest.config.ts                           <span class="c"># projects: packages (unit) + features/**/*.steps.test.ts (bdd)</span></pre>
+  <p><small>Reading note: each module folder receives its files as vertical slices land; the tree only pre-exists empty for <code>fin/</code> at kickoff (first slice, STACK §12.3).</small></p>
+
+  <h3>7.3 Conventions (derived from the §04 invariants, nothing invented)</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Item</th><th>Convention</th><th>Example</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Spec file</td><td><code>&lt;mod&gt;-&lt;nn&gt;-&lt;kebab-slug&gt;.feature</code>, lowercase</td><td><code>fin-03-installment-schedule.feature</code></td><td>ID = sort order + direct PRD traceability; slug = capability name; matches the PRD's ASCII naming rule</td></tr>
+      <tr><td>Glue pair</td><td>same basename + <code>.steps.test.ts</code>, colocated</td><td><code>fin-03-installment-schedule.steps.test.ts</code></td><td><code>loadFeature(import.meta.url)</code> constraint; the effect-cucumber dogfood pattern</td></tr>
+      <tr><td>File content</td><td>the PRD's "Feature" block, <strong>verbatim</strong> + tags</td><td>see 7.4</td><td>STACK §8: "no rewording that would weaken traceability"</td></tr>
+      <tr><td>Shared step modules</td><td><code>support/steps/&lt;concept&gt;.steps.ts</code> (domain concept)</td><td><code>installment-schedule.steps.ts</code>, <code>authentication.steps.ts</code></td><td>avoids the feature-coupled anti-pattern; reusable across modules (the installment schedule serves FIN, TRA, DOC)</td></tr>
+      <tr><td>Granularity</td><td>1 file = 1 FR (2–6 scenarios); short Background; Rule for local invariants; Outline for data variation</td><td><code>fin-03</code>: 3 scenarios</td><td>capability, not story; the official guardrails from §05</td></tr>
+      <tr><td>Tags</td><td><code>@FR-…</code> etc. on the Feature; <code>@mvp/@v1/@v2</code>; the occasional <code>@wip</code>/<code>@skip</code></td><td>see 7.4</td><td>cross-cutting index + the CI traceability gate</td></tr>
+      <tr><td>Title</td><td>"Feature: &lt;PRD title&gt;" kept as-is (including "(MVP)")</td><td>"Feature: Installment schedule (MVP)"</td><td>makes the PRD↔tests review report trivial</td></tr>
+      <tr><td>Step keywords</td><td><code>Given</code> invariable, <code>When</code>, <code>Then</code>, <code>And</code> — no synonyms</td><td>see 7.4</td><td>a single form per keyword = greppable, lintable, portable</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>7.4 Full example — FR-FIN-03 "Installment schedule"</h3>
+  <p>The first real file in the suite (FIN module, first vertical slice). The scenarios reuse the PRD block; the glue shows both levels: module-shared steps via <code>use()</code> plus steps specific to this file.</p>
+
+  <div class="codetitle">features/fin/fin-03-installment-schedule.feature</div>
+  <pre><span class="k">@FR-FIN-03 @mvp @fin</span>
+<span class="k">Feature:</span> Installment schedule (MVP)
+  <span class="c">Generated from the PRD acceptance criterion (prd/modules/16-finance-billing-collections.md §FR-FIN-03).
+  Do not reword: this file is the execution of the PRD criterion.</span>
+
+  <span class="k">Background:</span>
+    Given a 2026-2027 fee schedule for 2AC with monthly tuition of 1,200 DH
+    And an annual insurance fee of 150 DH
+
+  <span class="k">Scenario:</span> Ten-month installment schedule
+    Given Youssef's enrollment in 2AC
+    When the enrollment becomes ACTIVE on September 5
+    Then ten monthly installments of 1,200 DH are created from September to June
+    And a single 150 DH insurance installment is created on the activation date
+
+  <span class="k">Scenario:</span> Mid-year arrival with the started month due in full
+    Given an enrollment activated on January 18
+    When the installment schedule is generated with the default rule
+    Then six monthly installments of 1,200 DH are created from January to June
+    And the month of January is due in full
+
+  <span class="k">Scenario:</span> Mid-year departure
+    Given an enrollment closed WITHDRAWN on March 12
+    When the installment schedule is recalculated
+    Then the unpaid installments from April to June are voided with a trace record
+    And the March installment remains due in full and the balance survives the closure</pre>
+
+  <div class="codetitle">features/fin/fin-03-installment-schedule.steps.test.ts</div>
+  <pre><span class="c">// Glue pair for FR-FIN-03. Steps shared across the FIN module live in
+// `defineSteps` modules (support/steps/); this file keeps only the vocabulary
+// specific to the installment schedule. Test logic lives in the SERVICES provided
+// by the Layers — never in the steps themselves (STACK §8).</span>
+import { assert } from <span class="s">"@effect/vitest"</span>
+import { Layer } from <span class="s">"effect"</span>
+import { fileURLToPath } from <span class="s">"node:url"</span>
+import { describeFeature, loadFeature } from <span class="s">"@effect-cucumber/vitest"</span>
+import { installmentScheduleSteps, InstallmentSchedule } from <span class="s">"../support/steps/installment-schedule.steps.ts"</span>
+import { feeScheduleRegistryLayer } from <span class="s">"../support/layers/fee-schedule-registry.ts"</span>
+
+<span class="c">// The neighboring spec, resolved relative to THIS module — the pair survives any
+// folder move (the effect-cucumber repo's own pattern).</span>
+const featurePath = fileURLToPath(new URL(<span class="s">"./fin-03-installment-schedule.feature"</span>, import.meta.url))
+const feature = await loadFeature(featurePath)
+
+describeFeature(
+  feature,
+  <span class="c">// shared      : built ONCE per Feature — the fee-schedule registry is common.</span>
+  <span class="c">// perScenario : a fresh world per scenario — no enrollment leaks between scenarios.</span>
+  { shared: feeScheduleRegistryLayer, perScenario: InstallmentSchedule.layer },
+  ({ Background, Scenario, use }) =&gt; {
+    use(installmentScheduleSteps)  <span class="c">// shared steps for the "installment schedule" concept</span>
+
+    Background(({ Given }) =&gt; {
+      Given(<span class="s">"a {string} fee schedule for 2AC with monthly tuition of {int} DH"</span>,
+        function*(year: string, amount: number) {
+          yield* (yield* InstallmentSchedule).installFeeSchedule(year, amount)
+        })
+    })
+
+    Scenario(<span class="s">"Ten-month installment schedule"</span>, ({ Then }) =&gt; {
+      Then(<span class="s">"ten monthly installments of {int} DH are created from September to June"</span>,
+        function*(amount: number) {
+          const installments = yield* (yield* InstallmentSchedule).installments
+          assert.strictEqual(installments.length, 10)
+          <span class="c">// Two distinguishable assertions: the failure says WHAT didn't hold.</span>
+          assert.ok(installments.every((i) =&gt; i.amount === amount))
+        })
+    })
+    <span class="c">// … every Scenario in the .feature file has its own block here (specific steps).</span>
+  },
+  { excludeTags: [] }  <span class="c">// runner options (e.g. { excludeTags: ["@wip"] } in CI)</span>
+)</pre>
+
+  <div class="codetitle">features/support/steps/installment-schedule.steps.ts — shared module for the domain concept</div>
+  <pre><span class="c">// Reusable steps for the "installment schedule" concept — imported by the FIN,
+// TRA, DOC… pairs. The service requirement (InstallmentSchedule) is declared: a
+// Feature whose Layer doesn't provide InstallmentSchedule can NOT use() this
+// module (TypeScript error).</span>
+import { assert } from <span class="s">"@effect/vitest"</span>
+import { defineSteps } from <span class="s">"@effect-cucumber/vitest"</span>
+import { InstallmentSchedule } from <span class="s">"../layers/installment-schedule.ts"</span>
+
+export const installmentScheduleSteps = defineSteps&lt;InstallmentSchedule&gt;(({ Given, When, Then }) =&gt; {
+  Given(<span class="s">"{string}'s enrollment in 2AC"</span>, function*(student: string) {
+    yield* (yield* InstallmentSchedule).preEnroll(student, <span class="s">"2AC"</span>)
+  })
+
+  When(<span class="s">"the enrollment becomes ACTIVE on {string}"</span>, function*(date: string) {
+    yield* (yield* InstallmentSchedule).activate(date)   <span class="c">// scenario TestClock: deterministic date</span>
+  })
+
+  When(<span class="s">"the installment schedule is recalculated"</span>, function*() {
+    yield* (yield* InstallmentSchedule).recalculate()
+  })
+
+  Then(<span class="s">"the month of January is due in full"</span>, function*() {
+    const january = yield* (yield* InstallmentSchedule).installmentFor(<span class="s">"January"</span>)
+    assert.strictEqual(january.state, <span class="s">"DUE_IN_FULL"</span>)
+  })
+})</pre>
+
+  <div class="codetitle">features/support/layers/fee-schedule-registry.ts — shared deterministic layer</div>
+  <pre><span class="c">// The `shared` layer: an in-memory fee-schedule registry for FIN scenarios.
+// Real-database variant: the same interface, backed by a Layer wired to the
+// run's ephemeral Neon branch (migrations + fixtures) — see STACK §8.</span>
+import { Context, Effect, Layer, Schema } from <span class="s">"effect"</span>
+
+export class FeeSchedule extends Schema.Class&lt;FeeSchedule&gt;(<span class="s">"FeeSchedule"</span>)({
+  year: Schema.String, monthlyTuition: Schema.Number, annualInsurance: Schema.Number,
+}) {}
+
+export class FeeScheduleRegistry extends Context.Service&lt;FeeScheduleRegistry, {
+  readonly feeSchedule: (year: string) =&gt; Effect.Effect&lt;FeeSchedule&gt;
+}&gt;(<span class="s">"FeeScheduleRegistry"</span>) {
+  static readonly layer = Layer.effect(this, Effect.gen(function*() {
+    const schedules = new Map([[<span class="s">"2026-2027"</span>, new FeeSchedule({ year: <span class="s">"2026-2027"</span>, monthlyTuition: 1200, annualInsurance: 150 })]])
+    return FeeScheduleRegistry.of({ feeSchedule: (year) =&gt; Effect.sync(() =&gt; schedules.get(year)!) })
+  }))
+}</pre>
+
+  <h3>7.5 Wiring vitest &amp; the traceability gate</h3>
+  <div class="codetitle">vitest.config.ts (root) — two projects, one run</div>
+  <pre><span class="c">// Vitest 4: projects. The .feature files are NOT test targets themselves — only
+// the *.steps.test.ts pairs are (the parser loads them via loadFeature).</span>
+import { defineConfig } from <span class="s">"vitest/config"</span>
+
+export default defineConfig({
+  test: {
+    projects: [
+      { test: { name: <span class="s">"unit"</span>, include: [<span class="s">"packages/*/src/**/*.test.ts"</span>] } },
+      { test: { name: <span class="s">"bdd"</span>,   include: [<span class="s">"features/**/*.steps.test.ts"</span>],
+                typecheck: { enabled: <span class="k">true</span> } },  <span class="c">// the Layers' compile-time guarantee</span>
+      },
+    ],
+  },
+})</pre>
+  <div class="codetitle">scripts/verify-bdd-traceability.ts — every scenario-bearing PRD requirement is covered (the effect-cucumber pattern)</div>
+  <pre><span class="c">// 1. Extract the IDs from the PRD's ```gherkin blocks → FR-*, PER-*, INT-HEB-01…
+// 2. Extract the @ID tags from features/***.feature
+// 3. Fail if a PRD ID has no matching tag, or a tag matches no PRD ID.
+// Run on every push — the same mechanism as the effect-cucumber repo's own
+// "traceability check", which counts its acceptance-requirement tags.</span></pre>
+  <p>On top of that, a Moodle-style <strong>Gherkin lint</strong> (<code>.gherkin-lintrc</code>: unique feature names, outlines with Examples, named files) locks down the §05 style in CI<sup><a href="#src-13">13</a></sup>.</p>
+
+  <h3>7.6 Database per run — where it plugs in</h3>
+  <p>No layout surprise here: the database glue lives under <code>features/support/</code> and is injected like any other Layer.</p>
+  <ul>
+    <li><code>support/layers/db.ts</code> — a Layer that reads <code>NEON_TEST_BRANCH_URL</code> (created by the <code>pr-N</code> Alchemy stage), applies the <code>packages/db</code> migrations, then the fixtures; provided as <code>shared</code> to every feature that touches the database.</li>
+    <li><code>support/hooks.ts</code> — <code>AfterAllScenarios</code>: keeps the branch on failure (for diagnosis), destroys it otherwise (STACK §8).</li>
+    <li>Permission scenarios (<code>cross-cutting/per/</code>) rely on <code>@qadi/testing</code>'s deterministic Layers — reproducible decisions, no database needed.</li>
+  </ul>
+</section>
+
+<!-- ================================================================ 08 -->
+<section id="s8">
+  <h2><span class="secno">08</span>Alternatives considered and rejected</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th>Option</th><th>Observed in</th><th>Reason for rejection, for ZSchool</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Specs <strong>per package</strong> (<code>packages/x/features/</code>)</td>
+        <td>Moodle (specs inside each component), the dominant pattern in JS monorepos<sup><a href="#src-6">6</a></sup></td>
+        <td>ZSchool requirements are <em>cross-cutting</em> across packages (one FR-FIN-03 spans domain+db+api); the natural split is the <strong>PRD business module</strong>, not the technical package. STACK §9 already settled this: <code>features/</code> at the root.</td>
+      </tr>
+      <tr>
+        <td><strong>Keyword-centralized</strong> glue (<code>given.ts/when.ts/then.ts</code>)</td>
+        <td>webdriverio-boilerplate<sup><a href="#src-4">4</a></sup></td>
+        <td>Orders glue by syntax, not by domain: at 258 FRs, each file becomes a catch-all. Glue organized by domain concept (<code>installment-schedule.steps.ts</code>) stays greppable and reusable. (The runner has no auto-loading anyway, so a keyword split adds nothing.)</td>
+      </tr>
+      <tr>
+        <td>A step folder that <strong>mirrors the spec tree</strong></td>
+        <td>GitLab v8.17 (<code>steps/project/</code> ↔ <code>project/</code>)<sup><a href="#src-32">32</a></sup></td>
+        <td>Revives the feature-coupled-steps anti-pattern<sup><a href="#src-41">41</a></sup>; Reqnroll.Specs' flat glue holds up better at scale. For ZSchool, the colocated pair already covers file-specific vocabulary; anything shared goes in <code>support/steps/</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>One <code>.feature</code> file per scenario</strong></td>
+        <td>never observed in the projects studied</td>
+        <td>A documented anti-pattern (disposable files, duplicated Background); the PRD's per-FR block is already the right capability-level granularity<sup><a href="#src-38">38</a> <a href="#src-39">39</a></sup>.</td>
+      </tr>
+      <tr>
+        <td>Writing specs in <strong>French</strong> or bilingual</td>
+        <td>this report's own original 2026-09-09 draft</td>
+        <td>The official rule — the domain experts' own language<sup><a href="#src-44">44</a></sup> — pointed to French while the PRD itself was French. The product owner's 2026-09-09 instruction moved the PRD, this report, and the whole project to English (<code>PROJECT.md</code> v1.2); under the same rule, that now means standard English Gherkin, with no <code># language:</code> header. See §5.6.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ================================================================ 09 -->
+<section id="s9">
+  <h2><span class="secno">09</span>Action plan</h2>
+  <ol class="flow">
+    <li><b>Validate the structure (this report)</b> — decisions to confirm: file naming (ID prefix), placement of <code>cross-cutting/</code> and <code>journeys/</code>, tag taxonomy.</li>
+    <li><b>Scaffold <code>features/</code></b> — empty module folders + <code>support/{steps,layers,fixtures}</code> + <code>hooks.ts</code>; a <code>bdd</code> vitest project in <code>vitest.config.ts</code>; pinned dependencies (<code>@effect-cucumber/vitest@^0.4.0</code>, <code>vitest@^4.1.0</code>).</li>
+    <li><b>Write the first pair</b> — <code>fin-03-installment-schedule.feature</code> + its glue (example in 7.4), with real services imported from <code>packages/domain</code> as soon as that vertical slice lands (STACK §12.3).</li>
+    <li><b>Set up the CI gates</b> — <code>verify-bdd-traceability</code> (tags ↔ PRD IDs), Gherkin lint (.gherkin-lintrc), <code>excludeTags: ["@wip"]</code> on PR runs.</li>
+    <li><b>Wire up the database</b> — <code>support/layers/db.ts</code> against the <code>pr-N</code> stage's Neon branch, kept on failure (AfterAllScenarios).</li>
+    <li><b>Migrate module by module</b> — for each module in the first slice: PRD blocks → <code>.feature</code>/<code>.steps.test.ts</code> pairs, one FR = one file, tags applied from day one.</li>
+  </ol>
+</section>
+
+<!-- ================================================================ 10 -->
+<section id="s10" class="sources">
+  <h2><span class="secno">10</span>Sources</h2>
+  <p>All verified on 2026-09-09. Trees captured verbatim (GitHub contents API / git ls-tree) on the branches cited; official docs for the discovery mechanisms.</p>
+  <ol>
+    <li id="src-1">cucumber-js — configuration, feature/glue discovery, language, parallel: <a href="https://github.com/cucumber/cucumber-js/blob/main/docs/configuration.md">docs/configuration.md</a> · <a href="https://github.com/cucumber/cucumber-js/blob/main/docs/parallel.md">docs/parallel.md</a> · <a href="https://github.com/cucumber/cucumber-js/blob/main/docs/profiles.md">docs/profiles.md</a></li>
+    <li id="src-2">cucumber-js — dogfood suite <code>features/</code>: <a href="https://github.com/cucumber/cucumber-js/tree/main/features">github.com/cucumber/cucumber-js/tree/main/features</a></li>
+    <li id="src-3">cucumber-js — historical v7 example (nodejs_example): <a href="https://github.com/cucumber/cucumber-js/blob/v7.0.0/docs/nodejs_example.md">docs/nodejs_example.md @v7.0.0</a></li>
+    <li id="src-4">webdriverio/cucumber-boilerplate: <a href="https://github.com/webdriverio/cucumber-boilerplate">repo</a> · <a href="https://github.com/webdriverio/cucumber-boilerplate/blob/main/wdio.conf.ts">wdio.conf.ts</a></li>
+    <li id="src-5">playwright-bdd — examples and multi-project setups: <a href="https://github.com/vitalets/playwright-bdd/tree/main/examples/basic-esm">examples/basic-esm</a> · <a href="https://github.com/vitalets/playwright-bdd/blob/main/docs/configuration/multiple-projects.md">multiple-projects.md</a> · <a href="https://github.com/vitalets/playwright-bdd/blob/main/docs/guides/usage-with-nx.md">usage-with-nx.md</a></li>
+    <li id="src-6">JS monorepo placement: per-package vs shared-root patterns (same sources as S5); double-instance peerDependency: <a href="https://github.com/cucumber/cucumber-js/blob/main/docs/installation.md">docs/installation.md</a></li>
+    <li id="src-7">amiceli/vitest-cucumber — feature/spec colocation: <a href="https://github.com/amiceli/vitest-cucumber">repo</a> · <a href="https://github.com/amiceli/vitest-cucumber-docs/blob/main/examples/basic/features">official example</a></li>
+    <li id="src-8">Alternative vitest-BDD tools — <code>features/</code> + <code>support/</code> conventions: <a href="https://github.com/Deepractice/VitestCucumber">@deepracticex/vitest-cucumber</a> · <a href="https://github.com/dnotes/quickpickle">quickpickle</a></li>
+    <li id="src-9">effect-cucumber — README, colocated pair, tags→vitest, traceability check, hooks, TestClock: <a href="https://github.com/leaderiop/effect-cucumber">github.com/leaderiop/effect-cucumber</a> (local clone <code>~/Projects/Perso/effect-cucumber</code>: <code>packages/vitest/test/acceptance/*</code>, <code>packages/vitest/README.md</code>)</li>
+    <li id="src-10">effect-cucumber — worked examples (distinguishable assertions, shared/perScenario, defineSteps, ref-state gate): <code>worked-example-02-accounts.{feature,steps.test.ts}</code>, <code>step-modules.module.ts</code>, <code>scripts/verify-acceptance-ref-state.sh</code></li>
+    <li id="src-11">effect-cucumber — French dialect tested upstream: fixtures <code>packages/gherkin/test/fixtures/dialect-fr.feature</code></li>
+    <li id="src-12">moodle/moodle — <code>tests/behat/</code> corpus per component (1,499 .feature files): <a href="https://github.com/moodle/moodle">github.com/moodle/moodle</a></li>
+    <li id="src-13">moodle — Gherkin lint: <a href="https://github.com/moodle/moodle/blob/main/.gherkin-lintrc">.gherkin-lintrc</a></li>
+    <li id="src-14">cucumber/gherkin — official keywords (French dialect): <a href="https://github.com/cucumber/gherkin/blob/main/gherkin-languages.json">gherkin-languages.json</a> (local clone <code>~/Projects/Perso/gherkin</code>)</li>
+    <li id="src-15">Reqnroll — official templates: <a href="https://github.com/reqnroll/Reqnroll/tree/main/Templates/Reqnroll.Templates.DotNet/templates/reqnroll-project">reqnroll-project</a> · <a href="https://github.com/reqnroll/Quickstart">reqnroll/Quickstart</a></li>
+    <li id="src-16">Reqnroll — feature file location, code-behind: <a href="https://docs.reqnroll.net/latest/gherkin/feature-files.html">docs/gherkin/feature-files.html</a> · <a href="https://docs.reqnroll.net/latest/installation/setup-project.html">docs/installation/setup-project.html</a></li>
+    <li id="src-17">Reqnroll.Specs (dogfood): <a href="https://github.com/reqnroll/Reqnroll/tree/main/Tests/Reqnroll.Specs">Tests/Reqnroll.Specs</a></li>
+    <li id="src-18">Reqnroll — feature language (fr-FR): <a href="https://docs.reqnroll.net/latest/gherkin/feature-language.html">docs/gherkin/feature-language.html</a> · bindings: <a href="https://docs.reqnroll.net/latest/automation/scoped-bindings.html">scoped-bindings.html</a> · hooks: <a href="https://docs.reqnroll.net/latest/automation/hooks.html">hooks.html</a> · driver pattern: <a href="https://docs.reqnroll.net/latest/guides/driver-pattern.html">driver-pattern.html</a></li>
+    <li id="src-19">SpecFlow retired, Reqnroll continuation: <a href="https://seankilleen.com/2025/01/farewell-specflow-gaspar-nagy-saves-the-day-with-reqnroll/">seankilleen.com</a> · <a href="https://docs.reqnroll.net/latest/guides/migrating-from-specflow.html">migration docs</a></li>
+    <li id="src-20">SpecOverflow (Gáspár Nagy): <a href="https://github.com/gasparnagy/SpecFlowMasterClass.SpecOverflow">github.com/gasparnagy/SpecFlowMasterClass.SpecOverflow</a></li>
+    <li id="src-21">Reqnroll — parallel execution by Feature: <a href="https://docs.reqnroll.net/latest/execution/parallel-execution.html">docs/execution/parallel-execution.html</a></li>
+    <li id="src-22">Cucumber-JVM starters: <a href="https://github.com/cucumber/cucumber-jvm-starter-maven-java">maven starter</a> · <a href="https://github.com/cucumber/cucumber-jvm-starter-gradle-java">gradle starter</a></li>
+    <li id="src-23">Cucumber-JVM — discovery/glue/parallel: <a href="https://github.com/cucumber/cucumber-jvm/blob/main/cucumber-junit-platform-engine/README.md">junit-platform-engine README</a> · <a href="https://github.com/cucumber/cucumber-jvm/blob/main/cucumber-junit-platform-engine/src/main/java/io/cucumber/junit/platform/engine/Constants.java">Constants.java</a></li>
+    <li id="src-24">cucumber-jvm-examples (calculator, named Examples): <a href="https://github.com/cucumber/cucumber-jvm-examples">github.com/cucumber/cucumber-jvm-examples</a></li>
+    <li id="src-25">eugenp/tutorials — cucumber module (tags/acceptance, page objects, hooks per tag): <a href="https://github.com/eugenp/tutorials/tree/master/testing-modules/cucumber">testing-modules/cucumber</a></li>
+    <li id="src-26">Serenity BDD starter + tutorial: <a href="https://github.com/serenity-bdd/serenity-cucumber-starter">serenity-cucumber-starter</a> · <a href="https://serenity-bdd.github.io/docs/tutorials/cucumber-screenplay">docs/tutorials/cucumber-screenplay</a></li>
+    <li id="src-27">behave — tutorial/configuration: <a href="https://behave.readthedocs.io/en/latest/tutorial/">behave.readthedocs.io</a></li>
+    <li id="src-28">behave — dogfood <code>features/</code>: <a href="https://github.com/behave/behave/tree/main/features">github.com/behave/behave/tree/main/features</a></li>
+    <li id="src-29">godog — README (package isolation, go:embed): <a href="https://github.com/cucumber/godog">github.com/cucumber/godog</a></li>
+    <li id="src-30">godog — meta-suite: <a href="https://github.com/cucumber/godog/blob/main/suite_context_test.go">suite_context_test.go</a> · <a href="https://github.com/cucumber/godog/tree/main/_examples">_examples/</a></li>
+    <li id="src-31">cucumber-ruby — <code>cucumber --init</code>: <a href="https://github.com/cucumber/cucumber-ruby">github.com/cucumber/cucumber-ruby</a></li>
+    <li id="src-32">GitLab v8.17 (Cucumber era): <a href="https://github.com/gitlabhq/gitlabhq/tree/v8.17.0/features">features/ @v8.17.0</a></li>
+    <li id="src-33">GitLab drops Gherkin for RSpec: <a href="https://gitlab.com/gitlab-org/gitlab-foss/-/issues/23036">issue 23036</a></li>
+    <li id="src-34">VCR — <code>features/</code> per subject: <a href="https://github.com/vcr/vcr/tree/master/features">github.com/vcr/vcr/tree/master/features</a></li>
+    <li id="src-35">cucumber-ruby — dogfood <code>features/docs</code>: <a href="https://github.com/cucumber/cucumber-ruby/tree/main/features/docs">features/docs</a></li>
+    <li id="src-36">Behat — quick start &amp; suites: <a href="https://docs.behat.org/en/latest/quick_start.html">docs.behat.org quick_start</a> · <a href="https://behat.org/en/v3.x/user_guide/configuration.html">configuration</a></li>
+    <li id="src-37">Sylius v1.12 — <code>features/</code> per domain + <code>src/Sylius/Behat</code> + suites per tag: <a href="https://github.com/Sylius/Sylius/tree/v1.12.0/features">features/</a> · <a href="https://github.com/Sylius/Sylius/tree/v1.12.0/src/Sylius/Behat">src/Sylius/Behat</a></li>
+    <li id="src-38">cucumber.io blog — "Solving how to organise feature files" (official review; Wynne: "pure problem domain"): <a href="https://cucumber.io/blog/bdd/solving-how-to-organise-feature-files/">cucumber.io/blog</a></li>
+    <li id="src-39">cucumber.io blog — "User stories are not the same as features": <a href="https://cucumber.io/blog/bdd/user-stories-are-not-the-same-as-features/">cucumber.io/blog</a></li>
+    <li id="src-40">cucumber.io — Writing better Gherkin (describing behavior, declarative style): <a href="https://cucumber.io/docs/bdd/better-gherkin/">cucumber.io/docs/bdd/better-gherkin</a></li>
+    <li id="src-41">cucumber.io — Anti-patterns (feature-coupled steps, conjunctions): <a href="https://cucumber.io/docs/guides/anti-patterns/">cucumber.io/docs/guides/anti-patterns</a></li>
+    <li id="src-42">ZSchool — the PRD's own Gherkin acceptance criteria: <code>prd/modules/*.md</code> (e.g. FR-FIN-03, <code>prd/modules/16-finance-billing-collections.md</code> §FR-FIN-03)</li>
+    <li id="src-43">cucumber.io — Gherkin reference (Background, Rule, Scenario Outline, guidance): <a href="https://cucumber.io/docs/gherkin/reference/">cucumber.io/docs/gherkin/reference</a></li>
+    <li id="src-44">cucumber.io — Gherkin languages (the domain experts' own language): <a href="https://cucumber.io/docs/gherkin/reference/#spoken-languages">reference #spoken-languages</a> · <a href="https://cucumber.io/docs/gherkin/languages/">docs/gherkin/languages</a></li>
+    <li id="src-45">ZSchool — technical foundation: <code>STACK.md</code> §2, §8, §9, §12; conventions: <code>prd/00-conventions.md</code></li>
+  </ol>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <div class="shell">
+    <span>ZSchool · BDD engineering brief · 2026-09-09 · status 0.2 — English translation</span>
+    <span>Trees captured verbatim · sources in §10 · related documents: STACK.md §8–§9, prd/00-conventions.md</span>
+  </div>
+</footer>
+
+<script>
+// Minimal scroll-spy for the table of contents
+const links = [...document.querySelectorAll('.toc a')];
+const byId = Object.fromEntries(links.map(a => [a.getAttribute('href').slice(1), a]));
+const obs = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) {
+    links.forEach(a => a.classList.remove('active'));
+    byId[e.target.id]?.classList.add('active');
+  }
+}, { rootMargin: '-15% 0px -70% 0px' });
+document.querySelectorAll('main section').forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
