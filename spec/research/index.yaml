@@ -4,5 +4,36 @@
 kind: research
 package: zschool
 infix: ZS
-# Populated in Phase 1.5. One entry per relocated research file (research/0N-*.md), content unchanged from prd/research/.
-entries: []
+# Populated in Phase 1.5 (belatedly - see Phase 8 note in spec/README.md). One entry
+# per relocated research file (research/0N-*.md), content unchanged from prd/research/.
+entries:
+  - id: "ZSCHOOL-RES-00"
+    file: "00-baseline-corrections.md"
+    title: "Web Research — Corrections to the Baseline"
+    status: "Effective"
+    origin: "prd/research/00-baseline-corrections.md"
+  - id: "ZSCHOOL-RES-01"
+    file: "01-market-competition.md"
+    title: "Web Research — Market and Competition"
+    status: "Effective"
+    origin: "prd/research/01-market-competition.md"
+  - id: "ZSCHOOL-RES-02"
+    file: "02-regulatory-data.md"
+    title: "Web Research — Regulatory and Data Protection"
+    status: "Effective"
+    origin: "prd/research/02-regulatory-data.md"
+  - id: "ZSCHOOL-RES-03"
+    file: "03-payments-communications.md"
+    title: "Web Research — Payments and Communications"
+    status: "Effective"
+    origin: "prd/research/03-payments-communications.md"
+  - id: "ZSCHOOL-RES-04"
+    file: "04-pedagogy-massar-calendar.md"
+    title: "Web Research — Pedagogy, Massar, Calendar"
+    status: "Effective"
+    origin: "prd/research/04-pedagogy-massar-calendar.md"
+  - id: "ZSCHOOL-RES-05"
+    file: "05-infrastructure-usage.md"
+    title: "Web Research — Infrastructure, Hosting, Digital Usage"
+    status: "Effective"
+    origin: "prd/research/05-infrastructure-usage.md"
