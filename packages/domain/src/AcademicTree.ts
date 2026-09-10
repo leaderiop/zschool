@@ -30,6 +30,8 @@ export interface CreateGroupCommand {
   readonly code: string
   readonly name: string
   readonly groupType: "language" | "option" | "lab"
+  /** Which subject this group is for — required before `Courses.ts`'s `generateCourseForGroup` can generate its course (migration 0006). */
+  readonly subjectLevelConfigId?: string
 }
 
 /**
@@ -77,10 +79,10 @@ export const createGroup = (
         yield* requireOwnedRow(sql, "classes", "class", command.classId, command.schoolId)
 
         const [row] = yield* sql<{ id: string }>`
-          INSERT INTO groups (school_id, academic_year_id, class_id, code, name, group_type)
+          INSERT INTO groups (school_id, academic_year_id, class_id, code, name, group_type, subject_level_config_id)
           VALUES (
             ${command.schoolId}, ${command.academicYearId}, ${command.classId},
-            ${command.code}, ${command.name}, ${command.groupType}
+            ${command.code}, ${command.name}, ${command.groupType}, ${command.subjectLevelConfigId ?? null}
           )
           RETURNING id
         `
