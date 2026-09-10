@@ -112,7 +112,7 @@ const trackSpecialtySubjects: Record<string, ReadonlyArray<SubjectCoefficient>> 
     { code: "COMPTA", name: "Comptabilité", coefficient: 3, teachingLanguage: "Arabic", isMandatory: true }
   ],
   accounting_management: [
-    { code: "COMPTA", name: "Comptabilité et mathématiques financières", coefficient: 6, teachingLanguage: "Arabic", isMandatory: true },
+    { code: "COMPTA", name: "Comptabilité", coefficient: 6, teachingLanguage: "Arabic", isMandatory: true },
     { code: "MATH", name: "Mathématiques", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true },
     { code: "ECO", name: "Économie générale et statistique", coefficient: 3, teachingLanguage: "Arabic", isMandatory: true }
   ],

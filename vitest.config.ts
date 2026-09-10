@@ -15,7 +15,16 @@ export default defineConfig({
           // issues on the order of a hundred sequential statements, which
           // comfortably exceeds vitest's 5s default.
           testTimeout: 60_000,
-          tags: [...gherkinTags("features/**/*.feature", { cwd: process.cwd() }), { name: "@skip" }, { name: "@only" }]
+          // `@skip`/`@only` are declared unconditionally so either is usable
+          // even before a `.feature` file uses it; deduped by name against
+          // `gherkinTags`'s own discovery since a tag already in use there
+          // (e.g. `@skip`) would otherwise be declared twice.
+          tags: [
+            ...new Map(
+              [...gherkinTags("features/**/*.feature", { cwd: process.cwd() }), { name: "@skip" }, { name: "@only" }]
+                .map((tag) => [tag.name, tag] as const)
+            ).values()
+          ]
         }
       }
     ]
