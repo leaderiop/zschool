@@ -92,7 +92,7 @@ const setupSchoolWithClass = (name: string, academicYearLabel: string) =>
       levelId: level1AC.id,
       label: "1AC-1",
       capacity: 30
-    }).pipe(Effect.provide(asDirectorOf(school.id)))
+    }).pipe(Effect.provide(asDirectorOf(school.id)), Effect.orDie)
 
     return { schoolId: school.id, academicYearId: result.academicYearId }
   })
