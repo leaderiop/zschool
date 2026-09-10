@@ -2,6 +2,8 @@ import type { EvaluationServices } from "@qadi/core/Evaluate"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
+import * as Result from "effect/Result"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
@@ -30,6 +32,22 @@ export interface ClassImportRow {
   readonly capacity: number
 }
 
+/**
+ * Validates the shape of a row before any DB lookup runs — a positive
+ * integer `capacity`, non-empty `levelCode`/`label`. Kept as a standalone,
+ * DB-free function (rather than inlined in `analyzeClassImport`'s loop) so
+ * this boundary is unit-testable without a `SqlClient`.
+ */
+const ClassImportRowSchema = Schema.Struct({
+  levelCode: Schema.NonEmptyString,
+  trackCode: Schema.optional(Schema.NonEmptyString),
+  label: Schema.NonEmptyString,
+  capacity: Schema.Int.check(Schema.isGreaterThan(0))
+})
+
+export const decodeClassImportRow = (row: ClassImportRow): Result.Result<ClassImportRow, Schema.SchemaError> =>
+  Schema.decodeResult(ClassImportRowSchema)(row)
+
 export type ClassImportRowResult =
   | { readonly row: ClassImportRow; readonly status: "creatable" }
   | { readonly row: ClassImportRow; readonly status: "duplicate"; readonly reason: string }
@@ -48,8 +66,9 @@ export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImp
         const results: Array<ClassImportRowResult> = []
 
         for (const row of rows) {
-          if (row.capacity <= 0) {
-            results.push({ row, status: "error", reason: "Capacity must be greater than zero" })
+          const decoded = decodeClassImportRow(row)
+          if (Result.isFailure(decoded)) {
+            results.push({ row, status: "error", reason: decoded.failure.message })
             continue
           }
 
