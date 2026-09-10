@@ -253,9 +253,19 @@ into that range.
 | [ADR-ZS-099](decisions/099-sqs-idempotent-workers-mvp-async.md) | SQS with idempotent workers for MVP async processing, workflow deferred | Accepted | — |
 | [ADR-ZS-100](decisions/100-postgres-full-text-search-over-external-engine.md) | Postgres full-text search over an external search engine | Accepted | — |
 | [ADR-ZS-101](decisions/101-neon-branch-per-pr-and-per-bdd-run.md) | A Neon branch per developer, per PR, and per BDD test run | Accepted | — |
-| [ADR-ZS-102](decisions/102-pnpm-workspaces-no-monorepo-tool.md) | pnpm workspaces, no turbo/nx, while build times allow it | Accepted | — |
+| [ADR-ZS-102](decisions/102-pnpm-workspaces-no-monorepo-tool.md) | pnpm workspaces, no turbo/nx, while build times allow it | Superseded by ADR-ZS-114 | — |
 | [ADR-ZS-103](decisions/103-cloudfront-static-assets-only.md) | CloudFront serves only the static SPA bundle, never student data | Accepted | — |
 | [ADR-ZS-104](decisions/104-clamav-upload-scanning.md) | Uploaded documents scanned by ClamAV before storage or distribution | Accepted | — |
+| [ADR-ZS-105](decisions/105-academic-structure-school-vs-year-scoped-entities.md) | Every MVP academic-structure entity is a per-year snapshot, cloned wholesale at rollover | Accepted | — |
+| [ADR-ZS-106](decisions/106-onboarding-import-staged-batch-sync-analyze-async-commit.md) | Onboarding import: staged batch, synchronous analyze, async idempotent commit with re-validation | Accepted | — |
+| [ADR-ZS-107](decisions/107-person-relationship-rls-exists-subquery.md) | Person and ParentStudentRelationship stay covered by RLS via an EXISTS-subquery policy | Accepted | — |
+| [ADR-ZS-108](decisions/108-cross-tenant-matching-security-definer-function.md) | Cross-tenant identity matching goes through a narrow SECURITY DEFINER function, never raw row access | Accepted | — |
+| [ADR-ZS-109](decisions/109-person-separate-facet-tables.md) | Person plus separate facet tables per profile type | Accepted | — |
+| [ADR-ZS-110](decisions/110-combined-import-batch-commit-order.md) | Combined import batch commits classes, then guardians, then per-student units | Accepted | — |
+| [ADR-ZS-111](decisions/111-teacher-import-invited-only-no-assignment.md) | Bulk-imported teacher affiliations are created invited, never active — course assignment stays a manual post-acceptance step | Accepted | — |
+| [ADR-ZS-112](decisions/112-historical-grades-archival-academic-year.md) | "Historical" grades are this school's own prior-year archive, imported into a born-closed archival AcademicYear | Accepted | — |
+| [ADR-ZS-113](decisions/113-grade-import-synthesizes-assessment-and-enrollment.md) | Grade import synthesizes a placeholder Assessment, and a COMPLETED Enrollment for historical rows | Accepted | — |
+| [ADR-ZS-114](decisions/114-turborepo-adopted-ahead-of-schedule.md) | Turborepo adopted ahead of ADR-ZS-102's "while build times allow it" schedule | Accepted | — |
 
 ---
 

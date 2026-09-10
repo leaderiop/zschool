@@ -57,15 +57,15 @@ redefined accordingly.
 | Package | Version | Note |
 |---|---|---|
 | `effect`, `@effect/vitest`, `@effect/platform-node`, `@effect/atom-react`, `@effect/opentelemetry`, `@effect/sql-pg` | `4.0.0-rc.112` (`rc` dist-tag) | v4 RC line; watching for GA |
-| `@effect-cucumber/vitest` / `@effect-cucumber/gherkin` | `^0.4.0` | pre-1.0, API may still change |
-| `vitest` | `^4.1.0` | `<5` ceiling imposed by `@effect-cucumber/vitest` |
+| `@effect-cucumber/vitest` / `@effect-cucumber/gherkin` | `^0.7.0` | pre-1.0, API may still change; vitest peer range moved from `<5.0.0` (through `0.6.0`) to `>=5.0.0 <6.0.0` (from `0.7.0`) |
+| `vitest` | `^5.0.0` | ceiling tracks whichever range `@effect-cucumber/vitest`'s current release supports |
 | `react`, `react-dom` | `19.2.x` | |
 | `vite` | `8.2.x` | |
 | `typescript` | `7.x` (tsgo) | aligned with the effect repository |
 | `node` | `22.x` LTS | Lambda runtime `nodejs22.x` |
 | `pnpm` | `11.x` | |
 | `alchemy` | `2.0.0-beta.76` (`latest` dist-tag) | "Infrastructure as Effects" IaC; aligned with `effect@rc` |
-| `@qadi/*` (core, http, react, predicate-sql, audit, testing, devtools) | `0.4.0` | depends on `effect` pinned exactly to `4.0.0-rc.112` → upgrades move in lockstep with the RC |
+| `@qadi/*` (core, http, react, predicate-sql, audit, testing, devtools) | `0.5.0` | depends on `effect` pinned exactly to `4.0.0-rc.112` → upgrades move in lockstep with the RC |
 | `shadcn` (CLI), `tailwindcss` | `4.21.x` / `4.3.x` | components copied into the repository (zero runtime dependency); Tailwind 4 CSS-first |
 
 Routing/i18n/long-tail UI and tooling (TanStack Router, i18next, TanStack
@@ -79,14 +79,15 @@ time.
 | # | Risk | Treatment |
 |---|---|---|
 | 1 | Effect v4 is still RC (not GA): the API may still change before GA | Pin `4.0.0-rc.112`; confine `unstable/*` behind `packages/domain` and the adapters |
-| 2 | `@effect-cucumber/vitest` is pre-1.0, with a `vitest <5` ceiling | Accepted and tracked; the `.feature` files (standard Gherkin) remain stable by construction |
+| 2 | `@effect-cucumber/vitest` is pre-1.0, with a Vitest peer-dependency ceiling that has already moved once (`<5.0.0` → `>=5.0.0 <6.0.0` at `0.7.0`) | Accepted and tracked; the `.feature` files (standard Gherkin) remain stable by construction |
 | 3 | Neon region is final; single-region dependency on `eu-central-1` | PITR + S3 exports replicated to `eu-west-3` + IaC rebuild; quarterly drills (`NFR-ZS`, savings/DR domain) |
 | 4 | Arabic PDF (shaping/RTL) under a tight deadline (report card under 3s) | A spike at MVP start; two tooled options |
 | 5 | Cognito + OTP via a Moroccan aggregator (custom triggers) | Prototype the auth flow before pilot onboarding (rate limiting, no enumeration — `spec/risks.md`) |
 | 6 | Latency between Morocco and `eu-central-1` (~80-100ms round trip) vs pages under 2s on 4G | Ample margin; measured in k6 campaigns (`ADR-ZS-...` v `spec/decisions/`); connection pooling mandatory |
 | 7 | Loss of the "hosted in Morocco" argument with schools | Carried by the product owner in the `ADR-ZS-091` escalation |
 | 8 | Alchemy's maturity gap: Cognito, API Gateway HTTP API v2, WAF have no dedicated resources | Cognito via a custom resource over typed AWS APIs; JWT verified in-app; application-level rate limiting |
-| 9 | `@qadi` coupled by an exact pin (`effect@4.0.0-rc.112`, no version range) | The workspace upgrades in lockstep on the (Effect RC, `@qadi` 0.4.x) pair; Postgres RLS remains the final safeguard (`ADR-ZS-092`) |
+| 9 | `@qadi` coupled by an exact pin (`effect@4.0.0-rc.112`, no version range) | The workspace upgrades in lockstep on the (Effect RC, `@qadi` 0.4.x) pair; `@qadi` application-level authorization is the sole enforcement layer today (see risk 10 — RLS is not currently an independent backstop) |
+| 10 | **Neon grants every project role `BYPASSRLS`, including a freshly-provisioned least-privilege role, and the project owner cannot revoke it via `ALTER ROLE ... NOBYPASSRLS`** (verified directly against `zschool_app`: refused with "Only roles with the CREATEROLE attribute and the ADMIN option on role may alter this role") | ADR-ZS-092's Postgres-RLS-as-defense-in-depth is written and installed correctly (`tenant_isolation` policies, `FORCE ROW LEVEL SECURITY`) but is not an enforced second layer on this Neon project today — `@qadi` is the sole enforcement until Neon exposes a way to provision a non-`BYPASSRLS` role (a support request, or a plan/feature not yet checked); tracked, not silently assumed fixed |
 
 ## 4. Next steps
 

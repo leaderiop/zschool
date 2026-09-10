@@ -1,1 +1,2 @@
-export const name = "@zschool/domain"
+export * from "./NationalTemplate.ts"
+export * from "./InstantiateNationalTemplate.ts"

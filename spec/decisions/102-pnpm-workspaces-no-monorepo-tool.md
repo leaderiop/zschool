@@ -1,6 +1,6 @@
 # ADR-ZS-102: pnpm workspaces, no turbo/nx, while build times allow it
 
-> **Status:** Accepted
+> **Status:** Superseded by [ADR-ZS-114](./114-turborepo-adopted-ahead-of-schedule.md) (2026-09-10)
 > **Date:** 2026-09-09
 > **Historical aliases:** none (STACK.md §9)
 

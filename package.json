@@ -1,21 +1,37 @@
 {
   "name": "zschool",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=24.21.0"
+    "node": ">=22.22.0 <23.0.0"
   },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "typecheck": "turbo run typecheck && tsc --noEmit -p tsconfig.json",
+    "test": "turbo run test",
+    "test:bdd": "vitest run --project bdd"
   },
   "devDependencies": {
     "turbo": "^2.10.12",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0",
-    "oxlint": "^1.82.0"
+    "oxlint": "^1.82.0",
+    "effect": "4.0.0-rc.112",
+    "@effect/platform-node": "4.0.0-rc.112",
+    "@effect-cucumber/vitest": "^0.7.0",
+    "@effect-cucumber/gherkin": "^0.7.0",
+    "@qadi/core": "0.5.0",
+    "@qadi/testing": "0.5.0",
+    "@zschool/domain": "workspace:*",
+    "@zschool/db": "workspace:*"
+  },
+  "pnpm": {
+    "overrides": {
+      "effect": "4.0.0-rc.112",
+      "@effect/platform-node-shared": "4.0.0-rc.112"
+    }
   }
 }

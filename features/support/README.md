@@ -1,27 +1,21 @@
-# Support — claims of absence
+# Support
 
-`support/` is where step definitions, deterministic test layers (TestClock,
-transport stubs), and fixtures would live once ZSchool has a wired-up BDD
-runner, per `reports/2026-09-09-organizing-bdd-gherkin-tests.html` and
-`spec/stack.md` (`@effect-cucumber/vitest`).
-
-None of that exists yet. Explicitly, as of this migration:
+`support/` holds step definitions, deterministic test layers (TestClock,
+transport stubs), and fixtures for the BDD runner (`@effect-cucumber/vitest`,
+`spec/decisions/088-effect-cucumber-vitest-as-bdd-runner.md`).
 
 | What | Status |
 |---|---|
-| `support/steps/*.steps.ts` (step definitions) | **Does not exist.** No glue code has been written for any `.feature` file in this tree. |
-| `support/layers/*.ts` (TestClock, SMS/WhatsApp/CMI stubs, DB layer) | **Does not exist.** |
-| `support/fixtures/*` (builders, anonymized test sets) | **Does not exist.** |
-| `support/hooks.ts` (global hooks, ephemeral Neon branch lifecycle) | **Does not exist.** |
-| `package.json` / any installed test runner | **Does not exist anywhere in this repo.** `@effect-cucumber/vitest` is a stated intent in `spec/stack.md`, not an installed dependency. |
-| CI wiring that runs `.feature` files | **Does not exist.** |
+| `support/layers/db.ts` (`DatabaseTestLive`: migrations + a restricted-role `SqlClient`) | **Exists**, shared by every Postgres-backed Feature. |
+| `<feature>.steps.test.ts` colocated step definitions | **Exists for `features/ped/fr-ped-01-instantiate-national-template.feature`** — the pattern to follow for the next Feature (`loadFeature` + `describeFeature`, per `@effect-cucumber/vitest`'s own README). |
+| `support/steps/*.steps.ts` (step modules shared across more than one Feature, via `defineSteps`) | Not needed yet — every step so far is specific to its one Feature. Extract to a shared module (by domain concept, not by `.feature` file) once a second Feature needs the same step text. |
+| `support/layers/*.ts` (TestClock, SMS/WhatsApp/CMI transport stubs, `@qadi/testing` resolvers) | Not needed yet — no Feature written so far exercises those services. |
+| `support/fixtures/*` (builders, anonymized test sets) | Not needed yet. |
+| `support/hooks.ts` (global hooks, ephemeral per-run Neon branch lifecycle) | **Does not exist.** Every local run and CI run currently share the one provisioned Neon branch (`DatabaseTestLive`'s own doc comment) rather than getting a fresh one per run — ADR-ZS-103's per-PR/per-BDD-run branching is not wired up. |
+| CI wiring that runs `.feature` files | **Does not exist.** `pnpm test:bdd` (root `package.json`) runs the suite locally; nothing in `.github/workflows` calls it yet. |
 
-This table is the registry for those absence-claims, following the pattern
+This table is the registry for what's still missing, following the pattern
 `/Users/mohammadalmechkor/Projects/Perso/qadi/spec/devtools-spec/` uses for
 "not yet built" statements: when any row above becomes false, update the row
 and delete it together in the same change — don't let a stale "does not
 exist" line sit next to code that now exists.
-
-The `.feature` files under `features/**` are still valuable on their own as
-executable-shaped acceptance criteria, correctly tagged and traceable — they
-just aren't executed by anything yet.

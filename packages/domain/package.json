@@ -11,5 +11,10 @@
     "lint": "oxlint .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "effect": "4.0.0-rc.112",
+    "@zschool/db": "workspace:*",
+    "@qadi/core": "0.5.0"
   }
 }

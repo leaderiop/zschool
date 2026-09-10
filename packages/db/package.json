@@ -10,6 +10,15 @@
     "dev": "tsc -b --watch",
     "lint": "oxlint .",
     "typecheck": "tsc -b --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "migrate": "tsx src/runMigrations.ts"
+  },
+  "dependencies": {
+    "effect": "4.0.0-rc.112",
+    "@effect/sql-pg": "4.0.0-rc.112",
+    "@effect/platform-node": "4.0.0-rc.112"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
   }
 }
