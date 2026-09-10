@@ -53,7 +53,13 @@ const middleSubjects: ReadonlyArray<SubjectCoefficient> = [
   { code: "FR", name: "Français", coefficient: 4, teachingLanguage: "French", isMandatory: true },
   { code: "EN", name: "Anglais", coefficient: 2, teachingLanguage: "English", isMandatory: true },
   { code: "MATH", name: "Mathématiques", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true },
-  { code: "SVT", name: "Sciences de la Vie et de la Terre", coefficient: 2, teachingLanguage: "Arabic", isMandatory: true },
+  {
+    code: "SVT",
+    name: "Sciences de la Vie et de la Terre",
+    coefficient: 2,
+    teachingLanguage: "Arabic",
+    isMandatory: true
+  },
   { code: "PC", name: "Physique-Chimie", coefficient: 2, teachingLanguage: "Arabic", isMandatory: true },
   { code: "HG", name: "Histoire-Géographie", coefficient: 2, teachingLanguage: "Arabic", isMandatory: true },
   { code: "ISL", name: "Éducation islamique", coefficient: 2, teachingLanguage: "Arabic", isMandatory: true },
@@ -79,20 +85,44 @@ const trackSpecialtySubjects: Record<string, ReadonlyArray<SubjectCoefficient>> 
   math_sciences_a: [
     { code: "MATH", name: "Mathématiques", coefficient: 7, teachingLanguage: "French", isMandatory: true },
     { code: "PC", name: "Physique-Chimie", coefficient: 5, teachingLanguage: "French", isMandatory: true },
-    { code: "SVT", name: "Sciences de la Vie et de la Terre", coefficient: 3, teachingLanguage: "French", isMandatory: true }
+    {
+      code: "SVT",
+      name: "Sciences de la Vie et de la Terre",
+      coefficient: 3,
+      teachingLanguage: "French",
+      isMandatory: true
+    }
   ],
   math_sciences_b: [
     { code: "MATH", name: "Mathématiques", coefficient: 9, teachingLanguage: "French", isMandatory: true },
     { code: "PC", name: "Physique-Chimie", coefficient: 7, teachingLanguage: "French", isMandatory: true },
-    { code: "SVT", name: "Sciences de la Vie et de la Terre", coefficient: 1, teachingLanguage: "French", isMandatory: true }
+    {
+      code: "SVT",
+      name: "Sciences de la Vie et de la Terre",
+      coefficient: 1,
+      teachingLanguage: "French",
+      isMandatory: true
+    }
   ],
   physical_sciences: [
     { code: "PC", name: "Physique-Chimie", coefficient: 7, teachingLanguage: "French", isMandatory: true },
     { code: "MATH", name: "Mathématiques", coefficient: 5, teachingLanguage: "French", isMandatory: true },
-    { code: "SVT", name: "Sciences de la Vie et de la Terre", coefficient: 2, teachingLanguage: "French", isMandatory: true }
+    {
+      code: "SVT",
+      name: "Sciences de la Vie et de la Terre",
+      coefficient: 2,
+      teachingLanguage: "French",
+      isMandatory: true
+    }
   ],
   life_earth_sciences: [
-    { code: "SVT", name: "Sciences de la Vie et de la Terre", coefficient: 7, teachingLanguage: "French", isMandatory: true },
+    {
+      code: "SVT",
+      name: "Sciences de la Vie et de la Terre",
+      coefficient: 7,
+      teachingLanguage: "French",
+      isMandatory: true
+    },
     { code: "PC", name: "Physique-Chimie", coefficient: 5, teachingLanguage: "French", isMandatory: true },
     { code: "MATH", name: "Mathématiques", coefficient: 3, teachingLanguage: "French", isMandatory: true }
   ],
@@ -104,17 +134,35 @@ const trackSpecialtySubjects: Record<string, ReadonlyArray<SubjectCoefficient>> 
   social_sciences: [
     { code: "HG", name: "Histoire-Géographie", coefficient: 5, teachingLanguage: "Arabic", isMandatory: true },
     { code: "PHILO", name: "Philosophie", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true },
-    { code: "ECO", name: "Économie générale et statistique", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true }
+    {
+      code: "ECO",
+      name: "Économie générale et statistique",
+      coefficient: 4,
+      teachingLanguage: "Arabic",
+      isMandatory: true
+    }
   ],
   economics: [
-    { code: "ECO", name: "Économie générale et statistique", coefficient: 6, teachingLanguage: "Arabic", isMandatory: true },
+    {
+      code: "ECO",
+      name: "Économie générale et statistique",
+      coefficient: 6,
+      teachingLanguage: "Arabic",
+      isMandatory: true
+    },
     { code: "MATH", name: "Mathématiques", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true },
     { code: "COMPTA", name: "Comptabilité", coefficient: 3, teachingLanguage: "Arabic", isMandatory: true }
   ],
   accounting_management: [
     { code: "COMPTA", name: "Comptabilité", coefficient: 6, teachingLanguage: "Arabic", isMandatory: true },
     { code: "MATH", name: "Mathématiques", coefficient: 4, teachingLanguage: "Arabic", isMandatory: true },
-    { code: "ECO", name: "Économie générale et statistique", coefficient: 3, teachingLanguage: "Arabic", isMandatory: true }
+    {
+      code: "ECO",
+      name: "Économie générale et statistique",
+      coefficient: 3,
+      teachingLanguage: "Arabic",
+      isMandatory: true
+    }
   ],
   science_technology: [
     { code: "TECH", name: "Sciences de l'ingénieur", coefficient: 7, teachingLanguage: "French", isMandatory: true },

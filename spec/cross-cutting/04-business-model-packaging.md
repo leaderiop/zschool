@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-CC-04                                                  |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification — Cross-cutting                      |
+> | Property       | Value                                                                                                                                                                                 |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-CC-04                                                                                                                                                                         |
+> | Revision       | 1.0                                                                                                                                                                                   |
+> | Effective Date | 2026-09-09                                                                                                                                                                            |
+> | Status         | Draft                                                                                                                                                                                 |
+> | Author         | ZSchool Product                                                                                                                                                                       |
+> | Classification | Functional Specification — Cross-cutting                                                                                                                                              |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/33-business-model-packaging.md` (v0.3), old `PAK-01..17` -> `PAK-ZS-001..017`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Business Model and Packaging
@@ -46,16 +46,16 @@ A single active pricing plan includes every available module ([ADR-ZS-009](../de
 
 ### 2.3 Price and billing cycle
 
-| Item | Pricing rule | Source |
-|---|---|---|
-| Single-plan subscription | **5 MAD per active student per month**, billed over ten months (September to June), i.e. **50 MAD per student per school year**, all modules included | [ADR-ZS-009](../decisions/009-single-plan-pricing.md), confirmed by the founder on 09/09/2026; OQ-ZS-301 |
-| Order of magnitude | 300 students = 1,500 MAD/month; 2,000 students = 10,000 MAD/month | `spec/appendices/00-project-baseline.md` §11 |
-| SMS consumable | prepaid packs sold to the school in the **0.30–0.50 MAD per SMS** corridor (margin included); market pricing reference: alphanumeric sender ID ≈ 0.31–0.36 MAD per SMS in tiers of 5,000 to 100,000 | [ADR-ZS-009](../decisions/009-single-plan-pricing.md); `prd/research/03-payments-communications.md` §5 (bulksms.ma) |
-| WhatsApp consumable | **configurable** re-billing grid by category and effective date; current reference: *utility* message ≈ **€0.0064** to +212; new "standalone rate card" for Morocco applicable from 10/01/2026 | `prd/research/03-payments-communications.md` §4; `spec/appendices/01-review-history.md` (correction #6) |
-| Storage consumable | quota included in the subscription: 2 GB per school plus 5 MB per active student (working hypothesis [ADR-ZS-...](../decisions/) storage-quota decision, to be confirmed by the founder, OQ-ZS-296); tiered billing beyond that (pricing: a parameter, OQ-ZS-296) | `spec/appendices/00-project-baseline.md` §11 |
-| Professional services | onboarding and data migration **at a flat rate**; training, advanced configuration, premium support billable (amounts: parameters to finalize, OQ-ZS-296) | `spec/appendices/00-project-baseline.md` §11; [ADR-ZS-009](../decisions/009-single-plan-pricing.md) |
-| Trial | free, limited duration, with demo data | `spec/appendices/00-project-baseline.md` §11 |
-| Public subsidies | onboarding, configuration, and training services targeted by the MOWAKABA program (80% for SMEs / 90% for micro-enterprises of cost, projects from 15,000 to 150,000 MAD); school eligibility to be confirmed | `prd/research/02-regulatory-data.md` §9 |
+| Item                     | Pricing rule                                                                                                                                                                                                                                                      | Source                                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Single-plan subscription | **5 MAD per active student per month**, billed over ten months (September to June), i.e. **50 MAD per student per school year**, all modules included                                                                                                             | [ADR-ZS-009](../decisions/009-single-plan-pricing.md), confirmed by the founder on 09/09/2026; OQ-ZS-301            |
+| Order of magnitude       | 300 students = 1,500 MAD/month; 2,000 students = 10,000 MAD/month                                                                                                                                                                                                 | `spec/appendices/00-project-baseline.md` §11                                                                        |
+| SMS consumable           | prepaid packs sold to the school in the **0.30–0.50 MAD per SMS** corridor (margin included); market pricing reference: alphanumeric sender ID ≈ 0.31–0.36 MAD per SMS in tiers of 5,000 to 100,000                                                               | [ADR-ZS-009](../decisions/009-single-plan-pricing.md); `prd/research/03-payments-communications.md` §5 (bulksms.ma) |
+| WhatsApp consumable      | **configurable** re-billing grid by category and effective date; current reference: _utility_ message ≈ **€0.0064** to +212; new "standalone rate card" for Morocco applicable from 10/01/2026                                                                    | `prd/research/03-payments-communications.md` §4; `spec/appendices/01-review-history.md` (correction #6)             |
+| Storage consumable       | quota included in the subscription: 2 GB per school plus 5 MB per active student (working hypothesis [ADR-ZS-...](../decisions/) storage-quota decision, to be confirmed by the founder, OQ-ZS-296); tiered billing beyond that (pricing: a parameter, OQ-ZS-296) | `spec/appendices/00-project-baseline.md` §11                                                                        |
+| Professional services    | onboarding and data migration **at a flat rate**; training, advanced configuration, premium support billable (amounts: parameters to finalize, OQ-ZS-296)                                                                                                         | `spec/appendices/00-project-baseline.md` §11; [ADR-ZS-009](../decisions/009-single-plan-pricing.md)                 |
+| Trial                    | free, limited duration, with demo data                                                                                                                                                                                                                            | `spec/appendices/00-project-baseline.md` §11                                                                        |
+| Public subsidies         | onboarding, configuration, and training services targeted by the MOWAKABA program (80% for SMEs / 90% for micro-enterprises of cost, projects from 15,000 to 150,000 MAD); school eligibility to be confirmed                                                     | `prd/research/02-regulatory-data.md` §9                                                                             |
 
 The 5 MAD price sits at the top of the observed Moroccan range (10 to 65 MAD per student per year — `spec/appendices/00-project-baseline.md` §3.3), with a markedly more complete offer than documented competitors: multi-school global identity, a single cross-school parent account, a parent app, Fatourati collections, all modules (detail in §8).
 
@@ -121,11 +121,11 @@ Common principles: consumables are **optional** — the subscription remains ful
 
 ### 5.2 WhatsApp conversations
 
-- The WhatsApp channel — MVP usage limited to attendance notifications via WhatsApp utility (a founder arbitration; [INT-ZS-025](../cross-cutting/06-external-integrations.md) and OQ-ZS-293), generalized in V1 (all messages, managed templates, WhatsApp Business API) — is re-billed to the school per a **configurable pricing grid**: category (marketing, *utility*, authentication), amount per message, effective date. The grid is a product parameter, not a compiled constant: the market switched to per-message billing on 07/01/2025 and changes again on 10/01/2026.
-- Current reference to +212: *utility* message ≈ **€0.0064**, *authentication* ≈ €0.0064, *marketing* ≈ €0.0357 (vendor BSP Messaggio, `prd/research/03-payments-communications.md` §4) — i.e. a *utility* message ≈ **8 times cheaper** than an alias SMS. These values serve as a sizing reference, not a contractual rate.
-- **10/01/2026 switch**: the end of free *service* and *utility* messages within the 24-hour window, and Morocco's exit from "Rest of Africa" regional rates in favor of a **standalone rate card** (higher *utility* and *authentication* rates, plus *authentication-international*); the grids were expected to be published before 09/01/2026 — final values to be entered into configuration once published (OQ-ZS-293).
+- The WhatsApp channel — MVP usage limited to attendance notifications via WhatsApp utility (a founder arbitration; [INT-ZS-025](../cross-cutting/06-external-integrations.md) and OQ-ZS-293), generalized in V1 (all messages, managed templates, WhatsApp Business API) — is re-billed to the school per a **configurable pricing grid**: category (marketing, _utility_, authentication), amount per message, effective date. The grid is a product parameter, not a compiled constant: the market switched to per-message billing on 07/01/2025 and changes again on 10/01/2026.
+- Current reference to +212: _utility_ message ≈ **€0.0064**, _authentication_ ≈ €0.0064, _marketing_ ≈ €0.0357 (vendor BSP Messaggio, `prd/research/03-payments-communications.md` §4) — i.e. a _utility_ message ≈ **8 times cheaper** than an alias SMS. These values serve as a sizing reference, not a contractual rate.
+- **10/01/2026 switch**: the end of free _service_ and _utility_ messages within the 24-hour window, and Morocco's exit from "Rest of Africa" regional rates in favor of a **standalone rate card** (higher _utility_ and _authentication_ rates, plus _authentication-international_); the grids were expected to be published before 09/01/2026 — final values to be entered into configuration once published (OQ-ZS-293).
 - **Inbound messages**: after 10/01/2026, parent replies within the 24-hour window become billable; they are counted in the school's consumption and shown in the report (`prd/research/03-payments-communications.md` §4).
-- Safeguards: only Meta-approved *utility* templates are used (a message reclassified as *marketing* costs ≈ 5.6 times the *utility* rate); parental opt-in is required (Law 09.08 — compliance covered by `spec/cross-cutting/07-legal-compliance-data-protection.md`, integration by `spec/cross-cutting/06-external-integrations.md`); the push → WhatsApp *utility* → alias SMS routing hierarchy ([ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)) structurally limits the WhatsApp bill.
+- Safeguards: only Meta-approved _utility_ templates are used (a message reclassified as _marketing_ costs ≈ 5.6 times the _utility_ rate); parental opt-in is required (Law 09.08 — compliance covered by `spec/cross-cutting/07-legal-compliance-data-protection.md`, integration by `spec/cross-cutting/06-external-integrations.md`); the push → WhatsApp _utility_ → alias SMS routing hierarchy ([ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)) structurally limits the WhatsApp bill.
 - EUR→MAD conversion for re-billing: reference rate and conversion date configured (OQ-ZS-299).
 
 ### 5.3 Document storage
@@ -136,13 +136,13 @@ Common principles: consumables are **optional** — the subscription remains ful
 
 ## 6. Professional services
 
-| Service | Content | Pricing | Version |
-|---|---|---|---|
-| Onboarding | Creating the tenant, initial configuration (legal identity, languages, channels), instantiating the national structure model, assisted Excel imports with duplicate checking, internal users and roles (journey JMP-ZS-003 of `spec/journeys/00-journey-map.md`) | Flat rate by headcount tier (amounts: parameters, OQ-ZS-296) | MVP |
-| Data migration | Importing existing data (students, parents, classes, balances) from Excel or the previous tool, with a validation report | Flat rate, standalone or bundled with onboarding | MVP |
-| Training | Training for teams (principal's office, registrar's office, student life, teachers), bilingual FR/AR materials | Per session or flat rate (parameters, OQ-ZS-296) | MVP (pilots); catalog offer in V1 |
-| Advanced configuration | Complex fee schedules, report-card templates, timetable variants, message templates | Per session | V1 |
-| Premium support | Beyond the included standard support ([NFR-ZS-014](../cross-cutting/03-non-functional-requirements.md): single channel, business hours, first response within 4 business hours for a blocker): dedicated channel, stronger response-time commitments; exact definition and pricing: parameters (OQ-ZS-296) | Subscription or annual flat rate | V1 |
+| Service                | Content                                                                                                                                                                                                                                                                                                    | Pricing                                                      | Version                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------- |
+| Onboarding             | Creating the tenant, initial configuration (legal identity, languages, channels), instantiating the national structure model, assisted Excel imports with duplicate checking, internal users and roles (journey JMP-ZS-003 of `spec/journeys/00-journey-map.md`)                                           | Flat rate by headcount tier (amounts: parameters, OQ-ZS-296) | MVP                               |
+| Data migration         | Importing existing data (students, parents, classes, balances) from Excel or the previous tool, with a validation report                                                                                                                                                                                   | Flat rate, standalone or bundled with onboarding             | MVP                               |
+| Training               | Training for teams (principal's office, registrar's office, student life, teachers), bilingual FR/AR materials                                                                                                                                                                                             | Per session or flat rate (parameters, OQ-ZS-296)             | MVP (pilots); catalog offer in V1 |
+| Advanced configuration | Complex fee schedules, report-card templates, timetable variants, message templates                                                                                                                                                                                                                        | Per session                                                  | V1                                |
+| Premium support        | Beyond the included standard support ([NFR-ZS-014](../cross-cutting/03-non-functional-requirements.md): single channel, business hours, first response within 4 business hours for a blocker): dedicated channel, stronger response-time commitments; exact definition and pricing: parameters (OQ-ZS-296) | Subscription or annual flat rate                             | V1                                |
 
 Onboarding, configuration, and training services are the expenses targeted by the MOWAKABA subsidy program (§9.3): they are therefore billed with formal quotes, a prerequisite for the subsidy application (procedure: ICE + quote + online filing — `prd/research/02-regulatory-data.md` §9).
 
@@ -160,19 +160,19 @@ Onboarding, configuration, and training services are the expenses targeted by th
 
 Every value in this table comes from `prd/research/01-market-competition.md` (§2 for Moroccan players, §3 for international ones), except where noted as from the baseline.
 
-| Solution | Observed public rate | Notes |
-|---|---|---|
-| **ZSchool (target)** | **5 MAD per active student per month; 50 MAD per student per school year (10 months), all inclusive** | `spec/appendices/00-project-baseline.md` §11; [ADR-ZS-009](../decisions/009-single-plan-pricing.md) |
-| Skoolly | 4, 5, or 6 MAD per student per month depending on edition (Starter, max 100 students; Pro unlimited with HR, admissions, payments; Élite with AI and multi-school support); 10% discount on annual payment; 30-day trial; cited example: 200 students on Pro = 1,000 MAD/month | Equivalent to 40–60 MAD per student over 10 months (derived calculation, no external source); Play Store app owned by an Indian developer; no visible Massar integration |
-| Minassa | 249 MAD/month (0–100 students) to 1,050 MAD/month (601–800 students); + 99 MAD/month per 50-student tier; groups on quote | i.e. 1.3 to 2.5 MAD per student per month (sourced figure, `prd/research/01-market-competition.md` §2) |
-| SchoolMA | Free demo (≤ 10 students); Discovery 300 MAD/month (≤ 50 students, 1 GB); Enterprise 800 MAD/month unlimited (50 GB, HR payroll, GPS transport, unlimited WhatsApp) | 300 MAD for 50 students = 6 MAD/student/month at the tier's maximum (derived calculation) |
-| Madariss Plus / eMadariss (Nexsoft) | Promotion "starting at 6,800 MAD/year" (promotional page) | Locally installed software at the school (Madariss Plus) or web via subdomain (eMadariss); white-label apps per school; no cross-school parent account |
-| Tayssir School | BASIC free forever (unlimited students, 2 administrators); PREMIUM on quote | ~50 schools claimed; "bidirectional Massar sync" claimed, publicly unverifiable (no documented Massar API) |
-| DataSchool, SchoolApp, E-Schools, SmartSchool, ALIFADA | Prices not published (on quote) | 2 out of 6 players publish prices in the Moroccan SaaS segment (`prd/research/01-market-competition.md` §2) |
-| E-Madrassati | 1,950 MAD excl. VAT/year (promotion "instead of 4,950") | Page dated 12/2023, weak sign of 2025-2026 activity |
-| Galactis.Education | Essentials €5/student/year; Collaboration €1; Campus €2; e-learning €2–15; HR €20/employee/year; Express edition 5,000 MAD/year | SaaS targeting Morocco, **hosted in the United States** — at odds with the local-hosting expectation ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)) |
-| Pronote (Index Éducation) | Licenses €572–1,055 excl. VAT/year depending on teacher count + hosting €330–993, i.e. ≈ €2,000 excl. VAT/year for an unlimited hosted offer (2023 rates); paid export API (€140 excl. VAT/year) | ~80 Moroccan schools; does not cover billing; positioned for the French curriculum stream and bilingual groups |
-| Classter (international benchmark) | ≈ $24/student/year + onboarding | Calibration benchmark, `prd/research/01-market-competition.md` §5 |
+| Solution                                               | Observed public rate                                                                                                                                                                                                                                                           | Notes                                                                                                                                                                              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ZSchool (target)**                                   | **5 MAD per active student per month; 50 MAD per student per school year (10 months), all inclusive**                                                                                                                                                                          | `spec/appendices/00-project-baseline.md` §11; [ADR-ZS-009](../decisions/009-single-plan-pricing.md)                                                                                |
+| Skoolly                                                | 4, 5, or 6 MAD per student per month depending on edition (Starter, max 100 students; Pro unlimited with HR, admissions, payments; Élite with AI and multi-school support); 10% discount on annual payment; 30-day trial; cited example: 200 students on Pro = 1,000 MAD/month | Equivalent to 40–60 MAD per student over 10 months (derived calculation, no external source); Play Store app owned by an Indian developer; no visible Massar integration           |
+| Minassa                                                | 249 MAD/month (0–100 students) to 1,050 MAD/month (601–800 students); + 99 MAD/month per 50-student tier; groups on quote                                                                                                                                                      | i.e. 1.3 to 2.5 MAD per student per month (sourced figure, `prd/research/01-market-competition.md` §2)                                                                             |
+| SchoolMA                                               | Free demo (≤ 10 students); Discovery 300 MAD/month (≤ 50 students, 1 GB); Enterprise 800 MAD/month unlimited (50 GB, HR payroll, GPS transport, unlimited WhatsApp)                                                                                                            | 300 MAD for 50 students = 6 MAD/student/month at the tier's maximum (derived calculation)                                                                                          |
+| Madariss Plus / eMadariss (Nexsoft)                    | Promotion "starting at 6,800 MAD/year" (promotional page)                                                                                                                                                                                                                      | Locally installed software at the school (Madariss Plus) or web via subdomain (eMadariss); white-label apps per school; no cross-school parent account                             |
+| Tayssir School                                         | BASIC free forever (unlimited students, 2 administrators); PREMIUM on quote                                                                                                                                                                                                    | ~50 schools claimed; "bidirectional Massar sync" claimed, publicly unverifiable (no documented Massar API)                                                                         |
+| DataSchool, SchoolApp, E-Schools, SmartSchool, ALIFADA | Prices not published (on quote)                                                                                                                                                                                                                                                | 2 out of 6 players publish prices in the Moroccan SaaS segment (`prd/research/01-market-competition.md` §2)                                                                        |
+| E-Madrassati                                           | 1,950 MAD excl. VAT/year (promotion "instead of 4,950")                                                                                                                                                                                                                        | Page dated 12/2023, weak sign of 2025-2026 activity                                                                                                                                |
+| Galactis.Education                                     | Essentials €5/student/year; Collaboration €1; Campus €2; e-learning €2–15; HR €20/employee/year; Express edition 5,000 MAD/year                                                                                                                                                | SaaS targeting Morocco, **hosted in the United States** — at odds with the local-hosting expectation ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)) |
+| Pronote (Index Éducation)                              | Licenses €572–1,055 excl. VAT/year depending on teacher count + hosting €330–993, i.e. ≈ €2,000 excl. VAT/year for an unlimited hosted offer (2023 rates); paid export API (€140 excl. VAT/year)                                                                               | ~80 Moroccan schools; does not cover billing; positioned for the French curriculum stream and bilingual groups                                                                     |
+| Classter (international benchmark)                     | ≈ $24/student/year + onboarding                                                                                                                                                                                                                                                | Calibration benchmark, `prd/research/01-market-competition.md` §5                                                                                                                  |
 
 Baseline summary: Moroccan public prices sit between **10 and 65 MAD per student per year**; full-featured French offers around **€15 per student per year** (`spec/appendices/00-project-baseline.md` §3.3).
 
@@ -190,10 +190,10 @@ Baseline summary: Moroccan public prices sit between **10 and 65 MAD per student
 
 ### 9.1 Reference targets ([ADR-ZS-008](../decisions/008-growth-ambition-horizon.md), confirmed by the founder on 09/09/2026)
 
-| Horizon | Schools | Students | Annual subscription revenue at full run rate (derived calculation: headcount × 50 MAD, no external source) |
-|---|---|---|---|
-| End of year 1 | 20 | 15,000 | 750,000 MAD (15,000 × 50) |
-| End of year 3 | 300 | 200,000 | 10,000,000 MAD (200,000 × 50) |
+| Horizon       | Schools | Students | Annual subscription revenue at full run rate (derived calculation: headcount × 50 MAD, no external source) |
+| ------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| End of year 1 | 20      | 15,000   | 750,000 MAD (15,000 × 50)                                                                                  |
+| End of year 3 | 300     | 200,000  | 10,000,000 MAD (200,000 × 50)                                                                              |
 
 The "end of year 1" horizon is anchored in the calendar by `spec/roadmap.md` (RDM-ZS-009, OQ-ZS-291): a **working hypothesis** adopted by the spec, it designates the end of the 2028-2029 school year, the first full year of general rollout — not 2026-2027, which is the pilot year. This reading pushes the targets confirmed by the founder on 09/09/2026 back by two years; it is **escalated to the founder** as a blocking question ([ADR-ZS-072](../decisions/072-dec27-horizon-confirmation-escalated.md), historical alias ESC-01, superseding [ADR-ZS-047](../decisions/047-dec27-horizon-escalated.md)): either the reference targets are read from the commercial launch onward (2029 and 2031), or the roadmap must be compressed. This chapter's business case ([NFR-ZS-046](../cross-cutting/03-non-functional-requirements.md), capacity sizing) is unaffected by the choice.
 
@@ -205,12 +205,12 @@ Progress against these targets is measured by the indicators of `spec/metrics.md
 
 Four representative profiles on the Casablanca–Rabat corridor, which set the order of magnitude for invoices and onboarding effort:
 
-| Pilot | Headcount | Expected monthly invoice at 5 MAD (derived calculation from the baseline rate; 300 and 2,000 students cited in `spec/appendices/00-project-baseline.md` §11) |
-|---|---|---|
-| Primary school | ≈ 300 students | 1,500 MAD/month |
-| Middle-and-high school | ≈ 800 students | 4,000 MAD/month |
-| Multi-site group | > 2,000 students | > 10,000 MAD/month (billed at the organization level, PAK-ZS-001) |
-| Bilingual school on a trimester calendar | headcount not specified by the baseline | billing identical to the active headcount; the trimester calendar does not change the counting rule |
+| Pilot                                    | Headcount                               | Expected monthly invoice at 5 MAD (derived calculation from the baseline rate; 300 and 2,000 students cited in `spec/appendices/00-project-baseline.md` §11) |
+| ---------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Primary school                           | ≈ 300 students                          | 1,500 MAD/month                                                                                                                                              |
+| Middle-and-high school                   | ≈ 800 students                          | 4,000 MAD/month                                                                                                                                              |
+| Multi-site group                         | > 2,000 students                        | > 10,000 MAD/month (billed at the organization level, PAK-ZS-001)                                                                                            |
+| Bilingual school on a trimester calendar | headcount not specified by the baseline | billing identical to the active headcount; the trimester calendar does not change the counting rule                                                          |
 
 Pricing terms applicable to the pilots (full price, discount, or free) are not fixed by the baseline: to be settled before launch (OQ-ZS-296).
 
@@ -236,25 +236,25 @@ Network effects from multi-school parents and part-time teachers, referrals betw
 
 ## 10. Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| PAK-ZS-001 | Restrict the paying customer to the school or the organization | Must |
-| PAK-ZS-002 | Provide a single all-inclusive plan with no per-module option | Must |
-| PAK-ZS-003 | Apply the single price of 5 MAD per active student per month | Must |
-| PAK-ZS-004 | Count the active student per a measurable, auditable rule | Must |
-| PAK-ZS-005 | Bill monthly in MAD from September to June, never in July or August | Must |
-| PAK-ZS-006 | Deliver a detailed, retained subscription invoice | Must |
-| PAK-ZS-007 | Manage the subscription lifecycle, from trial to termination | Must |
-| PAK-ZS-008 | Bill the organization with a consolidated invoice for groups | Must |
-| PAK-ZS-009 | Sell transactional SMS in prepaid, alias-priced packs | Must |
-| PAK-ZS-010 | Re-bill WhatsApp conversations per a configurable grid | Must |
-| PAK-ZS-011 | Measure and bill storage beyond the included quota | Should |
-| PAK-ZS-012 | Sell onboarding and data migration at a flat rate | Must |
-| PAK-ZS-013 | Offer training and advanced configuration as billable services | Should |
-| PAK-ZS-014 | Offer billable premium support beyond standard support | Should |
-| PAK-ZS-015 | Assemble MOWAKABA subsidy applications for eligible services | Should |
-| PAK-ZS-016 | Publish an up-to-date public price list | Could |
-| PAK-ZS-017 | Treat authentication SMS as a platform cost | Must |
+| ID         | Title                                                               | Priority |
+| ---------- | ------------------------------------------------------------------- | -------- |
+| PAK-ZS-001 | Restrict the paying customer to the school or the organization      | Must     |
+| PAK-ZS-002 | Provide a single all-inclusive plan with no per-module option       | Must     |
+| PAK-ZS-003 | Apply the single price of 5 MAD per active student per month        | Must     |
+| PAK-ZS-004 | Count the active student per a measurable, auditable rule           | Must     |
+| PAK-ZS-005 | Bill monthly in MAD from September to June, never in July or August | Must     |
+| PAK-ZS-006 | Deliver a detailed, retained subscription invoice                   | Must     |
+| PAK-ZS-007 | Manage the subscription lifecycle, from trial to termination        | Must     |
+| PAK-ZS-008 | Bill the organization with a consolidated invoice for groups        | Must     |
+| PAK-ZS-009 | Sell transactional SMS in prepaid, alias-priced packs               | Must     |
+| PAK-ZS-010 | Re-bill WhatsApp conversations per a configurable grid              | Must     |
+| PAK-ZS-011 | Measure and bill storage beyond the included quota                  | Should   |
+| PAK-ZS-012 | Sell onboarding and data migration at a flat rate                   | Must     |
+| PAK-ZS-013 | Offer training and advanced configuration as billable services      | Should   |
+| PAK-ZS-014 | Offer billable premium support beyond standard support              | Should   |
+| PAK-ZS-015 | Assemble MOWAKABA subsidy applications for eligible services        | Should   |
+| PAK-ZS-016 | Publish an up-to-date public price list                             | Could    |
+| PAK-ZS-017 | Treat authentication SMS as a platform cost                         | Must     |
 
 ### PAK-ZS-001: Restrict the paying customer to the school or the organization
 
@@ -264,8 +264,8 @@ Network effects from multi-school parents and part-time teachers, referrals betw
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: The subscription MUST be taken out, billed, and paid by the school or, for a
-             group, by the organization. No paid feature, no purchase flow, and no commercial
-             offer MUST be presented to parents, students, or teachers, on web or mobile.
+group, by the organization. No paid feature, no purchase flow, and no commercial
+offer MUST be presented to parents, students, or teachers, on web or mobile.
 
 Actors: principal's office, organization administrator, ZSchool (operator); parents, students, teachers (free beneficiaries).
 
@@ -277,10 +277,10 @@ Actors: principal's office, organization administrator, ZSchool (operator); pare
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: Only one pricing plan MUST be active on the platform. Every available module MUST
-             be included: MVP and V1 modules at their respective launch, later modules
-             (transport, canteen, health, online payment, public API) as they ship, activated
-             via `ModuleActivation` at no extra cost and no sales process. No edition, no
-             per-module add-on, no feature MUST be capped by a subscription tier.
+be included: MVP and V1 modules at their respective launch, later modules
+(transport, canteen, health, online payment, public API) as they ship, activated
+via `ModuleActivation` at no extra cost and no sales process. No edition, no
+per-module add-on, no feature MUST be capped by a subscription tier.
 
 Actors: principal's office, organization administrator, ZSchool (operator).
 
@@ -292,11 +292,11 @@ Actors: principal's office, organization administrator, ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: The subscription price MUST be 5 MAD per active student per month, billed over ten
-             months (September to June), i.e. 50 MAD per student per school year, all modules
-             included. The price MUST be displayed on the public price list and carried in the
-             subscription contract; it MUST be stable for the current school year (§2.3,
-             OQ-ZS-301). Contractual examples: 300 students = 1,500 MAD/month; 2,000 students =
-             10,000 MAD/month.
+months (September to June), i.e. 50 MAD per student per school year, all modules
+included. The price MUST be displayed on the public price list and carried in the
+subscription contract; it MUST be stable for the current school year (§2.3,
+OQ-ZS-301). Contractual examples: 300 students = 1,500 MAD/month; 2,000 students =
+10,000 MAD/month.
 
 Actors: principal's office, organization administrator, ZSchool (operator).
 
@@ -308,13 +308,13 @@ Actors: principal's office, organization administrator, ZSchool (operator).
 > **Acceptance:** [`@REQ-ZS-480`](../../features/cross-cutting/pak/pak-zs-004-counting-the-active-student.feature)
 
 REQUIREMENT: Monthly active-student counting MUST apply the rule in §3: a snapshot at midnight
-             local `Africa/Casablanca` time on the 1st of the billing month; counted = ACTIVE
-             enrollments; not counted = CANDIDATE, PRE-ENROLLED, SUSPENDED, and terminal
-             statuses; uniqueness MUST be guaranteed by INV-ZS-058; mid-month entries and exits
-             MUST take effect at the next count; every count MUST be logged append-only in
-             `UsageMetric` (date, school, headcount, rule version). The principal's office MUST
-             be able to view the projected billable headcount for the month and the counting
-             history.
+local `Africa/Casablanca` time on the 1st of the billing month; counted = ACTIVE
+enrollments; not counted = CANDIDATE, PRE-ENROLLED, SUSPENDED, and terminal
+statuses; uniqueness MUST be guaranteed by INV-ZS-058; mid-month entries and exits
+MUST take effect at the next count; every count MUST be logged append-only in
+`UsageMetric` (date, school, headcount, rule version). The principal's office MUST
+be able to view the projected billable headcount for the month and the counting
+history.
 
 Actors: principal's office, organization administrator, ZSchool (operator).
 
@@ -326,11 +326,11 @@ Actors: principal's office, organization administrator, ZSchool (operator).
 > **Acceptance:** [`@REQ-ZS-481`](../../features/cross-cutting/pak/pak-zs-005-monthly-subscription-billing.feature)
 
 REQUIREMENT: A subscription invoice in MAD MUST be issued for each of the ten school months
-             (September to June); its amount MUST be the active-student headcount counted on
-             the 1st of the month multiplied by 5 MAD. No invoice MUST be generated in July or
-             August; an active subscription MUST carry no amount due over the summer. A
-             subscription activated mid-month M MUST produce its first invoice on the 1st of
-             the following month.
+(September to June); its amount MUST be the active-student headcount counted on
+the 1st of the month multiplied by 5 MAD. No invoice MUST be generated in July or
+August; an active subscription MUST carry no amount due over the summer. A
+subscription activated mid-month M MUST produce its first invoice on the 1st of
+the following month.
 
 Actors: principal's office, school accounting, organization administrator, ZSchool (operator).
 
@@ -341,10 +341,10 @@ Actors: principal's office, school accounting, organization administrator, ZScho
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: Every invoice MUST identify the customer (school or organization), the billing
-             period, the headcount billed per school, the unit price, the total in MAD, and
-             MUST separate subscription lines from consumables (§5) and services (§6). Invoices
-             MUST be viewable, downloadable, and retained in the subscription-management area;
-             the exact tax notices on the ZSchool invoice are handled in OQ-ZS-298.
+period, the headcount billed per school, the unit price, the total in MAD, and
+MUST separate subscription lines from consumables (§5) and services (§6). Invoices
+MUST be viewable, downloadable, and retained in the subscription-management area;
+the exact tax notices on the ZSchool invoice are handled in OQ-ZS-298.
 
 Actors: principal's office, school accounting, organization administrator, ZSchool (operator).
 
@@ -357,15 +357,15 @@ Actors: principal's office, school accounting, organization administrator, ZScho
 > **Acceptance:** [`@REQ-ZS-482`](../../features/cross-cutting/pak/pak-zs-007-converting-a-trial-to-a-subscription.feature)
 
 REQUIREMENT: The subscription MUST carry the statuses trial, active, past due, terminated (the
-             `Subscription` entity, `spec/domain-model.md`). The trial MUST be free, of limited
-             duration, with demo data (§7). Switching to past-due MUST trigger read-only after
-             a configurable delay (viewing open, writes blocked); settlement MUST restore
-             active status. Termination MUST apply the export/retention timeline of
-             INV-ZS-045: full export, 90 days of read-only, deletion of operational data at 12
-             months, global identities and published documents retained. Every
-             trial-to-past-due-to-terminated transition MUST be notified (event
-             `SubscriptionSuspendedOrTerminated`). Functional owner:
-             `spec/behaviors/01-administration-onboarding-subscription.md`.
+`Subscription` entity, `spec/domain-model.md`). The trial MUST be free, of limited
+duration, with demo data (§7). Switching to past-due MUST trigger read-only after
+a configurable delay (viewing open, writes blocked); settlement MUST restore
+active status. Termination MUST apply the export/retention timeline of
+INV-ZS-045: full export, 90 days of read-only, deletion of operational data at 12
+months, global identities and published documents retained. Every
+trial-to-past-due-to-terminated transition MUST be notified (event
+`SubscriptionSuspendedOrTerminated`). Functional owner:
+`spec/behaviors/01-administration-onboarding-subscription.md`.
 
 Actors: principal's office, ZSchool (operator).
 
@@ -377,11 +377,11 @@ Actors: principal's office, ZSchool (operator).
 > **Acceptance:** [`@REQ-ZS-483`](../../features/cross-cutting/pak/pak-zs-008-consolidated-invoice-for-a-school-group.feature)
 
 REQUIREMENT: For an organization grouping several schools (V1), monthly billing MUST produce a
-             consolidated invoice: a total at the organization level, with a breakdown per
-             school (headcount billed, amount). Per-school counting MUST rely on PAK-ZS-004;
-             uniqueness of the active enrollment platform-wide (INV-ZS-058) MUST rule out any
-             double counting. The group administrator MUST receive the invoice and the
-             breakdown.
+consolidated invoice: a total at the organization level, with a breakdown per
+school (headcount billed, amount). Per-school counting MUST rely on PAK-ZS-004;
+uniqueness of the active enrollment platform-wide (INV-ZS-058) MUST rule out any
+double counting. The group administrator MUST receive the invoice and the
+breakdown.
 
 Actors: organization administrator, each school's principal's office, ZSchool (operator).
 
@@ -393,14 +393,14 @@ Actors: organization administrator, each school's principal's office, ZSchool (o
 > **Acceptance:** [`@REQ-ZS-484`](../../features/cross-cutting/pak/pak-zs-009-managing-the-sms-credit-balance.feature)
 
 REQUIREMENT: SMS MUST be sold to the school in prepaid packs, credits with no expiry, purchased
-             self-service. The per-SMS sell price MUST sit in the 0.30–0.50 MAD corridor with
-             margin (exact value and pack granularity: parameters, OQ-ZS-296). Transactional
-             SMS MUST exclusively use the alphanumeric-sender-ID alias; LowCost routing MUST
-             NOT be used for transactional messages. Every school MUST have a credit balance,
-             configurable threshold alerts, and a tracked send history; on a depleted balance,
-             the SMS channel MUST be suspended for non-critical sends — except a configurable
-             emergency queue, aligned with INT-ZS-020 — with no impact on free channels (in-app
-             notification, push in V1), and an alert MUST be sent to the principal's office.
+self-service. The per-SMS sell price MUST sit in the 0.30–0.50 MAD corridor with
+margin (exact value and pack granularity: parameters, OQ-ZS-296). Transactional
+SMS MUST exclusively use the alphanumeric-sender-ID alias; LowCost routing MUST
+NOT be used for transactional messages. Every school MUST have a credit balance,
+configurable threshold alerts, and a tracked send history; on a depleted balance,
+the SMS channel MUST be suspended for non-critical sends — except a configurable
+emergency queue, aligned with INT-ZS-020 — with no impact on free channels (in-app
+notification, push in V1), and an alert MUST be sent to the principal's office.
 
 Actors: principal's office, registrar's office, head supervisor (senders), parents (recipients, free), ZSchool (operator).
 
@@ -412,13 +412,13 @@ Actors: principal's office, registrar's office, head supervisor (senders), paren
 > **Acceptance:** [`@REQ-ZS-485`](../../features/cross-cutting/pak/pak-zs-010-whatsapp-pricing-switch.feature)
 
 REQUIREMENT: WhatsApp conversations MUST be re-billed to the school per a pricing grid stored
-             as a parameter: category (marketing, *utility*, authentication), amount per
-             message, effective date. The grid MUST incorporate the current reference (*utility*
-             ≈ €0.0064 to +212) and, from 10/01/2026, Morocco's standalone rate card; final
-             values MUST be entered once Meta publishes them (OQ-ZS-293). From 10/01/2026
-             onward, inbound messages MUST be counted in consumption. A monthly report by
-             category and by school MUST underlie billing; EUR→MAD conversion MUST be
-             configured (OQ-ZS-299).
+as a parameter: category (marketing, _utility_, authentication), amount per
+message, effective date. The grid MUST incorporate the current reference (_utility_
+≈ €0.0064 to +212) and, from 10/01/2026, Morocco's standalone rate card; final
+values MUST be entered once Meta publishes them (OQ-ZS-293). From 10/01/2026
+onward, inbound messages MUST be counted in consumption. A monthly report by
+category and by school MUST underlie billing; EUR→MAD conversion MUST be
+configured (OQ-ZS-299).
 
 Actors: principal's office, ZSchool (operator); parents (senders of inbound replies, free).
 
@@ -429,12 +429,12 @@ Actors: principal's office, ZSchool (operator); parents (senders of inbound repl
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: An included storage quota MUST be attached to every school's subscription;
-             consumption MUST be measured continuously and visible to the principal's office.
-             Preventive alerts (configurable thresholds) MUST precede an overage; the overage
-             MUST be billed in tiers on lines separate from the invoice. Viewing existing
-             documents and report cards MUST NOT be blocked by an overage awaiting billing.
-             Included quota (working hypothesis): 2 GB per school plus 5 MB per active student;
-             pricing beyond that: a parameter to finalize (OQ-ZS-296).
+consumption MUST be measured continuously and visible to the principal's office.
+Preventive alerts (configurable thresholds) MUST precede an overage; the overage
+MUST be billed in tiers on lines separate from the invoice. Viewing existing
+documents and report cards MUST NOT be blocked by an overage awaiting billing.
+Included quota (working hypothesis): 2 GB per school plus 5 MB per active student;
+pricing beyond that: a parameter to finalize (OQ-ZS-296).
 
 Actors: principal's office, ZSchool (operator).
 
@@ -445,13 +445,13 @@ Actors: principal's office, ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: Onboarding (creating the tenant, initial configuration, instantiating the
-             structure model, assisted Excel imports with duplicate checking, internal users
-             and roles — journey JMP-ZS-003) and data migration MUST be services billed at a
-             flat rate by headcount tier (amounts: parameters, OQ-ZS-296). Each flat-rate
-             package MUST have defined deliverables: an operational tenant, an instantiated
-             structure, imports validated by a check report, trained internal users. Formal
-             quotes issued for these services are used for the MOWAKABA application
-             (PAK-ZS-015).
+structure model, assisted Excel imports with duplicate checking, internal users
+and roles — journey JMP-ZS-003) and data migration MUST be services billed at a
+flat rate by headcount tier (amounts: parameters, OQ-ZS-296). Each flat-rate
+package MUST have defined deliverables: an operational tenant, an instantiated
+structure, imports validated by a check report, trained internal users. Formal
+quotes issued for these services are used for the MOWAKABA application
+(PAK-ZS-015).
 
 Actors: principal's office, registrar's office, ZSchool (operator).
 
@@ -462,10 +462,10 @@ Actors: principal's office, registrar's office, ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: Team training (principal's office, registrar's office, student life, teachers),
-             with bilingual FR/AR materials, and advanced configuration (complex fee schedules,
-             report-card templates, timetable variants, message templates) MUST be offered as
-             billable services, per session or at a flat rate (amounts: parameters,
-             OQ-ZS-296). During the pilot phase, basic training accompanies onboarding (§6).
+with bilingual FR/AR materials, and advanced configuration (complex fee schedules,
+report-card templates, timetable variants, message templates) MUST be offered as
+billable services, per session or at a flat rate (amounts: parameters,
+OQ-ZS-296). During the pilot phase, basic training accompanies onboarding (§6).
 
 Actors: principal's office, school staff, ZSchool (operator).
 
@@ -477,11 +477,11 @@ Actors: principal's office, school staff, ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: Standard support (single channel, business hours, first response within 4 business
-             hours for a blocker, FR/AR response, NFR-ZS-014) MUST be included in the
-             subscription. A billable premium offer MUST provide a dedicated channel and
-             stronger response-time commitments; its precise definition (scope, hours,
-             commitments, pricing) is a commercial parameter to finalize (OQ-ZS-296). Any
-             support access to a school's data remains governed by the logged procedure.
+hours for a blocker, FR/AR response, NFR-ZS-014) MUST be included in the
+subscription. A billable premium offer MUST provide a dedicated channel and
+stronger response-time commitments; its precise definition (scope, hours,
+commitments, pricing) is a commercial parameter to finalize (OQ-ZS-296). Any
+support access to a school's data remains governed by the logged procedure.
 
 Actors: principal's office, ZSchool (operator).
 
@@ -492,14 +492,14 @@ Actors: principal's office, ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: For any school that requests it, ZSchool MUST prepare the MOWAKABA digitalization
-             subsidy application covering eligible services (onboarding, configuration,
-             training): formal quotes, a project description, online filing (ICE + quote +
-             application procedure), tracking approval (4 to 6 weeks) and disbursement after
-             delivery. Reference rates are 80% of cost for an SME and 90% for a micro-enterprise,
-             on projects of 15,000 to 150,000 MAD. No eligibility commitment MUST be made until
-             private schools' eligibility is confirmed (prior verification with the regional
-             office, OQ-ZS-292); the project's start MUST NEVER be conditioned on the subsidy's
-             disbursement.
+subsidy application covering eligible services (onboarding, configuration,
+training): formal quotes, a project description, online filing (ICE + quote +
+application procedure), tracking approval (4 to 6 weeks) and disbursement after
+delivery. Reference rates are 80% of cost for an SME and 90% for a micro-enterprise,
+on projects of 15,000 to 150,000 MAD. No eligibility commitment MUST be made until
+private schools' eligibility is confirmed (prior verification with the regional
+office, OQ-ZS-292); the project's start MUST NEVER be conditioned on the subsidy's
+disbursement.
 
 Actors: principal's office, ZSchool (operator), Maroc PME regional office (third party).
 
@@ -510,9 +510,9 @@ Actors: principal's office, ZSchool (operator), Maroc PME regional office (third
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: The public price list MUST show the subscription price (5 MAD per active student
-             per month), the consumables reference (SMS corridor, WhatsApp re-billing method,
-             above-quota storage principle), and the list of billable services, with dated
-             updates.
+per month), the consumables reference (SMS corridor, WhatsApp re-billing method,
+above-quota storage principle), and the list of billable services, with dated
+updates.
 
 Actors: principal's office (reader), ZSchool (operator).
 
@@ -524,15 +524,15 @@ Actors: principal's office (reader), ZSchool (operator).
 > **Acceptance:** none (no dedicated scenario)
 
 REQUIREMENT: SMS sent for account authentication and security (login codes, second factor,
-             reset, number change, invitations and identity claims) MUST NEVER be deducted from
-             a school's SMS credits or billed to families: they MUST be treated as a platform
-             cost covered by the subscription price. ZSchool MUST measure them separately
-             (monthly volume, aggregator unit cost, per-school share for reference) to track
-             subscription margin and feed the annual pricing review; a sizing benchmark comes
-             from the number of active accounts (two guardians per student on average, MFA for
-             privileged roles, 90-day trusted devices limiting repeated OTPs — SEC-ZS-005,
-             SEC-ZS-006). Authentication sends remain subject to rate limiting (SEC-ZS-011,
-             SEC-ZS-003).
+reset, number change, invitations and identity claims) MUST NEVER be deducted from
+a school's SMS credits or billed to families: they MUST be treated as a platform
+cost covered by the subscription price. ZSchool MUST measure them separately
+(monthly volume, aggregator unit cost, per-school share for reference) to track
+subscription margin and feed the annual pricing review; a sizing benchmark comes
+from the number of active accounts (two guardians per student on average, MFA for
+privileged roles, 90-day trusted devices limiting repeated OTPs — SEC-ZS-005,
+SEC-ZS-006). Authentication sends remain subject to rate limiting (SEC-ZS-011,
+SEC-ZS-003).
 
 Actors: ZSchool (operator); principal's office (informational).
 

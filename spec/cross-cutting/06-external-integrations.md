@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-CC-06                                                  |
-> | Revision       | 1.1                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification — Cross-Cutting (External Integrations) |
+> | Property       | Value                                                                                                                                                                                                                                                                                                                                 |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-CC-06                                                                                                                                                                                                                                                                                                                         |
+> | Revision       | 1.1                                                                                                                                                                                                                                                                                                                                   |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                                                                                                            |
+> | Status         | Draft                                                                                                                                                                                                                                                                                                                                 |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                                                                                                       |
+> | Classification | Functional Specification — Cross-Cutting (External Integrations)                                                                                                                                                                                                                                                                      |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/35-external-integrations.md` (v0.3), old `INT-<SYS>-NN` -> `INT-ZS-NNN`, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): §8 (Cloud hosting) and INT-ZS-036/037/039/040 redefined for AWS `eu-central-1`/`eu-west-3` per ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # External Integrations
@@ -62,14 +62,14 @@ No commercial contract: Massar is a public service used directly by the school, 
 
 ### 2.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-002 | [MAS] Generate Massar-compliant Excel grade exports | Must |
-| INT-ZS-001 | [MAS] Validate every export before submission with an error report | Must |
-| INT-ZS-003 | [MAS] Log transfers with their Massar reference | Must |
-| INT-ZS-004 | [MAS] Provide ESISE data mirrors | Should |
-| INT-ZS-005 | [MAS] Import results of certifying exams | Should |
-| INT-ZS-006 | [MAS] Forbid any entry automation into Massar without an official channel | Must |
+| ID         | Title                                                                     | Priority |
+| ---------- | ------------------------------------------------------------------------- | -------- |
+| INT-ZS-002 | [MAS] Generate Massar-compliant Excel grade exports                       | Must     |
+| INT-ZS-001 | [MAS] Validate every export before submission with an error report        | Must     |
+| INT-ZS-003 | [MAS] Log transfers with their Massar reference                           | Must     |
+| INT-ZS-004 | [MAS] Provide ESISE data mirrors                                          | Should   |
+| INT-ZS-005 | [MAS] Import results of certifying exams                                  | Should   |
+| INT-ZS-006 | [MAS] Forbid any entry automation into Massar without an official channel | Must     |
 
 ### INT-ZS-002: [MAS] Generate Massar-compliant Excel grade exports
 
@@ -80,10 +80,10 @@ No commercial contract: Massar is a public service used directly by the school, 
 > **Acceptance:** [`@REQ-ZS-520`](../../features/cross-cutting/int/int-zs-002-massar-grade-export.feature)
 
 REQUIREMENT: The system MUST generate, per school, an Excel file per subject, class, and
-             semester, faithfully reproducing the structure of the Massar grades module's
-             import file (columns, order, value formats, dual-script names); the file MUST
-             be downloadable by the principal's office and the registrar's office once the
-             period closes; no automation of the deposit into Massar is performed.
+semester, faithfully reproducing the structure of the Massar grades module's
+import file (columns, order, value formats, dual-script names); the file MUST
+be downloadable by the principal's office and the registrar's office once the
+period closes; no automation of the deposit into Massar is performed.
 
 Actors: Principal's office, Registrar's office. Traceability: [URS-ZS-003](../urs.md); `spec/behaviors/12-massar-regulatory-exports.md` (BEH-ZS-263, BEH-ZS-264).
 
@@ -96,13 +96,13 @@ Actors: Principal's office, Registrar's office. Traceability: [URS-ZS-003](../ur
 > **Acceptance:** [`@REQ-ZS-521`](../../features/cross-cutting/int/int-zs-001-massar-export-validation.feature)
 
 REQUIREMENT: Before any submission, the system MUST check the generated file: column
-             structure matching the current template, value ranges (grades, coefficients),
-             completeness per student and per subject, uniqueness of the Massar codes
-             present, no corrupted values. A readable error report MUST list the rows
-             involved and MUST block generation of a non-compliant file. For the bilingual
-             trimester school ([ADR-ZS-035](../decisions/035-pilot-school-profiles.md)),
-             the trimester-to-Massar-semester mapping is the one configured by the school
-             ([ADR-ZS-058](../decisions/058-grading-calculation-rules-mvp.md)).
+structure matching the current template, value ranges (grades, coefficients),
+completeness per student and per subject, uniqueness of the Massar codes
+present, no corrupted values. A readable error report MUST list the rows
+involved and MUST block generation of a non-compliant file. For the bilingual
+trimester school ([ADR-ZS-035](../decisions/035-pilot-school-profiles.md)),
+the trimester-to-Massar-semester mapping is the one configured by the school
+([ADR-ZS-058](../decisions/058-grading-calculation-rules-mvp.md)).
 
 Actors: Principal's office, Registrar's office.
 
@@ -115,10 +115,10 @@ Actors: Principal's office, Registrar's office.
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: During a transfer (journey JMP-ZS-009), the system MUST record in
-             `TransferRequest` the Massar transfer request's reference when the school
-             knows it, MUST log the procedure (dates, documents, declared provincial
-             validation), and MUST keep the audit trail on the origin enrollment's
-             TRANSFERRED closure. The Massar procedure itself remains external to ZSchool.
+`TransferRequest` the Massar transfer request's reference when the school
+knows it, MUST log the procedure (dates, documents, declared provincial
+validation), and MUST keep the audit trail on the origin enrollment's
+TRANSFERRED closure. The Massar procedure itself remains external to ZSchool.
 
 Actors: Principal's office, Registrar's office. Traceability: `spec/behaviors/09-transfers-mobility.md`.
 
@@ -131,10 +131,10 @@ Actors: Principal's office, Registrar's office. Traceability: `spec/behaviors/09
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The system MUST produce, for each school, the extracts needed for the three
-             ESISE applications (private-school census, HR reference data, year-end
-             results): headcount by level and class, teacher- and staff-affiliation data,
-             year-end decisions. Exact forms are configured from the pilots and maintained
-             per school year.
+ESISE applications (private-school census, HR reference data, year-end
+results): headcount by level and class, teacher- and staff-affiliation data,
+year-end decisions. Exact forms are configured from the pilots and maintained
+per school year.
 
 Actors: Principal's office. Traceability: `spec/behaviors/12-massar-regulatory-exports.md`.
 
@@ -147,11 +147,11 @@ Actors: Principal's office. Traceability: `spec/behaviors/12-massar-regulatory-e
 > **Acceptance:** [`@REQ-ZS-522`](../../features/cross-cutting/int/int-zs-005-certifying-exam-import.feature)
 
 REQUIREMENT: The system MUST be able to import a file of external exam results (6AP, 3AC,
-             1st Bac, 2nd Bac) transmitted via Massar, with a consistency check (student
-             matched by Massar code, grades within range) and an error report; imported
-             grades MUST feed the period results of the matching enrollment, MUST be
-             timestamped as originating from the ministry, and MUST NOT overwrite local
-             data without the principal's office's explicit confirmation.
+1st Bac, 2nd Bac) transmitted via Massar, with a consistency check (student
+matched by Massar code, grades within range) and an error report; imported
+grades MUST feed the period results of the matching enrollment, MUST be
+timestamped as originating from the ministry, and MUST NOT overwrite local
+data without the principal's office's explicit confirmation.
 
 Actors: Principal's office, Registrar's office. Traceability: `spec/domain-model.md` (`PeriodResult`).
 
@@ -164,11 +164,11 @@ Actors: Principal's office, Registrar's office. Traceability: `spec/domain-model
 > **Acceptance:** none (a negative/prohibitive requirement, no scenario)
 
 REQUIREMENT: The system MUST implement no automation of entry into Massar (bots, portal
-             injection, workarounds) as long as the ministry offers no official channel.
-             Any change to the "no Massar API" hypothesis (see `spec/appendices/01-review-
+injection, workarounds) as long as the ministry offers no official channel.
+Any change to the "no Massar API" hypothesis (see `spec/appendices/01-review-
              history.md`) MUST trigger a review of this chapter before any development.
-             Product communications speak of "exports compliant with Massar templates",
-             never of "sync".
+Product communications speak of "exports compliant with Massar templates",
+never of "sync".
 
 Actors: Platform (ZSchool).
 
@@ -212,14 +212,14 @@ Access via a "single contract": the CMI manages the relationship with banks and 
 
 ### 3.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-010 | [FAT] Generate bill references and Fatourati QR codes via the Aggregator API | Must |
-| INT-ZS-011 | [FAT] Answer debt lookups in real time and record payment confirmations | Must |
-| INT-ZS-009 | [FAT] Reconcile daily and reject duplicates | Must |
-| INT-ZS-008 | [FAT] Offer Collect mode for self-service schools | Should |
-| INT-ZS-012 | [FAT] Guarantee the school remains the creditor and ZSchool holds no funds | Must |
-| INT-ZS-007 | [FAT] Distinguish the CMI Fatourati rail from DGI e-invoicing | Should |
+| ID         | Title                                                                        | Priority |
+| ---------- | ---------------------------------------------------------------------------- | -------- |
+| INT-ZS-010 | [FAT] Generate bill references and Fatourati QR codes via the Aggregator API | Must     |
+| INT-ZS-011 | [FAT] Answer debt lookups in real time and record payment confirmations      | Must     |
+| INT-ZS-009 | [FAT] Reconcile daily and reject duplicates                                  | Must     |
+| INT-ZS-008 | [FAT] Offer Collect mode for self-service schools                            | Should   |
+| INT-ZS-012 | [FAT] Guarantee the school remains the creditor and ZSchool holds no funds   | Must     |
+| INT-ZS-007 | [FAT] Distinguish the CMI Fatourati rail from DGI e-invoicing                | Should   |
 
 ### INT-ZS-010: [FAT] Generate bill references and Fatourati QR codes via the Aggregator API
 
@@ -230,14 +230,14 @@ Access via a "single contract": the CMI manages the relationship with banks and 
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: For every subscribed school and every installment due, the system MUST
-             generate via the Aggregator partnership's API a unique bill reference and a
-             Fatourati QR code, attached to the enrollment and the financial guardian. The
-             reference MUST be visible to the parent (portal, reminder notifications) and
-             at the school's front desk. A reference MUST cover only one installment or an
-             expressly selected balance, never an open amount. **Go/no-go**: the Aggregator
-             contract (pricing, specifications, SLA) must be signed by 06/30/2027 at the
-             latest; past that date, V1 ships with Collect mode (INT-ZS-008) as a fallback
-             rail, with the API requirement remaining on the roadmap.
+generate via the Aggregator partnership's API a unique bill reference and a
+Fatourati QR code, attached to the enrollment and the financial guardian. The
+reference MUST be visible to the parent (portal, reminder notifications) and
+at the school's front desk. A reference MUST cover only one installment or an
+expressly selected balance, never an open amount. **Go/no-go**: the Aggregator
+contract (pricing, specifications, SLA) must be signed by 06/30/2027 at the
+latest; past that date, V1 ships with Collect mode (INT-ZS-008) as a fallback
+rail, with the API requirement remaining on the roadmap.
 
 Actors: Registrar's office, Accounting, Parent (payer), Platform (ZSchool). Traceability: journey JMP-ZS-008; `spec/behaviors/07-finance-billing-collections.md`.
 
@@ -250,19 +250,19 @@ Actors: Registrar's office, Accounting, Parent (payer), Platform (ZSchool). Trac
 > **Acceptance:** [`@REQ-ZS-523`](../../features/cross-cutting/int/int-zs-011-paying-installment-fatourati.feature)
 
 REQUIREMENT: When Fatourati queries a reference, the system MUST respond in real time with
-             the amount due and the creditor details from the school's billing. Upon
-             receiving a payment confirmation, it MUST automatically create the payment
-             with mode "Fatourati", allocate it to the relevant installment, issue the
-             receipt, and notify the parent (`PaymentReceived`), with no manual front-desk
-             action. **Inbound availability and degraded mode**: the lookup endpoint
-             exposed to Fatourati targets 99.9% monthly availability, is excluded from
-             maintenance windows ([NFR-ZS-002](../cross-cutting/03-non-functional-requirements.md):
-             other services may be under maintenance, not this one), and is served by an
-             isolated component; as a fallback, ZSchool deposits with Fatourati each night
-             the state of open bills ("deposited bills" mode), which serves parents when
-             the real-time lookup fails; payments received against a deposited bill are
-             reconciled by INT-ZS-009 and flagged "to reconcile" until confirmed. A parent
-             MUST never be prevented from paying by a ZSchool outage.
+the amount due and the creditor details from the school's billing. Upon
+receiving a payment confirmation, it MUST automatically create the payment
+with mode "Fatourati", allocate it to the relevant installment, issue the
+receipt, and notify the parent (`PaymentReceived`), with no manual front-desk
+action. **Inbound availability and degraded mode**: the lookup endpoint
+exposed to Fatourati targets 99.9% monthly availability, is excluded from
+maintenance windows ([NFR-ZS-002](../cross-cutting/03-non-functional-requirements.md):
+other services may be under maintenance, not this one), and is served by an
+isolated component; as a fallback, ZSchool deposits with Fatourati each night
+the state of open bills ("deposited bills" mode), which serves parents when
+the real-time lookup fails; payments received against a deposited bill are
+reconciled by INT-ZS-009 and flagged "to reconcile" until confirmed. A parent
+MUST never be prevented from paying by a ZSchool outage.
 
 Actors: Platform (ZSchool), Parent (payer), Registrar's office. Traceability: [URS-ZS-036](../urs.md); `spec/domain-model.md`; `spec/behaviors/07-finance-billing-collections.md`; [NFR-ZS-008](../cross-cutting/03-non-functional-requirements.md).
 
@@ -275,11 +275,11 @@ Actors: Platform (ZSchool), Parent (payer), Registrar's office. Traceability: [U
 > **Acceptance:** [`@REQ-ZS-524`](../../features/cross-cutting/int/int-zs-009-daily-fatourati-reconciliation.feature)
 
 REQUIREMENT: Each day, the system MUST reconcile confirmed payments with the Fatourati
-             reconciliation report, MUST reject any duplicate (a reference already
-             reconciled), and MUST produce a discrepancy statement for the school's
-             accounting (payments not found, confirmations with no payment, mismatched
-             amounts) that can be handled at the front desk. No payment can be counted
-             twice against the same reference.
+reconciliation report, MUST reject any duplicate (a reference already
+reconciled), and MUST produce a discrepancy statement for the school's
+accounting (payments not found, confirmations with no payment, mismatched
+amounts) that can be handled at the front desk. No payment can be counted
+twice against the same reference.
 
 Actors: Accounting, Registrar's office, Platform (ZSchool). Traceability: `spec/behaviors/07-finance-billing-collections.md`.
 
@@ -292,11 +292,11 @@ Actors: Accounting, Registrar's office, Platform (ZSchool). Traceability: `spec/
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: For a school not using the API model, the system MUST support Fatourati
-             Collect mode: the school manages its bills in the Collect app and declares
-             payments collected in ZSchool (manual entry or import of a payments
-             statement) with supporting documentation. Declared payments MUST be
-             distinguished from API-confirmed payments and MUST produce no automatic
-             confirmation.
+Collect mode: the school manages its bills in the Collect app and declares
+payments collected in ZSchool (manual entry or import of a payments
+statement) with supporting documentation. Declared payments MUST be
+distinguished from API-confirmed payments and MUST produce no automatic
+confirmation.
 
 Actors: Registrar's office, Accounting.
 
@@ -309,11 +309,11 @@ Actors: Registrar's office, Accounting.
 > **Acceptance:** none (a structural/prohibitive requirement, no scenario)
 
 REQUIREMENT: In every Fatourati flow, funds MUST be collected within the CMI system for
-             the benefit of the creditor school; ZSchool MUST hold, move, or transfer no
-             funds and MUST store no parent bank-account data. Data processed is limited
-             to bill references, amounts, statuses, and reconciliation information. Any
-             contractual change that would route funds through ZSchool is prohibited
-             without a payment-institution license, a hypothesis off the roadmap.
+the benefit of the creditor school; ZSchool MUST hold, move, or transfer no
+funds and MUST store no parent bank-account data. Data processed is limited
+to bill references, amounts, statuses, and reconciliation information. Any
+contractual change that would route funds through ZSchool is prohibited
+without a payment-institution license, a hypothesis off the roadmap.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -326,12 +326,12 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/cross-cuttin
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The system MUST explicitly distinguish, in the data model and in labels, the
-             CMI's Fatourati bill-payment rail (this chapter) from DGI e-invoicing (a
-             clearance model, UBL format, implementing decree not published as of mid-2026
-             — see `spec/appendices/01-review-history.md`). UBL export preparation and the
-             regulatory timeline fall to the finance behaviors and the compliance chapter;
-             no payment requirement depends on the DGI decree. Most schools billing
-             individual parents (B2C) are outside the reform's initial scope.
+CMI's Fatourati bill-payment rail (this chapter) from DGI e-invoicing (a
+clearance model, UBL format, implementing decree not published as of mid-2026
+— see `spec/appendices/01-review-history.md`). UBL export preparation and the
+regulatory timeline fall to the finance behaviors and the compliance chapter;
+no payment requirement depends on the DGI decree. Most schools billing
+individual parents (B2C) are outside the reform's initial scope.
 
 Actors: Platform (ZSchool), Accounting. Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`; `spec/behaviors/07-finance-billing-collections.md`.
 
@@ -374,14 +374,14 @@ Goal: connect ZSchool to the acquirer chosen by each school for card-based recur
 
 ### 4.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-014 | [CAR] Connect to the school's acquirer for tokenization and recurring payment | Must |
-| INT-ZS-015 | [CAR] Keep the acquiring contract in the school's name with ZSchool as technical provider | Must |
-| INT-ZS-016 | [CAR] Manage the recurring-payment mandate lifecycle | Must |
-| INT-ZS-017 | [CAR] Split a group's multi-beneficiary disbursements via the acquirer's split payments | Could |
-| INT-ZS-013 | [CAR] Exclude non-compliant payment rails | Must |
-| INT-ZS-018 | [CAR] Reconcile card transactions daily with the school's finances | Must |
+| ID         | Title                                                                                     | Priority |
+| ---------- | ----------------------------------------------------------------------------------------- | -------- |
+| INT-ZS-014 | [CAR] Connect to the school's acquirer for tokenization and recurring payment             | Must     |
+| INT-ZS-015 | [CAR] Keep the acquiring contract in the school's name with ZSchool as technical provider | Must     |
+| INT-ZS-016 | [CAR] Manage the recurring-payment mandate lifecycle                                      | Must     |
+| INT-ZS-017 | [CAR] Split a group's multi-beneficiary disbursements via the acquirer's split payments   | Could    |
+| INT-ZS-013 | [CAR] Exclude non-compliant payment rails                                                 | Must     |
+| INT-ZS-018 | [CAR] Reconcile card transactions daily with the school's finances                        | Must     |
 
 ### INT-ZS-014: [CAR] Connect to the school's acquirer for tokenization and recurring payment
 
@@ -392,11 +392,11 @@ Goal: connect ZSchool to the acquirer chosen by each school for card-based recur
 > **Acceptance:** [`@REQ-ZS-525`](../../features/cross-cutting/int/int-zs-014-automatic-card-payment.feature)
 
 REQUIREMENT: The system MUST integrate with the API of the acquirer configured by the
-             school (NAPS e-Premium, Chari Pay, or a bank-affiliated acquirer) for: hosted
-             mandate enrollment (card tokenization at the acquirer, 3DS 2.0 authentication
-             where applicable), viewing the mandate status, and triggering installment
-             payments. ZSchool MUST store no card data, only the token, the masked last
-             four digits, and the status.
+school (NAPS e-Premium, Chari Pay, or a bank-affiliated acquirer) for: hosted
+mandate enrollment (card tokenization at the acquirer, 3DS 2.0 authentication
+where applicable), viewing the mandate status, and triggering installment
+payments. ZSchool MUST store no card data, only the token, the masked last
+four digits, and the status.
 
 Actors: Parent (payer), Accounting, Platform (ZSchool). Traceability: `spec/cross-cutting/02-security-privacy.md`.
 
@@ -409,11 +409,11 @@ Actors: Parent (payer), Accounting, Platform (ZSchool). Traceability: `spec/cros
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Activating card payment MUST require the school to provide proof of its
-             card-acceptance contract with the acquirer; ZSchool configures the
-             integration in the school's name and on its behalf, never holding funds or
-             signing a commercial contract in its own name. Settlement details (the
-             school's IBAN) are entered only at the acquirer. Terminating the school's
-             contract suspends triggering without affecting financial history.
+card-acceptance contract with the acquirer; ZSchool configures the
+integration in the school's name and on its behalf, never holding funds or
+signing a commercial contract in its own name. Settlement details (the
+school's IBAN) are entered only at the acquirer. Terminating the school's
+contract suspends triggering without affecting financial history.
 
 Actors: Principal's office, Platform (ZSchool).
 
@@ -426,10 +426,10 @@ Actors: Principal's office, Platform (ZSchool).
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The payer MUST be able to consent to, modify, suspend, or revoke their
-             mandate from the parent portal; every action is timestamped and logged.
-             Revocation halts future triggers without cancelling payments already
-             reconciled. The school can view the status of its payers' mandates and resend
-             the enrollment invitation, never seeing card data.
+mandate from the parent portal; every action is timestamped and logged.
+Revocation halts future triggers without cancelling payments already
+reconciled. The school can view the status of its payers' mandates and resend
+the enrollment invitation, never seeing card data.
 
 Actors: Parent (payer), Registrar's office, Accounting. Traceability: [URS-ZS-040](../urs.md); `spec/domain-model.md` (`Payment`).
 
@@ -442,10 +442,10 @@ Actors: Parent (payer), Registrar's office, Accounting. Traceability: [URS-ZS-04
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: When a school group operates several schools with distinct settlement
-             accounts, splitting funds between beneficiaries MUST be handled by the
-             acquirer's split payments (documented to date for Chari Pay); ZSchool
-             transmits the bill split between tenants and keeps a per-school audit trail.
-             No disbursement is performed by ZSchool.
+accounts, splitting funds between beneficiaries MUST be handled by the
+acquirer's split payments (documented to date for Chari Pay); ZSchool
+transmits the bill split between tenants and keeps a per-school audit trail.
+No disbursement is performed by ZSchool.
 
 Actors: Principal's office (group), Accounting, Platform (ZSchool).
 
@@ -458,12 +458,12 @@ Actors: Principal's office (group), Accounting, Platform (ZSchool).
 > **Acceptance:** none (a negative/prohibitive requirement, no scenario)
 
 REQUIREMENT: The system MUST integrate, at no version, an acquiring or intermediation
-             provider with no current Bank Al-Maghrib license: YouCan Pay (operations
-             ceased in January 2024) is the reference example; Stripe and PayPal, which do
-             not cover Moroccan merchant collection, are not adopted. Payzone is not
-             adopted as a multi-school disbursement rail (no public evidence), at most as
-             card acceptance under a school's own contract. Any new rail proposal is set
-             aside until its license and fund-flow model are verified.
+provider with no current Bank Al-Maghrib license: YouCan Pay (operations
+ceased in January 2024) is the reference example; Stripe and PayPal, which do
+not cover Moroccan merchant collection, are not adopted. Payzone is not
+adopted as a multi-school disbursement rail (no public evidence), at most as
+card acceptance under a school's own contract. Any new rail proposal is set
+aside until its license and fund-flow model are verified.
 
 Actors: Platform (ZSchool).
 
@@ -476,10 +476,10 @@ Actors: Platform (ZSchool).
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Each day, the system MUST reconcile card transactions (successful, declined,
-             refunded) with recorded payments and the acquirer's reports, MUST reject
-             duplicates, and MUST produce a discrepancy statement for accounting, per the
-             same principles as INT-ZS-009. The school's account settlements are tracked
-             as reconciliation information, with no fund movement through ZSchool.
+refunded) with recorded payments and the acquirer's reports, MUST reject
+duplicates, and MUST produce a discrepancy statement for accounting, per the
+same principles as INT-ZS-009. The school's account settlements are tracked
+as reconciliation information, with no fund movement through ZSchool.
 
 Actors: Accounting. Traceability: `spec/behaviors/07-finance-billing-collections.md`.
 
@@ -517,13 +517,13 @@ Reference market as of 09/09/2026: Moroccan aggregators operate on a **prepaid s
 
 ### 5.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-021 | [SMS] Send transactional SMS via a Moroccan aggregator with a per-school alias | Must |
-| INT-ZS-022 | [SMS] Track status and cost for every SMS in the delivery log | Must |
-| INT-ZS-020 | [SMS] Manage prepaid packs, credit counters, and threshold alerts per school | Must |
-| INT-ZS-019 | [SMS] Reserve the alias for transactional messages and exclude LowCost | Should |
-| INT-ZS-023 | [SMS] Apply opt-in and opposition on SMS sends | Must |
+| ID         | Title                                                                          | Priority |
+| ---------- | ------------------------------------------------------------------------------ | -------- |
+| INT-ZS-021 | [SMS] Send transactional SMS via a Moroccan aggregator with a per-school alias | Must     |
+| INT-ZS-022 | [SMS] Track status and cost for every SMS in the delivery log                  | Must     |
+| INT-ZS-020 | [SMS] Manage prepaid packs, credit counters, and threshold alerts per school   | Must     |
+| INT-ZS-019 | [SMS] Reserve the alias for transactional messages and exclude LowCost         | Should   |
+| INT-ZS-023 | [SMS] Apply opt-in and opposition on SMS sends                                 | Must     |
 
 ### INT-ZS-021: [SMS] Send transactional SMS via a Moroccan aggregator with a per-school alias
 
@@ -534,10 +534,10 @@ Reference market as of 09/09/2026: Moroccan aggregators operate on a **prepaid s
 > **Acceptance:** [`@REQ-ZS-526`](../../features/cross-cutting/int/int-zs-021-absence-notification-by-sms.feature)
 
 REQUIREMENT: The system MUST send SMS notifications via an account on a Moroccan
-             aggregator, with an alphanumeric alias identifying the sending school (a
-             short name, approved by carriers). Every send MUST carry a correlation
-             reference to the originating `Notification`. Sending is available from MVP
-             onward for attendance and communication notifications.
+aggregator, with an alphanumeric alias identifying the sending school (a
+short name, approved by carriers). Every send MUST carry a correlation
+reference to the originating `Notification`. Sending is available from MVP
+onward for attendance and communication notifications.
 
 Actors: Platform (ZSchool), all notification-sending roles. Traceability: [URS-ZS-019](../urs.md), [URS-ZS-035](../urs.md); `spec/behaviors/08-communication-notifications.md`.
 
@@ -550,10 +550,10 @@ Actors: Platform (ZSchool), all notification-sending roles. Traceability: [URS-Z
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Every SMS MUST produce a `DeliveryLog` entry: channel, statuses (sent,
-             delivered, failed with a carrier reason), unit cost charged, and the school
-             allocated. Consolidated costs feed `UsageMetric` and the school's
-             credit-balance view. Bulk sends (announcements, reminders) are counted as a
-             single viewable batch.
+delivered, failed with a carrier reason), unit cost charged, and the school
+allocated. Consolidated costs feed `UsageMetric` and the school's
+credit-balance view. Bulk sends (announcements, reminders) are counted as a
+single viewable batch.
 
 Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability: `spec/domain-model.md` (`DeliveryLog`, `UsageMetric`); `spec/behaviors/08-communication-notifications.md`.
 
@@ -566,13 +566,13 @@ Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability
 > **Acceptance:** [`@REQ-ZS-527`](../../features/cross-cutting/int/int-zs-020-sms-credit-balance-depletion.feature)
 
 REQUIREMENT: Every school MUST have an SMS credit counter funded by purchasing packs
-             (resale price within the [ADR-ZS-009](../decisions/009-single-plan-pricing.md)
-             range: 0.30 to 0.50 MAD per SMS). The system MUST block non-critical sends
-             beyond the balance (except a configurable emergency queue), MUST warn at
-             configurable thresholds (default: 20% and 10% of the last pack), and MUST log
-             purchases and consumption. The remaining credit is visible to the principal's
-             office and the registrar's office. Authentication SMS never draws on this
-             credit (`spec/cross-cutting/04-business-model-packaging.md` PAK-17).
+(resale price within the [ADR-ZS-009](../decisions/009-single-plan-pricing.md)
+range: 0.30 to 0.50 MAD per SMS). The system MUST block non-critical sends
+beyond the balance (except a configurable emergency queue), MUST warn at
+configurable thresholds (default: 20% and 10% of the last pack), and MUST log
+purchases and consumption. The remaining credit is visible to the principal's
+office and the registrar's office. Authentication SMS never draws on this
+credit (`spec/cross-cutting/04-business-model-packaging.md` PAK-17).
 
 Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability: `spec/cross-cutting/04-business-model-packaging.md` (PAK-17); `spec/domain-model.md` (`UsageMetric`).
 
@@ -585,15 +585,15 @@ Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Every transactional message (absence, reminder, receipt, report card,
-             notice) MUST be sent under the school's alphanumeric alias (premium
-             routing); the LowCost regime (a variable mobile-number sender, priced around
-             0.05 to 0.10 DH) MUST NOT be used at any shipped version, with the ban on
-             transactional use active from the MVP's first send. It is out of scope for
-             packs (`spec/cross-cutting/04-business-model-packaging.md` §5.1); a possible
-             use for non-critical bulk alerts expressly authorized by the school — a clear
-             school identification in the message body, banned for any message naming a
-             student or a payment — would be a separate V2+ evolution to study, out of
-             scope for this requirement.
+notice) MUST be sent under the school's alphanumeric alias (premium
+routing); the LowCost regime (a variable mobile-number sender, priced around
+0.05 to 0.10 DH) MUST NOT be used at any shipped version, with the ban on
+transactional use active from the MVP's first send. It is out of scope for
+packs (`spec/cross-cutting/04-business-model-packaging.md` §5.1); a possible
+use for non-critical bulk alerts expressly authorized by the school — a clear
+school identification in the message body, banned for any message naming a
+student or a payment — would be a separate V2+ evolution to study, out of
+scope for this requirement.
 
 Actors: Principal's office, Platform (ZSchool). Traceability: `spec/cross-cutting/04-business-model-packaging.md` §5.1.
 
@@ -606,12 +606,12 @@ Actors: Principal's office, Platform (ZSchool). Traceability: `spec/cross-cuttin
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: ZSchool's SMS messages are transactional (performing the schooling
-             contractual relationship); any marketing use is excluded. The system MUST
-             handle opposition: a stop request on a number suspends non-mandatory SMS
-             sends to that recipient for the school concerned, without cutting mandatory
-             security notifications, and MUST log the request. The number database is
-             covered by the school's CNDP declarations (a template provided by ZSchool),
-             per the compliance chapter.
+contractual relationship); any marketing use is excluded. The system MUST
+handle opposition: a stop request on a number suspends non-mandatory SMS
+sends to that recipient for the school concerned, without cutting mandatory
+security notifications, and MUST log the request. The number database is
+covered by the school's CNDP declarations (a template provided by ZSchool),
+per the compliance chapter.
 
 Actors: Parent, Principal's office, Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -652,15 +652,15 @@ Two access models, to be settled at execution (OQ-ZS-327 for the pricing grid): 
 
 ### 6.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-025 | [WAP] Access the WhatsApp Business Platform via direct Cloud API or an official BSP after Meta Business verification | Must |
-| INT-ZS-027 | [WAP] Manage utility templates with prior Meta approval | Must |
-| INT-ZS-026 | [WAP] Collect WhatsApp opt-in and handle opposition | Must |
-| INT-ZS-028 | [WAP] Configure the 10/01/2026 pricing switch and Morocco's standalone rate card | Must |
-| INT-ZS-029 | [WAP] Budget for inbound messages and the service window after the switch | Should |
-| INT-ZS-030 | [WAP] Follow the push, WhatsApp utility, SMS-alias channel hierarchy | Must |
-| INT-ZS-024 | [WAP] Operate a single platform WhatsApp Business account at MVP and handle inbound replies | Must |
+| ID         | Title                                                                                                                | Priority |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- | -------- |
+| INT-ZS-025 | [WAP] Access the WhatsApp Business Platform via direct Cloud API or an official BSP after Meta Business verification | Must     |
+| INT-ZS-027 | [WAP] Manage utility templates with prior Meta approval                                                              | Must     |
+| INT-ZS-026 | [WAP] Collect WhatsApp opt-in and handle opposition                                                                  | Must     |
+| INT-ZS-028 | [WAP] Configure the 10/01/2026 pricing switch and Morocco's standalone rate card                                     | Must     |
+| INT-ZS-029 | [WAP] Budget for inbound messages and the service window after the switch                                            | Should   |
+| INT-ZS-030 | [WAP] Follow the push, WhatsApp utility, SMS-alias channel hierarchy                                                 | Must     |
+| INT-ZS-024 | [WAP] Operate a single platform WhatsApp Business account at MVP and handle inbound replies                          | Must     |
 
 ### INT-ZS-025: [WAP] Access the WhatsApp Business Platform via direct Cloud API or an official BSP after Meta Business verification
 
@@ -671,18 +671,18 @@ Two access models, to be settled at execution (OQ-ZS-327 for the pricing grid): 
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The system MUST send WhatsApp notifications exclusively via the official
-             WhatsApp Business Platform (Meta's Cloud API or an official BSP such as
-             360dialog, Twilio, Infobip, Gupshup, or CM.com), after Meta Business
-             verification and number approval. No unofficial API is used. The direct
-             Cloud API vs. BSP choice is a runtime configuration; the sending connector is
-             abstracted from the vendor. Scope by version: at MVP, use limited to
-             attendance notifications via minimal utility templates (one or two), on a
-             single platform WABA number (INT-ZS-024), with the recipient's express
-             consent collected with a transfer notice (INT-ZS-026) as the legal transfer
-             basis, and Meta entered in the vendor register ([SEC-ZS-023](../cross-cutting/02-security-privacy.md));
-             in V1, generalized to all messages, template management, and the push channel
-             of the [ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)
-             hierarchy.
+WhatsApp Business Platform (Meta's Cloud API or an official BSP such as
+360dialog, Twilio, Infobip, Gupshup, or CM.com), after Meta Business
+verification and number approval. No unofficial API is used. The direct
+Cloud API vs. BSP choice is a runtime configuration; the sending connector is
+abstracted from the vendor. Scope by version: at MVP, use limited to
+attendance notifications via minimal utility templates (one or two), on a
+single platform WABA number (INT-ZS-024), with the recipient's express
+consent collected with a transfer notice (INT-ZS-026) as the legal transfer
+basis, and Meta entered in the vendor register ([SEC-ZS-023](../cross-cutting/02-security-privacy.md));
+in V1, generalized to all messages, template management, and the push channel
+of the [ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)
+hierarchy.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08-communication-notifications.md`; `spec/cross-cutting/05-ux-ui-mobile-first-rtl.md`.
 
@@ -695,14 +695,14 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Every outbound WhatsApp message outside the service window MUST use a
-             utility template previously approved by Meta (absence, payment reminder,
-             report-card publication, notice, event). The system MUST manage the template
-             lifecycle: bilingual drafting with variables, submission, approval status,
-             revocation, replacement; it monitors usage-based re-categorization and alerts
-             when a template is reclassified as marketing. No marketing message is sent
-             over this channel. At MVP, only the one or two attendance-notification
-             utility templates are submitted and tracked; full lifecycle management ships
-             in V1.
+utility template previously approved by Meta (absence, payment reminder,
+report-card publication, notice, event). The system MUST manage the template
+lifecycle: bilingual drafting with variables, submission, approval status,
+revocation, replacement; it monitors usage-based re-categorization and alerts
+when a template is reclassified as marketing. No marketing message is sent
+over this channel. At MVP, only the one or two attendance-notification
+utility templates are submitted and tracked; full lifecycle management ships
+in V1.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08-communication-notifications.md`.
 
@@ -715,20 +715,20 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08
 > **Acceptance:** [`@REQ-ZS-528`](../../features/cross-cutting/int/int-zs-026-whatsapp-consent-and-fallback.feature)
 
 REQUIREMENT: The WhatsApp channel is used only for consenting guardians, with opt-in
-             collected per school (at enrollment, from the parent portal), timestamped
-             and revocable. The opt-in text explicitly states that contact data and
-             notification content are processed by Meta outside Morocco, in a country
-             outside the adequacy list; this **express consent constitutes the transfer
-             basis at MVP** ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)),
-             with the F118 request filed in parallel ([CNF-ZS-001](../cross-cutting/07-legal-compliance-data-protection.md)).
-             Opposition (a stop keyword or a portal opt-out) MUST immediately suspend
-             WhatsApp sends to that recipient for the school concerned, with the channel
-             hierarchy falling back to SMS per the school's rules; a stop keyword
-             received by WhatsApp or SMS applies only to reminders and announcements:
-             attendance, security, and authentication notifications keep being sent and
-             the parent is informed ([ADR-ZS-062](../decisions/062-communication-rules-batch.md)).
-             Consents and opt-outs MUST be logged and covered by the school's CNDP
-             declarations.
+collected per school (at enrollment, from the parent portal), timestamped
+and revocable. The opt-in text explicitly states that contact data and
+notification content are processed by Meta outside Morocco, in a country
+outside the adequacy list; this **express consent constitutes the transfer
+basis at MVP** ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)),
+with the F118 request filed in parallel ([CNF-ZS-001](../cross-cutting/07-legal-compliance-data-protection.md)).
+Opposition (a stop keyword or a portal opt-out) MUST immediately suspend
+WhatsApp sends to that recipient for the school concerned, with the channel
+hierarchy falling back to SMS per the school's rules; a stop keyword
+received by WhatsApp or SMS applies only to reminders and announcements:
+attendance, security, and authentication notifications keep being sent and
+the parent is informed ([ADR-ZS-062](../decisions/062-communication-rules-batch.md)).
+Consents and opt-outs MUST be logged and covered by the school's CNDP
+declarations.
 
 Actors: Parent, Principal's office, Platform (ZSchool). Traceability: [URS-ZS-035](../urs.md); `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -741,13 +741,13 @@ Actors: Parent, Principal's office, Platform (ZSchool). Traceability: [URS-ZS-03
 > **Acceptance:** [`@REQ-ZS-529`](../../features/cross-cutting/int/int-zs-028-pricing-switch.feature)
 
 REQUIREMENT: The system MUST carry the 10/01/2026 pricing-switch date as a platform
-             parameter: before the date, the current utility grid; from the date onward,
-             Morocco's standalone rate card (higher utility and authentication rates, end
-             of free service and utility messages within the 24-hour window) per the
-             grids Meta publishes (OQ-ZS-327, to verify and update). Unit costs are
-             configuration data per category and destination, never fixed constants. The
-             configuration is active from the MVP's first WhatsApp utility send, which
-             comes after the switch date.
+parameter: before the date, the current utility grid; from the date onward,
+Morocco's standalone rate card (higher utility and authentication rates, end
+of free service and utility messages within the 24-hour window) per the
+grids Meta publishes (OQ-ZS-327, to verify and update). Unit costs are
+configuration data per category and destination, never fixed constants. The
+configuration is active from the MVP's first WhatsApp utility send, which
+comes after the switch date.
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/04-business-model-packaging.md`.
 
@@ -760,10 +760,10 @@ Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/04-business-model-
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: From 10/01/2026 onward, inbound and service messages within the 24-hour
-             window are billed: the system MUST count inbound messages per school in
-             `UsageMetric` and `DeliveryLog`, MUST expose inbound consumption on the
-             school's cost dashboards, and MUST apply consumable credit counters to
-             inbound flows per the policy of `spec/cross-cutting/04-business-model-packaging.md`.
+window are billed: the system MUST count inbound messages per school in
+`UsageMetric` and `DeliveryLog`, MUST expose inbound consumption on the
+school's cost dashboards, and MUST apply consumable credit counters to
+inbound flows per the policy of `spec/cross-cutting/04-business-model-packaging.md`.
 
 Actors: Principal's office, Platform (ZSchool). Traceability: `spec/domain-model.md`.
 
@@ -776,18 +776,18 @@ Actors: Principal's office, Platform (ZSchool). Traceability: `spec/domain-model
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The WhatsApp channel fits into the [ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)
-             hierarchy, applicable from V1 onward: push notification first (V1, via the
-             PWA; native apps in V2, [NFR-ZS-022](../cross-cutting/03-non-functional-requirements.md)),
-             contingent on FCM and APNs being entered in the sub-processor register with a
-             transfer basis ([SEC-ZS-023](../cross-cutting/02-security-privacy.md),
-             [CNF-ZS-012](../cross-cutting/07-legal-compliance-data-protection.md),
-             [ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)),
-             WhatsApp utility for opted-in parents, alias SMS as a fallback (and for
-             households without a smartphone). At MVP, the hierarchy is in-app, then
-             WhatsApp utility (attendance only), then SMS. Fine-grained per-message-type
-             routing rules and parent preferences fall to `spec/behaviors/08-communication-notifications.md`;
-             this requirement ties integrations to this hierarchy and forbids any
-             workaround (an unconfigured, systematic double send across channels).
+hierarchy, applicable from V1 onward: push notification first (V1, via the
+PWA; native apps in V2, [NFR-ZS-022](../cross-cutting/03-non-functional-requirements.md)),
+contingent on FCM and APNs being entered in the sub-processor register with a
+transfer basis ([SEC-ZS-023](../cross-cutting/02-security-privacy.md),
+[CNF-ZS-012](../cross-cutting/07-legal-compliance-data-protection.md),
+[ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)),
+WhatsApp utility for opted-in parents, alias SMS as a fallback (and for
+households without a smartphone). At MVP, the hierarchy is in-app, then
+WhatsApp utility (attendance only), then SMS. Fine-grained per-message-type
+routing rules and parent preferences fall to `spec/behaviors/08-communication-notifications.md`;
+this requirement ties integrations to this hierarchy and forbids any
+workaround (an unconfigured, systematic double send across channels).
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08-communication-notifications.md`.
 
@@ -800,20 +800,20 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08
 > **Acceptance:** [`@REQ-ZS-530`](../../features/cross-cutting/int/int-zs-024-parent-reply-platform-number.feature)
 
 REQUIREMENT: At MVP, ZSchool MUST operate a single WhatsApp Business account (WABA) and
-             a single platform number for every school: the display name is ZSchool's and
-             every message identifies the sending school in its body ("ZSchool — <school
+a single platform number for every school: the display name is ZSchool's and
+every message identifies the sending school in its body ("ZSchool — <school
              name>"); opt-in remains collected per school (INT-ZS-026) and costs are
-             allocated to the sending school (INT-ZS-028). In V1, a school may opt to have
-             its own number and display name after its own Meta Business verification;
-             the connector supports both modes. **Inbound replies**: any message received
-             on the platform number MUST trigger an automatic bilingual receipt pointing
-             to the app and the registrar's office, MUST be attached to the school of the
-             last outbound message to that number, MUST be transmitted to that school's
-             student-life team in an inbound-message queue (reading, closing, converting
-             into a front-desk absence justification — [ADR-ZS-056](../decisions/056-absence-notification-rules.md)),
-             and MUST be counted in the school's consumption after 10/01/2026 (INT-ZS-029);
-             a stop keyword is handled per INT-ZS-026. Replies are never fed into
-             moderated threads ([ADR-ZS-034](../decisions/034-moderated-parent-teacher-communication.md)).
+allocated to the sending school (INT-ZS-028). In V1, a school may opt to have
+its own number and display name after its own Meta Business verification;
+the connector supports both modes. **Inbound replies**: any message received
+on the platform number MUST trigger an automatic bilingual receipt pointing
+to the app and the registrar's office, MUST be attached to the school of the
+last outbound message to that number, MUST be transmitted to that school's
+student-life team in an inbound-message queue (reading, closing, converting
+into a front-desk absence justification — [ADR-ZS-056](../decisions/056-absence-notification-rules.md)),
+and MUST be counted in the school's consumption after 10/01/2026 (INT-ZS-029);
+a stop keyword is handled per INT-ZS-026. Replies are never fed into
+moderated threads ([ADR-ZS-034](../decisions/034-moderated-parent-teacher-communication.md)).
 
 Actors: Platform (ZSchool), Principal's office, Student life, Parent. Traceability: `spec/behaviors/08-communication-notifications.md`; `spec/behaviors/04-attendance-student-life-discipline.md`.
 
@@ -854,13 +854,13 @@ V1: no external provider required — the advanced stamp is applied by ZSchool i
 
 ### 7.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-032 | [SIG] Apply the school's advanced electronic stamp and a timestamp on official documents | Must |
-| INT-ZS-031 | [SIG] Have the parent contract signed electronically at the advanced level | Must |
-| INT-ZS-033 | [SIG] Apply a qualified stamp and timestamp via a licensed PSCo on high-stakes documents | Must |
-| INT-ZS-034 | [SIG] Select a trust provider covering stamping, timestamping, and signature | Must |
-| INT-ZS-035 | [SIG] Keep the evidentiary package for the legal retention periods | Must |
+| ID         | Title                                                                                    | Priority |
+| ---------- | ---------------------------------------------------------------------------------------- | -------- |
+| INT-ZS-032 | [SIG] Apply the school's advanced electronic stamp and a timestamp on official documents | Must     |
+| INT-ZS-031 | [SIG] Have the parent contract signed electronically at the advanced level               | Must     |
+| INT-ZS-033 | [SIG] Apply a qualified stamp and timestamp via a licensed PSCo on high-stakes documents | Must     |
+| INT-ZS-034 | [SIG] Select a trust provider covering stamping, timestamping, and signature             | Must     |
+| INT-ZS-035 | [SIG] Keep the evidentiary package for the legal retention periods                       | Must     |
 
 ### INT-ZS-032: [SIG] Apply the school's advanced electronic stamp and a timestamp on official documents
 
@@ -871,15 +871,15 @@ V1: no external provider required — the advanced stamp is applied by ZSchool i
 > **Acceptance:** [`@REQ-ZS-531`](../../features/cross-cutting/int/int-zs-032-stamped-attestation.feature)
 
 REQUIREMENT: In V1, every published official document (a published report card,
-             certificate, attestation) MUST carry the school's advanced electronic stamp
-             and a timestamp: the system computes the document's fingerprint, applies the
-             tenant-linked stamp data, and records the evidence package (document,
-             fingerprint, application date and time, author). The stamp reproduces the
-             school's legal elements (name, opening authorization). The identifier
-             carried by the verification QR code MUST be random, non-sequential, and not
-             derived from the document number; the public verification page is
-             rate-limited and reveals only the document's existence, integrity, date, and
-             type ([SEC-ZS-010](../cross-cutting/02-security-privacy.md), [SEC-ZS-011](../cross-cutting/02-security-privacy.md)).
+certificate, attestation) MUST carry the school's advanced electronic stamp
+and a timestamp: the system computes the document's fingerprint, applies the
+tenant-linked stamp data, and records the evidence package (document,
+fingerprint, application date and time, author). The stamp reproduces the
+school's legal elements (name, opening authorization). The identifier
+carried by the verification QR code MUST be random, non-sequential, and not
+derived from the document number; the public verification page is
+rate-limited and reveals only the document's existence, integrity, date, and
+type ([SEC-ZS-010](../cross-cutting/02-security-privacy.md), [SEC-ZS-011](../cross-cutting/02-security-privacy.md)).
 
 Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability: `spec/domain-model.md` (`ReportCard`, `Certificate`, [INV-ZS-015](../invariants.md#inv-zs-015)); `spec/behaviors/06-documents-certificates.md`.
 
@@ -892,25 +892,25 @@ Actors: Principal's office, Registrar's office, Platform (ZSchool). Traceability
 > **Acceptance:** [`@REQ-ZS-532`](../../features/cross-cutting/int/int-zs-031-signing-the-parent-contract.feature)
 
 REQUIREMENT: The annual written school-parent contract (Law 59.21) generated by the
-             school MUST be signed electronically by the legal guardian at the advanced
-             level and, when distinct, countersigned by the financial guardian
-             ([ADR-ZS-061](../decisions/061-finance-rules-batch.md)): identification via
-             an authenticated account and a **signature-dedicated OTP code**, distinct
-             from the session code, sent to the signatory's mobile number, timestamped
-             consent, the signed document's fingerprint, device fingerprint and session
-             log, archived in the student's record and exportable for the AREF.
-             Compensating measures for the shared-phone risk ([ADR-ZS-048](../decisions/048-login-identifier-distinct-from-contact.md)):
-             the signatory is informed the code is strictly personal; when the
-             signatory's number is declared as a shared household contact, or when the
-             account was recovered at the front desk fewer than 30 days ago ([SEC-ZS-004](../cross-cutting/02-security-privacy.md)),
-             signing additionally requires a second element (front-desk confirmation with
-             identity verification, or a verified email); failing that, the contract is
-             signed at the front desk on a tablet with identity verification. The
-             signature carries an explicit note of the level (advanced) and the
-             identification evidence used. Since the contract is required from MVP onward
-             ([ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md)), front-desk
-             signature with identity verification and a timestamp is the MVP mode; remote
-             signature via dedicated OTP ships in V1.
+school MUST be signed electronically by the legal guardian at the advanced
+level and, when distinct, countersigned by the financial guardian
+([ADR-ZS-061](../decisions/061-finance-rules-batch.md)): identification via
+an authenticated account and a **signature-dedicated OTP code**, distinct
+from the session code, sent to the signatory's mobile number, timestamped
+consent, the signed document's fingerprint, device fingerprint and session
+log, archived in the student's record and exportable for the AREF.
+Compensating measures for the shared-phone risk ([ADR-ZS-048](../decisions/048-login-identifier-distinct-from-contact.md)):
+the signatory is informed the code is strictly personal; when the
+signatory's number is declared as a shared household contact, or when the
+account was recovered at the front desk fewer than 30 days ago ([SEC-ZS-004](../cross-cutting/02-security-privacy.md)),
+signing additionally requires a second element (front-desk confirmation with
+identity verification, or a verified email); failing that, the contract is
+signed at the front desk on a tablet with identity verification. The
+signature carries an explicit note of the level (advanced) and the
+identification evidence used. Since the contract is required from MVP onward
+([ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md)), front-desk
+signature with identity verification and a timestamp is the MVP mode; remote
+signature via dedicated OTP ships in V1.
 
 Actors: Legal guardian (parent), Principal's office, Platform (ZSchool). Traceability: `spec/domain-model.md` (`FeeSchedule`, the parent contract); `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -925,12 +925,12 @@ Note: per [INV-ZS-058](../invariants.md#inv-zs-058) / [INV-ZS-066](../invariants
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: In V2, for the exit certificate, attestations, and transcripts, the system
-             MUST call the chosen licensed PSCo's API (Barid eSign, DamaneSign, or
-             AfricTRUST) to apply the qualified electronic stamp in the school's name and
-             a qualified timestamp (Barid eSign has held Morocco's first qualified
-             timestamp since April 2026). Qualified evidence is added to the V1 evidence
-             package; the verification QR code distinguishes qualified documents. The
-             connector is abstracted from the provider.
+MUST call the chosen licensed PSCo's API (Barid eSign, DamaneSign, or
+AfricTRUST) to apply the qualified electronic stamp in the school's name and
+a qualified timestamp (Barid eSign has held Morocco's first qualified
+timestamp since April 2026). Qualified evidence is added to the V1 evidence
+package; the verification QR code distinguishes qualified documents. The
+connector is abstracted from the provider.
 
 Actors: Principal's office, Platform (ZSchool). Traceability: `spec/behaviors/06-documents-certificates.md`.
 
@@ -943,11 +943,11 @@ Actors: Principal's office, Platform (ZSchool). Traceability: `spec/behaviors/06
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Before V2 development, ZSchool MUST run the selection of the PSCo(s)
-             against three gating criteria: a current DGSSI license **per service**
-             covering stamping, timestamping, and signature (or complementarity of two
-             providers), a documented API for corporate stamping and qualified
-             timestamping, quote-based pricing compatible with school volumes. The choice
-             MUST be logged with proof of licensing as of the decision date.
+against three gating criteria: a current DGSSI license **per service**
+covering stamping, timestamping, and signature (or complementarity of two
+providers), a documented API for corporate stamping and qualified
+timestamping, quote-based pricing compatible with school volumes. The choice
+MUST be logged with proof of licensing as of the decision date.
 
 Actors: Platform (ZSchool). Traceability: OQ-ZS-328.
 
@@ -960,11 +960,11 @@ Actors: Platform (ZSchool). Traceability: OQ-ZS-328.
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: For every stamped document and every signed contract, the system MUST keep
-             the evidence package (document, fingerprint, timestamps, signatory identity
-             and identification evidence, access log) per the baseline's retention
-             periods: official documents kept permanently by the school, financial
-             documents ten years, logs five years. Exporting the package accompanies any
-             individual-rights request and the termination export.
+the evidence package (document, fingerprint, timestamps, signatory identity
+and identification evidence, access log) per the baseline's retention
+periods: official documents kept permanently by the school, financial
+documents ten years, logs five years. Exporting the package accompanies any
+individual-rights request and the termination export.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/domain-model.md` (`AuditLog`, `DataExport`); `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -1006,14 +1006,14 @@ Direct contracts between the ZSchool operator and AWS (`eu-central-1`, `eu-west-
 
 ### 8.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-040 | [HEB] Host production and backups in the EU with a documented residency check | Must |
-| INT-ZS-037 | [HEB] Replicate backups to a second EU region for the disaster recovery plan | Must |
-| INT-ZS-039 | [HEB] Verify the `eu-central-1` region's catalog service by service before commitment | Must |
-| INT-ZS-041 | [HEB] Test restores and keep the continuity plan up to date | Must |
-| INT-ZS-042 | [HEB] Guarantee hosting reversibility | Should |
-| INT-ZS-036 | [HEB] Replicate encrypted backups daily to a second EU region from MVP onward | Must |
+| ID         | Title                                                                                 | Priority |
+| ---------- | ------------------------------------------------------------------------------------- | -------- |
+| INT-ZS-040 | [HEB] Host production and backups in the EU with a documented residency check         | Must     |
+| INT-ZS-037 | [HEB] Replicate backups to a second EU region for the disaster recovery plan          | Must     |
+| INT-ZS-039 | [HEB] Verify the `eu-central-1` region's catalog service by service before commitment | Must     |
+| INT-ZS-041 | [HEB] Test restores and keep the continuity plan up to date                           | Must     |
+| INT-ZS-042 | [HEB] Guarantee hosting reversibility                                                 | Should   |
+| INT-ZS-036 | [HEB] Replicate encrypted backups daily to a second EU region from MVP onward         | Must     |
 
 ### INT-ZS-040: [HEB] Host production and backups in the EU with a documented residency check
 
@@ -1024,15 +1024,15 @@ Direct contracts between the ZSchool operator and AWS (`eu-central-1`, `eu-west-
 > **Acceptance:** [`@REQ-ZS-533`](../../features/cross-cutting/int/int-zs-040-data-residency-morocco.feature)
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09).** ZSchool's production and backups MUST be hosted in the
-             EU, targeting AWS `eu-central-1` (Frankfurt); no student data is stored or
-             processed outside the EU/EEA, except the expressly governed messaging
-             flows (INT-ZS-025, INT-ZS-038), which are separately assessed against the CNDP
-             adequacy list. A residency check (locating stores, backups, and processing
-             zones) MUST run at launch and at every architecture change, and MUST be
-             documented — this requirement now serves as that residency check for
-             ADR-ZS-091 itself, replacing the original Morocco-only baseline
-             ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).
+(Accepted, 2026-09-09).** ZSchool's production and backups MUST be hosted in the
+EU, targeting AWS `eu-central-1` (Frankfurt); no student data is stored or
+processed outside the EU/EEA, except the expressly governed messaging
+flows (INT-ZS-025, INT-ZS-038), which are separately assessed against the CNDP
+adequacy list. A residency check (locating stores, backups, and processing
+zones) MUST run at launch and at every architecture change, and MUST be
+documented — this requirement now serves as that residency check for
+ADR-ZS-091 itself, replacing the original Morocco-only baseline
+([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -1045,13 +1045,13 @@ Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-complianc
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09).** The continuity plan relies on a second EU region
-             independent of the first: replication or daily backup exports from AWS
-             `eu-central-1` (Frankfurt) to `eu-west-3` (Paris), matching `spec/stack.md`
-             §3 risk 3. Recovery targets (RPO/RTO) and plan-activation tests are
-             defined in `spec/cross-cutting/03-non-functional-requirements.md`; this
-             requirement guarantees their physical feasibility (a contracted, funded
-             second region).
+(Accepted, 2026-09-09).** The continuity plan relies on a second EU region
+independent of the first: replication or daily backup exports from AWS
+`eu-central-1` (Frankfurt) to `eu-west-3` (Paris), matching `spec/stack.md`
+§3 risk 3. Recovery targets (RPO/RTO) and plan-activation tests are
+defined in `spec/cross-cutting/03-non-functional-requirements.md`; this
+requirement guarantees their physical feasibility (a contracted, funded
+second region).
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-requirements.md`.
 
@@ -1064,13 +1064,13 @@ Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09).** Before any architecture commitment on AWS
-             `eu-central-1`, the availability, quotas, and performance of every required
-             service (compute, object and block storage, managed Postgres, orchestration,
-             backup, key encryption) MUST be verified and documented; any required
-             service that is unavailable triggers a documented alternative choice (a
-             self-managed service or another EU region such as `eu-west-3`).
-             Verification is repeated at every major architecture expansion.
+(Accepted, 2026-09-09).** Before any architecture commitment on AWS
+`eu-central-1`, the availability, quotas, and performance of every required
+service (compute, object and block storage, managed Postgres, orchestration,
+backup, key encryption) MUST be verified and documented; any required
+service that is unavailable triggers a documented alternative choice (a
+self-managed service or another EU region such as `eu-west-3`).
+Verification is repeated at every major architecture expansion.
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-requirements.md`.
 
@@ -1083,14 +1083,14 @@ Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/03-non-functional-
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Daily backups (at least 30-day retention) undergo documented quarterly
-             restore tests — backups and restore tests apply from MVP onward (the
-             NFR-SAV domain, `spec/cross-cutting/03-non-functional-requirements.md`), this
-             requirement covering the continuity-plan aspect in V1, without duplicating
-             the NFR; the continuity plan (including an inventory of this chapter's
-             integration dependencies: Massar offline, the SMS aggregator unavailable,
-             Meta unavailable, a PSCo unavailable) is reviewed at every major change and
-             after every test. Incidents and breaches follow the incident log and the
-             notification the baseline requires.
+restore tests — backups and restore tests apply from MVP onward (the
+NFR-SAV domain, `spec/cross-cutting/03-non-functional-requirements.md`), this
+requirement covering the continuity-plan aspect in V1, without duplicating
+the NFR; the continuity plan (including an inventory of this chapter's
+integration dependencies: Massar offline, the SMS aggregator unavailable,
+Meta unavailable, a PSCo unavailable) is reviewed at every major change and
+after every test. Incidents and breaches follow the incident log and the
+notification the baseline requires.
 
 Actors: Platform (ZSchool). Traceability: `spec/domain-model.md`; `spec/cross-cutting/02-security-privacy.md`.
 
@@ -1103,9 +1103,9 @@ Actors: Platform (ZSchool). Traceability: `spec/domain-model.md`; `spec/cross-cu
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Hosting contracts carry reversibility clauses: a full data export in open
-             formats, migration assistance, a deletion timeline after departure. A
-             documented exit plan (data, configurations, secrets) MUST be maintained and
-             testable, independent of any legal cloud-qualification obligation.
+formats, migration assistance, a deletion timeline after departure. A
+documented exit plan (data, configurations, secrets) MUST be maintained and
+testable, independent of any legal cloud-qualification obligation.
 
 Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -1118,18 +1118,18 @@ Actors: Platform (ZSchool). Traceability: `spec/cross-cutting/07-legal-complianc
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09).** From the pilots' activation onward, an encrypted
-             copy ([SEC-ZS-015](../cross-cutting/02-security-privacy.md), keys managed by
-             ZSchool) of the complete daily backup (databases, document files,
-             configuration, logs) MUST be transferred each day to a second EU region,
-             `eu-west-3` (Paris), physically distinct from the primary `eu-central-1`
-             (Frankfurt) region, on storage independent of the production account; the
-             copy's integrity MUST be verified after each transfer, with an alert on
-             failure; a restore from the remote copy is tested in the quarterly exercise
-             ([NFR-ZS-011](../cross-cutting/03-non-functional-requirements.md)).
-             The MVP fallback RPO is 24 hours and the fallback RTO is that of a measured
-             full restore, both recorded in the pilot agreement ([CNF-ZS-002](../cross-cutting/07-legal-compliance-data-protection.md)).
-             The full disaster recovery plan (INT-ZS-037) relies on this same region.
+(Accepted, 2026-09-09).** From the pilots' activation onward, an encrypted
+copy ([SEC-ZS-015](../cross-cutting/02-security-privacy.md), keys managed by
+ZSchool) of the complete daily backup (databases, document files,
+configuration, logs) MUST be transferred each day to a second EU region,
+`eu-west-3` (Paris), physically distinct from the primary `eu-central-1`
+(Frankfurt) region, on storage independent of the production account; the
+copy's integrity MUST be verified after each transfer, with an alert on
+failure; a restore from the remote copy is tested in the quarterly exercise
+([NFR-ZS-011](../cross-cutting/03-non-functional-requirements.md)).
+The MVP fallback RPO is 24 hours and the fallback RTO is that of a measured
+full restore, both recorded in the pilot agreement ([CNF-ZS-002](../cross-cutting/07-legal-compliance-data-protection.md)).
+The full disaster recovery plan (INT-ZS-037) relies on this same region.
 
 Actors: Platform (ZSchool). Traceability: [SEC-ZS-004](../cross-cutting/02-security-privacy.md); [NFR-ZS-009](../cross-cutting/03-non-functional-requirements.md), [NFR-ZS-010](../cross-cutting/03-non-functional-requirements.md).
 
@@ -1166,12 +1166,12 @@ A ZSchool contract with a transactional-sending service (volume-based pricing, a
 
 ### 9.6 Requirements
 
-| ID | Title | Priority |
-|---|---|---|
-| INT-ZS-043 | [EML] Send transactional emails via a dedicated service | Must |
-| INT-ZS-044 | [EML] Guarantee deliverability via a dedicated domain and SPF, DKIM, DMARC authentication | Must |
-| INT-ZS-038 | [EML] Govern the flow outside Morocco and provide the F118 request template to schools | Must |
-| INT-ZS-045 | [EML] Keep email as an optional channel, never required | Must |
+| ID         | Title                                                                                     | Priority |
+| ---------- | ----------------------------------------------------------------------------------------- | -------- |
+| INT-ZS-043 | [EML] Send transactional emails via a dedicated service                                   | Must     |
+| INT-ZS-044 | [EML] Guarantee deliverability via a dedicated domain and SPF, DKIM, DMARC authentication | Must     |
+| INT-ZS-038 | [EML] Govern the flow outside Morocco and provide the F118 request template to schools    | Must     |
+| INT-ZS-045 | [EML] Keep email as an optional channel, never required                                   | Must     |
 
 ### INT-ZS-043: [EML] Send transactional emails via a dedicated service
 
@@ -1182,12 +1182,12 @@ A ZSchool contract with a transactional-sending service (volume-based pricing, a
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The platform's emails (invitation and claim, access reset, email OTP,
-             receipts, documents, optional notifications) MUST be sent via a dedicated
-             transactional-sending service (never from a personal inbox), with a
-             correlation reference to the `Notification` and tracked statuses. Service
-             unavailability blocks no critical journey: every important-subject email is
-             paired with a channel from the [ADR-ZS-023](../decisions/023-notification-channel-priority.md)
-             hierarchy.
+receipts, documents, optional notifications) MUST be sent via a dedicated
+transactional-sending service (never from a personal inbox), with a
+correlation reference to the `Notification` and tracked statuses. Service
+unavailability blocks no critical journey: every important-subject email is
+paired with a channel from the [ADR-ZS-023](../decisions/023-notification-channel-priority.md)
+hierarchy.
 
 Actors: Platform (ZSchool), all recipient roles. Traceability: `spec/behaviors/08-communication-notifications.md`.
 
@@ -1200,11 +1200,11 @@ Actors: Platform (ZSchool), all recipient roles. Traceability: `spec/behaviors/0
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: Sends MUST originate from a dedicated ZSchool subdomain with valid SPF and
-             DKIM records and a strict DMARC policy; hard bounces MUST be handled
-             automatically (the address is suspended after repeated bounces, with the
-             school informed to correct contact details) and spam reports are monitored.
-             A per-school sending domain (optional) keeps the same authentication
-             discipline.
+DKIM records and a strict DMARC policy; hard bounces MUST be handled
+automatically (the address is suspended after repeated bounces, with the
+school informed to correct contact details) and spam reports are monitored.
+A per-school sending domain (optional) keeps the same authentication
+discipline.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08-communication-notifications.md`.
 
@@ -1217,11 +1217,11 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/behaviors/08
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: The system MUST document where the email vendor's processing takes place
-             and its adequacy countries; for affected schools, ZSchool MUST provide the
-             F118 authorization request template (a transfer to a messaging vendor),
-             fillable with processing details. No email flow of student content is
-             activated to a non-adequacy country without governance (choosing an
-             adequacy-country vendor, or the school's own F118) being documented.
+and its adequacy countries; for affected schools, ZSchool MUST provide the
+F118 authorization request template (a transfer to a messaging vendor),
+fillable with processing details. No email flow of student content is
+activated to a non-adequacy country without governance (choosing an
+adequacy-country vendor, or the school's own F118) being documented.
 
 Actors: Platform (ZSchool), Principal's office. Traceability: `spec/cross-cutting/07-legal-compliance-data-protection.md`.
 
@@ -1234,11 +1234,11 @@ Actors: Platform (ZSchool), Principal's office. Traceability: `spec/cross-cuttin
 > **Acceptance:** none (no dedicated scenario in the source)
 
 REQUIREMENT: No enrollment, access, or document journey requires an email address: the
-             account relies on the mobile phone ([INV-ZS-044](../invariants.md#inv-zs-044));
-             the email address is entered optionally, verified if used, and its mere
-             absence produces no anomaly alert. Official documents are never delivered
-             exclusively by email (portal download and the [ADR-ZS-023](../decisions/023-notification-channel-priority.md)
-             channels remain available).
+account relies on the mobile phone ([INV-ZS-044](../invariants.md#inv-zs-044));
+the email address is entered optionally, verified if used, and its mere
+absence produces no anomaly alert. Official documents are never delivered
+exclusively by email (portal download and the [ADR-ZS-023](../decisions/023-notification-channel-priority.md)
+channels remain available).
 
 Actors: All roles. Traceability: [URS-ZS-017](../urs.md).
 

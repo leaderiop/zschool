@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-BEH-05                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification                                       |
+> | Property       | Value                                                                                                                                                                                                                                |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Document ID    | ZSCHOOL-BEH-05                                                                                                                                                                                                                       |
+> | Revision       | 1.0                                                                                                                                                                                                                                  |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                           |
+> | Status         | Draft                                                                                                                                                                                                                                |
+> | Author         | ZSchool Product                                                                                                                                                                                                                      |
+> | Classification | Functional Specification                                                                                                                                                                                                             |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/modules/14-assessments-grades-report-cards.md` (v0.3), old `FR-EVA-01..19` -> `BEH-ZS-111..129`, old `ECR-EVA-01..09` -> `SCR-ZS-061..069`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Assessments, Grades and Report Cards (EVA)
@@ -18,53 +18,53 @@
 
 **In scope:**
 
-| Item | Version |
-|---|---|
-| Configurable assessment types with grading scale, weighting and period | MVP |
-| Assessment periods: semesters (national default) or trimesters (sections following the French reference framework), sub-periods; trimester -> Massar semester mapping | MVP (OQ-ZS-084 resolved) |
-| Web and mobile grade entry, drafts, offline mode with synchronization | MVP |
-| Period closing and locking of entries by the school leadership | MVP |
-| Configurable calculation rules and computation of averages, ranks, honors | MVP |
-| Default national weightings, versioned by school year, traced on the report card | MVP |
-| Certifying-exam grades: manual entry | MVP |
-| Bilingual report cards, templates, seal, signature, publication, immutability, versioning | MVP |
-| Compliance check against the national reference framework before closing (alert, then blocking with justified waiver) | MVP (informational warning without blocking, BEH-ZS-116); V1 (blocking with justified waiver) |
-| MVP calculation rules: absent, exempted and ungraded markers; normalization of grading scales to 20; ungraded subject marked "NG"; class change mid-period; rank exclusion; trimester -> Massar semester mapping | MVP |
-| Structured import of certifying-exam results | V1 |
-| End-of-year decisions, general remarks and simplified minutes (BEH-ZS-123) | MVP (wave 2 -- year-end closing, RDM-ZS-003) |
-| Full class council: file preparation (BEH-ZS-122) | V1 |
-| Verification QR code for report cards and transcripts | V1 |
-| Annual transcript | MVP (wave 2 -- year-end closing, RDM-ZS-003) |
-| Multi-year cumulative transcript (post-baccalaureate) | V1 |
-| Progressive publication of detailed grades to families (configurable option, default: published with the report card) | MVP (URS-ZS-035) |
+| Item                                                                                                                                                                                                             | Version                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Configurable assessment types with grading scale, weighting and period                                                                                                                                           | MVP                                                                                           |
+| Assessment periods: semesters (national default) or trimesters (sections following the French reference framework), sub-periods; trimester -> Massar semester mapping                                            | MVP (OQ-ZS-084 resolved)                                                                      |
+| Web and mobile grade entry, drafts, offline mode with synchronization                                                                                                                                            | MVP                                                                                           |
+| Period closing and locking of entries by the school leadership                                                                                                                                                   | MVP                                                                                           |
+| Configurable calculation rules and computation of averages, ranks, honors                                                                                                                                        | MVP                                                                                           |
+| Default national weightings, versioned by school year, traced on the report card                                                                                                                                 | MVP                                                                                           |
+| Certifying-exam grades: manual entry                                                                                                                                                                             | MVP                                                                                           |
+| Bilingual report cards, templates, seal, signature, publication, immutability, versioning                                                                                                                        | MVP                                                                                           |
+| Compliance check against the national reference framework before closing (alert, then blocking with justified waiver)                                                                                            | MVP (informational warning without blocking, BEH-ZS-116); V1 (blocking with justified waiver) |
+| MVP calculation rules: absent, exempted and ungraded markers; normalization of grading scales to 20; ungraded subject marked "NG"; class change mid-period; rank exclusion; trimester -> Massar semester mapping | MVP                                                                                           |
+| Structured import of certifying-exam results                                                                                                                                                                     | V1                                                                                            |
+| End-of-year decisions, general remarks and simplified minutes (BEH-ZS-123)                                                                                                                                       | MVP (wave 2 -- year-end closing, RDM-ZS-003)                                                  |
+| Full class council: file preparation (BEH-ZS-122)                                                                                                                                                                | V1                                                                                            |
+| Verification QR code for report cards and transcripts                                                                                                                                                            | V1                                                                                            |
+| Annual transcript                                                                                                                                                                                                | MVP (wave 2 -- year-end closing, RDM-ZS-003)                                                  |
+| Multi-year cumulative transcript (post-baccalaureate)                                                                                                                                                            | V1                                                                                            |
+| Progressive publication of detailed grades to families (configurable option, default: published with the report card)                                                                                            | MVP (URS-ZS-035)                                                                              |
 
 **Out of scope (covered elsewhere):**
 
-| Item | Owning file |
-|---|---|
-| Periods, grading scales and weightings as elements of the academic structure (creation, cloning from year N to N+1) | `spec/behaviors/03-academic-structure-timetables.md` |
-| Production of the conduct grade, incidents and disciplinary councils | `spec/behaviors/04-attendance-student-life-discipline.md` (this module reproduces the configured conduct grade on the report card) |
-| Notification channels and templates, SMS/WhatsApp costs | `spec/behaviors/08-communication-notifications.md` |
-| Dashboards and results statistics | `spec/behaviors/11-dashboards-reporting.md` |
-| Massar exports of continuous-assessment grades, pre-submission validation, ESISE mirror | `spec/behaviors/12-massar-regulatory-exports.md` |
-| Fine-grained permissions, logging, UX and RTL, detailed NFRs, numbered metrics | `spec/cross-cutting/01-permissions.md`, `spec/cross-cutting/03-non-functional-requirements.md`, `spec/cross-cutting/05-ux-ui-mobile-first-rtl.md`, `spec/metrics.md` |
-| Online homework and lightweight e-learning (resources, electronic submissions) | V2+ |
-| Letter grades and GPA for advanced international sections (`GradingScale`) | V2+ |
-| Qualified seal and timestamp via a DGSSI-approved provider | V2 ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md); `spec/cross-cutting/06-external-integrations.md`) |
+| Item                                                                                                                | Owning file                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Periods, grading scales and weightings as elements of the academic structure (creation, cloning from year N to N+1) | `spec/behaviors/03-academic-structure-timetables.md`                                                                                                                 |
+| Production of the conduct grade, incidents and disciplinary councils                                                | `spec/behaviors/04-attendance-student-life-discipline.md` (this module reproduces the configured conduct grade on the report card)                                   |
+| Notification channels and templates, SMS/WhatsApp costs                                                             | `spec/behaviors/08-communication-notifications.md`                                                                                                                   |
+| Dashboards and results statistics                                                                                   | `spec/behaviors/11-dashboards-reporting.md`                                                                                                                          |
+| Massar exports of continuous-assessment grades, pre-submission validation, ESISE mirror                             | `spec/behaviors/12-massar-regulatory-exports.md`                                                                                                                     |
+| Fine-grained permissions, logging, UX and RTL, detailed NFRs, numbered metrics                                      | `spec/cross-cutting/01-permissions.md`, `spec/cross-cutting/03-non-functional-requirements.md`, `spec/cross-cutting/05-ux-ui-mobile-first-rtl.md`, `spec/metrics.md` |
+| Online homework and lightweight e-learning (resources, electronic submissions)                                      | V2+                                                                                                                                                                  |
+| Letter grades and GPA for advanced international sections (`GradingScale`)                                          | V2+                                                                                                                                                                  |
+| Qualified seal and timestamp via a DGSSI-approved provider                                                          | V2 ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md); `spec/cross-cutting/06-external-integrations.md`)                                          |
 
 ## 2. Users and use cases
 
 Effective rights derive from the fine-grained permissions of `spec/cross-cutting/01-permissions.md` (INV-ZS-091, INV-ZS-011): a teacher only accesses students in their own courses, and the permission matrix distinguishes unpublished grades (write: the course teacher; read: school leadership) from published report cards.
 
-| User | Main use cases |
-|---|---|
-| Teacher | Creates assessments within their subject and classes; enters grades and remarks on mobile in class or in the evening, including offline; views their classes' averages; receives the lock notice at closing (-> URS-ZS-028, URS-ZS-033). |
-| Homeroom teacher | Has the class summary view: averages, ranks, absences and conduct, in preparation for the class council. |
+| User                                              | Main use cases                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Teacher                                           | Creates assessments within their subject and classes; enters grades and remarks on mobile in class or in the evening, including offline; views their classes' averages; receives the lock notice at closing (-> URS-ZS-028, URS-ZS-033).                                                                              |
+| Homeroom teacher                                  | Has the class summary view: averages, ranks, absences and conduct, in preparation for the class council.                                                                                                                                                                                                              |
 | School leadership (director, academic leadership) | Configures assessment types, periods, calculation rules and weightings; monitors compliance with the national reference framework; closes and locks periods; chairs the class council and records decisions; publishes report cards, corrects them via a new version, issues transcripts (-> URS-ZS-006, URS-ZS-008). |
-| Head supervisor | Feeds the council file (absences, tardiness, conduct); views published report cards for their assigned cycles (-> URS-ZS-024). |
-| Front desk | Views and prints published report cards on request from families at the front desk; no write access to grades. |
-| Parent / guardian (PAR, GAR) | Receives the publication notification; views the report card and, depending on the school's settings, grades published as they are entered; downloads transcripts (-> URS-ZS-035, URS-ZS-044). The custodial parent has equal access to the legal guardian (INV-ZS-065). |
-| Student (ELE) | Views published grades and report cards through the access activated by their guardians; an adult student downloads their annual and cumulative transcripts for post-baccalaureate applications (-> URS-ZS-053, URS-ZS-056). |
+| Head supervisor                                   | Feeds the council file (absences, tardiness, conduct); views published report cards for their assigned cycles (-> URS-ZS-024).                                                                                                                                                                                        |
+| Front desk                                        | Views and prints published report cards on request from families at the front desk; no write access to grades.                                                                                                                                                                                                        |
+| Parent / guardian (PAR, GAR)                      | Receives the publication notification; views the report card and, depending on the school's settings, grades published as they are entered; downloads transcripts (-> URS-ZS-035, URS-ZS-044). The custodial parent has equal access to the legal guardian (INV-ZS-065).                                              |
+| Student (ELE)                                     | Views published grades and report cards through the access activated by their guardians; an adult student downloads their annual and cumulative transcripts for post-baccalaureate applications (-> URS-ZS-053, URS-ZS-056).                                                                                          |
 
 ## 3. Key journeys
 
@@ -74,27 +74,27 @@ Upstream dependencies: periods and weightings carried by the academic structure 
 
 ## 4. Functional behaviors
 
-| ID | Title | Priority | Version |
-|---|---|---|---|
-| BEH-ZS-111 | Configure assessment types | Must | MVP |
-| BEH-ZS-112 | Configure assessment periods per section | Must | MVP |
-| BEH-ZS-113 | Enter grades by subject and class on web and mobile, with drafts | Must | MVP |
-| BEH-ZS-114 | Enter grades offline and synchronize | Must | MVP |
-| BEH-ZS-115 | Close the period and lock entries by the school leadership | Must | MVP |
-| BEH-ZS-116 | Check compliance with the national reference framework before closing | Should | MVP (warning) / V1 (blocking) |
-| BEH-ZS-117 | Configure calculation rules | Must | MVP |
-| BEH-ZS-118 | Provide default national weightings, versioned by year and traced on the report card | Must | MVP |
-| BEH-ZS-119 | Compute averages, ranks and honors per period and for the year | Must | MVP |
-| BEH-ZS-120 | Manually enter certifying-exam grades | Must | MVP |
-| BEH-ZS-121 | Import certifying-exam results with a validation report | Should | V1 |
-| BEH-ZS-122 | Prepare the class council | Should | V1 |
-| BEH-ZS-123 | Record council remarks and decisions and produce the minutes | Must | MVP (wave 2) / V1 (full council) |
-| BEH-ZS-124 | Generate bilingual report cards from configurable templates | Must | MVP |
-| BEH-ZS-125 | Publish report cards to families with immutability and versioning | Must | MVP |
-| BEH-ZS-126 | Verify report-card and transcript authenticity by QR code | Must | V1 |
-| BEH-ZS-127 | Correct a published report card by creating a new version | Must | MVP |
-| BEH-ZS-128 | Issue annual and cumulative transcripts | Must | MVP (wave 2 annual) / V1 (cumulative) |
-| BEH-ZS-129 | Publish detailed grades progressively (option) | Must | MVP |
+| ID         | Title                                                                                | Priority | Version                               |
+| ---------- | ------------------------------------------------------------------------------------ | -------- | ------------------------------------- |
+| BEH-ZS-111 | Configure assessment types                                                           | Must     | MVP                                   |
+| BEH-ZS-112 | Configure assessment periods per section                                             | Must     | MVP                                   |
+| BEH-ZS-113 | Enter grades by subject and class on web and mobile, with drafts                     | Must     | MVP                                   |
+| BEH-ZS-114 | Enter grades offline and synchronize                                                 | Must     | MVP                                   |
+| BEH-ZS-115 | Close the period and lock entries by the school leadership                           | Must     | MVP                                   |
+| BEH-ZS-116 | Check compliance with the national reference framework before closing                | Should   | MVP (warning) / V1 (blocking)         |
+| BEH-ZS-117 | Configure calculation rules                                                          | Must     | MVP                                   |
+| BEH-ZS-118 | Provide default national weightings, versioned by year and traced on the report card | Must     | MVP                                   |
+| BEH-ZS-119 | Compute averages, ranks and honors per period and for the year                       | Must     | MVP                                   |
+| BEH-ZS-120 | Manually enter certifying-exam grades                                                | Must     | MVP                                   |
+| BEH-ZS-121 | Import certifying-exam results with a validation report                              | Should   | V1                                    |
+| BEH-ZS-122 | Prepare the class council                                                            | Should   | V1                                    |
+| BEH-ZS-123 | Record council remarks and decisions and produce the minutes                         | Must     | MVP (wave 2) / V1 (full council)      |
+| BEH-ZS-124 | Generate bilingual report cards from configurable templates                          | Must     | MVP                                   |
+| BEH-ZS-125 | Publish report cards to families with immutability and versioning                    | Must     | MVP                                   |
+| BEH-ZS-126 | Verify report-card and transcript authenticity by QR code                            | Must     | V1                                    |
+| BEH-ZS-127 | Correct a published report card by creating a new version                            | Must     | MVP                                   |
+| BEH-ZS-128 | Issue annual and cumulative transcripts                                              | Must     | MVP (wave 2 annual) / V1 (cumulative) |
+| BEH-ZS-129 | Publish detailed grades progressively (option)                                       | Must     | MVP                                   |
 
 ### BEH-ZS-111: Configure assessment types
 
@@ -340,26 +340,26 @@ By default, detailed grades become visible to families when the period's report 
 
 Entities from the consolidated schema (`spec/domain-model.md`) drawn on by the module:
 
-| Entity | Use in the module | Key constraints |
-|---|---|---|
-| `EvaluationPeriod` | Assessment periods (semesters, trimesters, sub-periods), dates, closing status | Linked to the school year; locked at closing (BEH-ZS-115) |
-| `Assessment` | Assessment: type, subject, class **or group**, period, grading scale, weighting | Linked to context (INV-ZS-036); reference-framework compliance (BEH-ZS-116); linkage to a `Group` to be added to the dictionary (OQ-ZS-090) |
-| `Mark` | A student's grade, marker (justified or unjustified absence, exempted, ungraded) and remark for an assessment; **draft / published status** | Author, timestamp; not visible outside the school until published (INV-ZS-081, INV-ZS-034) |
-| `Remark` | Per-subject remark and general remark | Author, scope; internal observations not portable (INV-ZS-081) |
-| `PeriodResult` | Subject and overall averages, rank, honors, remarks, per period; "excluded from rank" flag | Frozen at closing; recomputed continuously during the period |
-| `YearDecision` | End-of-year decision (promotion, repeating the year, graduation, track guidance, undetermined) | Carried by the COMPLETED enrollment (INV-ZS-059); feeds the rollover (JMP-ZS-002); "undetermined" updated on import of certifying results |
-| `ReportCard` | Period report card: versions, fingerprint, signatory, date, QR code | Immutable after publication; earlier versions marked "superseded" (INV-ZS-085, [ADR-ZS-020](../decisions/020-immutable-versioned-report-cards.md)) |
-| `Transcript` | Annual and cumulative transcript | Published document, permanent access (INV-ZS-080); permanent retention ([ADR-ZS-003](../decisions/003-default-retention-durations.md)) |
-| `ConductGrade` | Conduct grade reproduced on the report card | Produced by `spec/behaviors/04-attendance-student-life-discipline.md`; not portable (INV-ZS-081) |
-| `EvaluationPeriod`, `ComputationRule`, `GradingScale`, `SubjectLevelConfig` | Configuration framework (periods, calculation rules, scales, weightings per level and track) | Weighting and language per level and track, never global (INV-ZS-078, INV-ZS-014); letter and GPA scales: V2+ |
-| `Enrollment`, `StudentProfile` | Carries all grades and results; import matching by Massar code | No floating school data ([ADR-ZS-029](../decisions/029-academic-data-always-tied-to-enrollment.md), INV-ZS-036); Massar code as the matching key ([ADR-ZS-015](../decisions/015-massar-code-as-preferred-matching-key.md)) |
+| Entity                                                                      | Use in the module                                                                                                                           | Key constraints                                                                                                                                                                                                            |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EvaluationPeriod`                                                          | Assessment periods (semesters, trimesters, sub-periods), dates, closing status                                                              | Linked to the school year; locked at closing (BEH-ZS-115)                                                                                                                                                                  |
+| `Assessment`                                                                | Assessment: type, subject, class **or group**, period, grading scale, weighting                                                             | Linked to context (INV-ZS-036); reference-framework compliance (BEH-ZS-116); linkage to a `Group` to be added to the dictionary (OQ-ZS-090)                                                                                |
+| `Mark`                                                                      | A student's grade, marker (justified or unjustified absence, exempted, ungraded) and remark for an assessment; **draft / published status** | Author, timestamp; not visible outside the school until published (INV-ZS-081, INV-ZS-034)                                                                                                                                 |
+| `Remark`                                                                    | Per-subject remark and general remark                                                                                                       | Author, scope; internal observations not portable (INV-ZS-081)                                                                                                                                                             |
+| `PeriodResult`                                                              | Subject and overall averages, rank, honors, remarks, per period; "excluded from rank" flag                                                  | Frozen at closing; recomputed continuously during the period                                                                                                                                                               |
+| `YearDecision`                                                              | End-of-year decision (promotion, repeating the year, graduation, track guidance, undetermined)                                              | Carried by the COMPLETED enrollment (INV-ZS-059); feeds the rollover (JMP-ZS-002); "undetermined" updated on import of certifying results                                                                                  |
+| `ReportCard`                                                                | Period report card: versions, fingerprint, signatory, date, QR code                                                                         | Immutable after publication; earlier versions marked "superseded" (INV-ZS-085, [ADR-ZS-020](../decisions/020-immutable-versioned-report-cards.md))                                                                         |
+| `Transcript`                                                                | Annual and cumulative transcript                                                                                                            | Published document, permanent access (INV-ZS-080); permanent retention ([ADR-ZS-003](../decisions/003-default-retention-durations.md))                                                                                     |
+| `ConductGrade`                                                              | Conduct grade reproduced on the report card                                                                                                 | Produced by `spec/behaviors/04-attendance-student-life-discipline.md`; not portable (INV-ZS-081)                                                                                                                           |
+| `EvaluationPeriod`, `ComputationRule`, `GradingScale`, `SubjectLevelConfig` | Configuration framework (periods, calculation rules, scales, weightings per level and track)                                                | Weighting and language per level and track, never global (INV-ZS-078, INV-ZS-014); letter and GPA scales: V2+                                                                                                              |
+| `Enrollment`, `StudentProfile`                                              | Carries all grades and results; import matching by Massar code                                                                              | No floating school data ([ADR-ZS-029](../decisions/029-academic-data-always-tied-to-enrollment.md), INV-ZS-036); Massar code as the matching key ([ADR-ZS-015](../decisions/015-massar-code-as-preferred-matching-key.md)) |
 
 Domain events (event dictionary in `spec/domain-model.md`) produced or consumed by the module:
 
-| Event | Produced by | Consumers and effects |
-|---|---|---|
-| `PeriodClosed` | Assessments (closing by the school leadership) | Teachers (entries locked), school leadership; triggers the frozen calculation and opens the councils |
-| `ReportCardPublished` | Assessments (publication) | Student and guardians (notification, QR code available); publication logged |
+| Event                 | Produced by                                    | Consumers and effects                                                                                |
+| --------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `PeriodClosed`        | Assessments (closing by the school leadership) | Teachers (entries locked), school leadership; triggers the frozen calculation and opens the councils |
+| `ReportCardPublished` | Assessments (publication)                      | Student and guardians (notification, QR code available); publication logged                          |
 
 Associated notifications (multichannel routing, templates, costs) are carried by `spec/behaviors/08-communication-notifications.md` ([ADR-ZS-023](../decisions/023-notification-channel-priority.md), [ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md); at the MVP stage, in-app and SMS channels, with WhatsApp "utility" limited to attendance notifications). Every write to grades, locking, unlocking, publication and correction carries author, context and timestamp at the record level from the MVP stage on (minimal history); the immutable, exportable AuditLog is V1.
 
@@ -405,10 +405,10 @@ Zones: student and year selection; annual-transcript preview (periods, averages,
 
 Integrations are specified in detail in `spec/cross-cutting/06-external-integrations.md` (built in Phase 4); this chapter only sets the module's needs:
 
-| Integration | Module need |
-|---|---|
-| INT-MAS (Massar) | Export of continuous-assessment grades in Massar template format, per subject, class and semester, with a validation report before submission (file structure not publicly documented, fragile re-import); structured import of certifying-exam results (BEH-ZS-121); no automation of Massar data entry (H-04, `spec/appendices/01-review-history.md`). Refers to `spec/behaviors/12-massar-regulatory-exports.md`. |
-| INT-SIG (signature and seal) | The school's advanced electronic seal and timestamp on report cards and transcripts in V1; verification QR code tied to the document's fingerprint; qualified seal via a DGSSI-approved provider in V2 ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md)). |
+| Integration                  | Module need                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| INT-MAS (Massar)             | Export of continuous-assessment grades in Massar template format, per subject, class and semester, with a validation report before submission (file structure not publicly documented, fragile re-import); structured import of certifying-exam results (BEH-ZS-121); no automation of Massar data entry (H-04, `spec/appendices/01-review-history.md`). Refers to `spec/behaviors/12-massar-regulatory-exports.md`. |
+| INT-SIG (signature and seal) | The school's advanced electronic seal and timestamp on report cards and transcripts in V1; verification QR code tied to the document's fingerprint; qualified seal via a DGSSI-approved provider in V2 ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md)).                                                                                                                                       |
 
 Notifications (publication, closing, compliance alerts) go through the communication module's channels (at the MVP stage: in-app and SMS, with WhatsApp "utility" limited to attendance notifications; general rollout in V1 -- `spec/behaviors/08-communication-notifications.md`, [ADR-ZS-023](../decisions/023-notification-channel-priority.md), [ADR-ZS-036](../decisions/036-notification-channel-hierarchy.md)).
 
@@ -416,16 +416,16 @@ Notifications (publication, closing, compliance alerts) go through the communica
 
 Numbering carried by `spec/cross-cutting/03-non-functional-requirements.md` (built in Phase 4):
 
-| Domain | Requirement applied to the module |
-|---|---|
-| NFR-PERF | Report-card generation under 3 s; report-card publication for a 2,000-student school under 10 minutes; usual pages under 2 s on 4G, including entry grids |
-| NFR-OFF | Grade entry resilient to outages, with synchronization and conflict resolution (BEH-ZS-114) |
-| NFR-I18N | Full FR and AR with RTL from the MVP; names in dual script on report cards and transcripts; bilingual documents |
-| NFR-DOC | Bilingual PDFs, correct Arabic fonts, A4 and A5 formats, batch printing (report cards, transcripts, minutes) |
-| NFR-MOB | PWA in MVP for teachers, parents and students; native apps in V2 |
+| Domain   | Requirement applied to the module                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NFR-PERF | Report-card generation under 3 s; report-card publication for a 2,000-student school under 10 minutes; usual pages under 2 s on 4G, including entry grids                |
+| NFR-OFF  | Grade entry resilient to outages, with synchronization and conflict resolution (BEH-ZS-114)                                                                              |
+| NFR-I18N | Full FR and AR with RTL from the MVP; names in dual script on report cards and transcripts; bilingual documents                                                          |
+| NFR-DOC  | Bilingual PDFs, correct Arabic fonts, A4 and A5 formats, batch printing (report cards, transcripts, minutes)                                                             |
+| NFR-MOB  | PWA in MVP for teachers, parents and students; native apps in V2                                                                                                         |
 | NFR-DISP | 99.5% target excluding announced maintenance; maintenance windows outside school-start and exam periods (period closings and the June results import are critical peaks) |
-| NFR-RES | Sizing of generation and publication peaks to the three-year technical target (500 schools, 500,000 students) |
-| NFR-INT | Excel, CSV and PDF exports available on grade, average and result lists |
+| NFR-RES  | Sizing of generation and publication peaks to the three-year technical target (500 schools, 500,000 students)                                                            |
+| NFR-INT  | Excel, CSV and PDF exports available on grade, average and result lists                                                                                                  |
 
 Applicable security requirements: least privilege on grades (INV-ZS-011, INV-ZS-091), logging of writes and sensitive views (minimal history at MVP, immutable exportable AuditLog in V1; INV-ZS-090, INV-ZS-019), multi-tenant isolation (INV-ZS-001) -- detailed in `spec/cross-cutting/01-permissions.md` and `spec/cross-cutting/02-security-privacy.md`.
 
@@ -433,13 +433,13 @@ Applicable security requirements: least privilege on grades (INV-ZS-011, INV-ZS-
 
 Product indicators are numbered in `spec/metrics.md`; the module proposes the following candidate measures, to be carried up there upon review:
 
-| Candidate measure | Definition |
-|---|---|
-| Closing-to-publication lag | Median duration between period closing and report-card publication, per school and per period (service target to be set on review) |
-| First-pass compliance rate | Share of classes that pass the national-reference-framework compliance check with no gap on the first check (BEH-ZS-116) |
-| Under-48-hour viewing rate | Share of published report cards viewed by at least one guardian or the student within 48 hours of the notification (measures the parent-app promise, URS-ZS-035) |
-| Post-publication correction rate | Number of correction versions per 100 published report cards (entry and calculation quality; low target) |
-| Progressive-publication adoption | Share of schools enabling progressive grade publication (BEH-ZS-129) and the resulting viewing rate |
+| Candidate measure                | Definition                                                                                                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Closing-to-publication lag       | Median duration between period closing and report-card publication, per school and per period (service target to be set on review)                               |
+| First-pass compliance rate       | Share of classes that pass the national-reference-framework compliance check with no gap on the first check (BEH-ZS-116)                                         |
+| Under-48-hour viewing rate       | Share of published report cards viewed by at least one guardian or the student within 48 hours of the notification (measures the parent-app promise, URS-ZS-035) |
+| Post-publication correction rate | Number of correction versions per 100 published report cards (entry and calculation quality; low target)                                                         |
+| Progressive-publication adoption | Share of schools enabling progressive grade publication (BEH-ZS-129) and the resulting viewing rate                                                              |
 
 ## 11. Open questions
 

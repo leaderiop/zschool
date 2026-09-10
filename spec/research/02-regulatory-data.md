@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-RES-02                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective — Reference                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Research Reference                                             |
+> | Property       | Value                                                                                                                                                             |
+> | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-RES-02                                                                                                                                                    |
+> | Revision       | 1.0                                                                                                                                                               |
+> | Effective Date | 2026-09-09                                                                                                                                                        |
+> | Status         | Effective — Reference                                                                                                                                             |
+> | Author         | ZSchool Product                                                                                                                                                   |
+> | Classification | Research Reference                                                                                                                                                |
 > | Change History | 1.0 (2026-09-09): Relocated from `prd/research/02-regulatory-data.md` (v0.3) during the qadi-style spec migration. No old-scheme ID citations found in this file. |
 
 # Web Research — Regulatory and Data Protection (09/09/2026)
@@ -49,7 +49,7 @@ Synthesis of research passes: Law5921, CNDP, DGSSI, ElecSignature, FamilyCode, D
 ## 5. Family Code (Moudawana)
 
 - The "December 2024 reform" is a **report from the Family Code Reform Commission submitted to the King (139 proposals), not voted or enacted as of 12/08/2026**; the 2004 Family Code (Law 70-03) remains in force. (medias24 12/08/2026; lesmre.com)
-- Art. **236**: the father is legal guardian (*wali*) by operation of law; the mother handles urgent matters if the father is unavailable. Art. **171**: custody (*hadana*) order — mother, then father, then maternal grandmother. Art. **209**: majority at 18 full Gregorian years. Art. 182: visitation rights of the non-custodial parent (article numbering 180-186 to confirm against the Official Gazette).
+- Art. **236**: the father is legal guardian (_wali_) by operation of law; the mother handles urgent matters if the father is unavailable. Art. **171**: custody (_hadana_) order — mother, then father, then maternal grandmother. Art. **209**: majority at 18 full Gregorian years. Art. 182: visitation rights of the non-custodial parent (article numbering 180-186 to confirm against the Official Gazette).
 - Ministerial position of **30/05/2023**: the custodial mother may obtain the child's school administrative documents; disputes go to the public prosecutor. (madar21.com)
 - The "national-ID measure for custodial mothers, November 2025" is **unconfirmed**.
 - Spec takeaway: keep "legal guardian" and "custodian" as distinct, independent qualities; the "custody regime" parameter is designed to evolve without a schema overhaul.

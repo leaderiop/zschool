@@ -18,7 +18,7 @@ const EXPECTED_APP_ROLE = "zschool_service"
  * `APP_EXPECTED_ROLE` for a deliberate future role change.
  */
 const assertExpectedAppRole: Effect.Effect<void, Error, SqlClient> = Effect.gen(function*() {
-  const expected = yield* Config.string("APP_EXPECTED_ROLE").pipe(Config.withDefault(EXPECTED_APP_ROLE))
+  const expected = yield* Config.String("APP_EXPECTED_ROLE").pipe(Config.withDefault(EXPECTED_APP_ROLE))
   const sql = yield* SqlClient
   const [row] = yield* sql<{ current_user: string }>`SELECT current_user`
   if (row.current_user !== expected) {

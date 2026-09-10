@@ -1,12 +1,5 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
-import * as Context from "effect/Context"
-import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as Ref from "effect/Ref"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { SqlLive, withSchool } from "@zschool/db"
 import {
@@ -18,6 +11,13 @@ import {
   instantiateNationalTemplate,
   type StudentImportRow
 } from "@zschool/domain"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Ref from "effect/Ref"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
+import type { SqlError } from "effect/unstable/sql/SqlError"
+import { fileURLToPath } from "node:url"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -144,7 +144,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     if (row.status !== "active") throw new Error("unreachable")
     yield* Ref.set(world.existingPersonId, row.studentPersonId)
 
-    const massarCount = yield* ownerCount((sql) => sql`SELECT count(*)::int AS count FROM persons WHERE massar_code = 'M100001'`)
+    const massarCount = yield* ownerCount((sql) =>
+      sql`SELECT count(*)::int AS count FROM persons WHERE massar_code = 'M100001'`
+    )
     assert.strictEqual(massarCount, 1)
 
     const b = yield* setupSchoolWithClass("Massar school B", "2026-2027")
@@ -186,21 +188,41 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const result = yield* Ref.get(world.commitResult)
     assert.strictEqual(result!.studentResults[0].status, "awaiting_confirmation")
 
-    const massarCount = yield* ownerCount((sql) => sql`SELECT count(*)::int AS count FROM persons WHERE massar_code = 'M100001'`)
+    const massarCount = yield* ownerCount((sql) =>
+      sql`SELECT count(*)::int AS count FROM persons WHERE massar_code = 'M100001'`
+    )
     assert.strictEqual(massarCount, 1)
   })
 
-  Given("a student named {string} born on {string} with no Massar code, enrolled at another school", function*(fullName, dob) {
-    const world = yield* World
-    const [firstName, lastName] = fullName.split(" ")
-    const a = yield* setupSchoolWithClass("Weak match school A", "2026-2027")
+  Given(
+    "a student named {string} born on {string} with no Massar code, enrolled at another school",
+    function*(fullName, dob) {
+      const world = yield* World
+      const [firstName, lastName] = fullName.split(" ")
+      const a = yield* setupSchoolWithClass("Weak match school A", "2026-2027")
 
-    const result = yield* commitImportBatch({
-      schoolId: a.schoolId,
-      academicYearId: a.academicYearId,
-      guardianRows: [],
-      studentRows: [{
-        rowId: "s1",
+      const result = yield* commitImportBatch({
+        schoolId: a.schoolId,
+        academicYearId: a.academicYearId,
+        guardianRows: [],
+        studentRows: [{
+          rowId: "s1",
+          firstName,
+          lastName,
+          dateOfBirth: dob,
+          levelCode: "1AC",
+          classLabel: "1AC-1",
+          effectiveDate: "2020-01-01",
+          guardians: []
+        }]
+      }).pipe(Effect.provide(asDirectorOf(a.schoolId)))
+      assert.strictEqual(result.studentResults[0].status, "pre_enrolled")
+
+      const b = yield* setupSchoolWithClass("Weak match school B", "2026-2027")
+      yield* Ref.set(world.schoolId, b.schoolId)
+      yield* Ref.set(world.academicYearId, b.academicYearId)
+      yield* Ref.set(world.studentRows, [{
+        rowId: "s2",
         firstName,
         lastName,
         dateOfBirth: dob,
@@ -208,24 +230,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
         classLabel: "1AC-1",
         effectiveDate: "2020-01-01",
         guardians: []
-      }]
-    }).pipe(Effect.provide(asDirectorOf(a.schoolId)))
-    assert.strictEqual(result.studentResults[0].status, "pre_enrolled")
-
-    const b = yield* setupSchoolWithClass("Weak match school B", "2026-2027")
-    yield* Ref.set(world.schoolId, b.schoolId)
-    yield* Ref.set(world.academicYearId, b.academicYearId)
-    yield* Ref.set(world.studentRows, [{
-      rowId: "s2",
-      firstName,
-      lastName,
-      dateOfBirth: dob,
-      levelCode: "1AC",
-      classLabel: "1AC-1",
-      effectiveDate: "2020-01-01",
-      guardians: []
-    }])
-  })
+      }])
+    }
+  )
 
   When("another school imports a student row with the same name and date of birth, unconfirmed", function*() {
     const world = yield* World
@@ -247,9 +254,11 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const result = yield* Ref.get(world.commitResult)
     assert.strictEqual(result!.studentResults[0].status, "pre_enrolled")
 
-    const nameCount = yield* ownerCount((sql) => sql`
+    const nameCount = yield* ownerCount((sql) =>
+      sql`
       SELECT count(*)::int AS count FROM persons WHERE first_name = 'Amina' AND last_name = 'Tazi' AND date_of_birth = '2015-03-01'
-    `)
+    `
+    )
     assert.strictEqual(nameCount, 2)
   })
 
@@ -291,31 +300,34 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     ])
   })
 
-  Given("a student row with an effective date in the past, a resolved class, a legal guardian, and a financial guardian", function*() {
-    const world = yield* World
-    const a = yield* setupSchoolWithClass("Active enrollment school", "2026-2027")
-    yield* Ref.set(world.schoolId, a.schoolId)
-    yield* Ref.set(world.academicYearId, a.academicYearId)
+  Given(
+    "a student row with an effective date in the past, a resolved class, a legal guardian, and a financial guardian",
+    function*() {
+      const world = yield* World
+      const a = yield* setupSchoolWithClass("Active enrollment school", "2026-2027")
+      yield* Ref.set(world.schoolId, a.schoolId)
+      yield* Ref.set(world.academicYearId, a.academicYearId)
 
-    const guardianRow: GuardianImportRow = {
-      rowId: "g1",
-      firstName: "Hassan",
-      lastName: "Idrissi",
-      dateOfBirth: "1978-02-02",
-      mobileNumber: "+212600000010"
+      const guardianRow: GuardianImportRow = {
+        rowId: "g1",
+        firstName: "Hassan",
+        lastName: "Idrissi",
+        dateOfBirth: "1978-02-02",
+        mobileNumber: "+212600000010"
+      }
+      yield* Ref.set(world.guardianRows, [guardianRow])
+      yield* Ref.set(world.studentRows, [{
+        rowId: "s1",
+        firstName: "Omar",
+        lastName: "Idrissi",
+        dateOfBirth: "2013-09-01",
+        levelCode: "1AC",
+        classLabel: "1AC-1",
+        effectiveDate: "2020-01-01",
+        guardians: [{ mobileNumber: guardianRow.mobileNumber, qualities: legalAndFinancialQualities }]
+      }])
     }
-    yield* Ref.set(world.guardianRows, [guardianRow])
-    yield* Ref.set(world.studentRows, [{
-      rowId: "s1",
-      firstName: "Omar",
-      lastName: "Idrissi",
-      dateOfBirth: "2013-09-01",
-      levelCode: "1AC",
-      classLabel: "1AC-1",
-      effectiveDate: "2020-01-01",
-      guardians: [{ mobileNumber: guardianRow.mobileNumber, qualities: legalAndFinancialQualities }]
-    }])
-  })
+  )
 
   Given("a student row with only a legal guardian and no financial guardian", function*() {
     const world = yield* World
@@ -372,14 +384,18 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     assert.strictEqual(guardian!.status, "committed")
     if (guardian!.status !== "committed") throw new Error("unreachable")
 
-    const profileCount = yield* ownerCount((sql) => sql`
+    const profileCount = yield* ownerCount((sql) =>
+      sql`
       SELECT count(*)::int AS count FROM guardian_profiles WHERE mobile_number = '+212600000099'
-    `)
+    `
+    )
     assert.strictEqual(profileCount, 1)
 
-    const relationshipCount = yield* ownerCount((sql) => sql`
+    const relationshipCount = yield* ownerCount((sql) =>
+      sql`
       SELECT count(*)::int AS count FROM parent_student_relationships WHERE guardian_person_id = ${guardian!.personId}
-    `)
+    `
+    )
     assert.strictEqual(relationshipCount, 2)
   })
 
@@ -470,9 +486,11 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     if (result!.studentResults[0].status !== "error") throw new Error("unreachable")
     assert.strictEqual(result!.studentResults[0].reason, "DuplicateActiveEnrollmentError")
 
-    const activeCount = yield* ownerCount((sql) => sql`
+    const activeCount = yield* ownerCount((sql) =>
+      sql`
       SELECT count(*)::int AS count FROM enrollments WHERE student_person_id = ${existingPersonId} AND status = 'active'
-    `)
+    `
+    )
     assert.strictEqual(activeCount, 1)
   })
 })

@@ -1,19 +1,19 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import * as Qadi from "@qadi/core/Qadi"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import * as Qadi from "@qadi/core/Qadi"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 import { seedCalendarEvents } from "./Calendar.ts"
 import { seedDefaultComputationRules } from "./GradingScales.ts"
 import {
   type CycleCode,
-  type LevelDefinition,
   defaultEvaluationPeriods,
   defaultGradingScale,
+  type LevelDefinition,
   nationalTemplate,
   subjectsForLevel
 } from "./NationalTemplate.ts"
@@ -181,7 +181,14 @@ export const instantiateNationalTemplate = (
         // separate loops.
         const subjectByCode = new Map<string, { code: string; name: string }>()
         const pendingConfigs: Array<
-          { levelCode: string; trackCode: string | undefined; subjectCode: string; coefficient: number; teachingLanguage: string; isMandatory: boolean }
+          {
+            levelCode: string
+            trackCode: string | undefined
+            subjectCode: string
+            coefficient: number
+            teachingLanguage: string
+            isMandatory: boolean
+          }
         > = []
         for (const { level } of levelInputs) {
           const trackCodes = level.tracks.length > 0 ? level.tracks.map((t) => t.code) : [undefined]
@@ -224,7 +231,9 @@ export const instantiateNationalTemplate = (
             academic_year_id: academicYearId,
             subject_id: subjectIdByCode.get(c.subjectCode)!,
             level_id: levelIdByCode.get(c.levelCode)!,
-            track_id: c.trackCode === undefined ? null : trackIdByLevelAndCode.get(`${levelIdByCode.get(c.levelCode)}:${c.trackCode}`)!,
+            track_id: c.trackCode === undefined
+              ? null
+              : trackIdByLevelAndCode.get(`${levelIdByCode.get(c.levelCode)}:${c.trackCode}`)!,
             coefficient: c.coefficient,
             teaching_language: c.teachingLanguage,
             is_mandatory: c.isMandatory

@@ -8,7 +8,7 @@
 
 Real minors' data starts flowing the moment pilots activate (February 2027), which
 means every compliance filing, security control, and operational safeguard the
-platform needs has to exist *before* that date, not be phased in afterward. The
+platform needs has to exist _before_ that date, not be phased in afterward. The
 review consolidated a large, previously scattered set of MVP-vs-V1 security and
 compliance timing decisions into one place, including the earlier D4 (MVP logging),
 D5 (continuity targets), and D8 (AREF cap non-blocking) shorthand decisions, which
@@ -31,13 +31,14 @@ access; mandatory MFA for leadership/administration/accounting/sysadmins at MVP,
 optional with trusted devices for teachers/supervisors; dual control preventing a
 local sysadmin from creating or resetting a leadership account; a 12-character
 breach-checked password policy with progressive lockout and rate-limited OTP; a 2GB
-+ 5MB/student MVP storage quota; WCAG 2.1 AA targeted at MVP on main journeys, a
-formal audit in V1; a defined browser/OS floor; a dedicated iOS PWA acceptance
-requirement; 30-day MVP backup retention, with V1 monthly copies purged of
-anonymized identities on restore; a named data-protection point of contact; and
-financial documents retained for 10 years after the balance is settled, not from
-document date. The AREF permanent-staff cap (D8) being non-blocking is folded into
-ADR-ZS-064's staffing-indicator rule (ADR-ZS-064) rather than repeated here.
+
+- 5MB/student MVP storage quota; WCAG 2.1 AA targeted at MVP on main journeys, a
+  formal audit in V1; a defined browser/OS floor; a dedicated iOS PWA acceptance
+  requirement; 30-day MVP backup retention, with V1 monthly copies purged of
+  anonymized identities on restore; a named data-protection point of contact; and
+  financial documents retained for 10 years after the balance is settled, not from
+  document date. The AREF permanent-staff cap (D8) being non-blocking is folded into
+  ADR-ZS-064's staffing-indicator rule (ADR-ZS-064) rather than repeated here.
 
 ## Consequences
 

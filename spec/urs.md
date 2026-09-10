@@ -2,14 +2,14 @@
 
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-URS                                                    |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | User Requirements Specification                               |
+> | Property       | Value                                                                                                                                                                                                                                                                        |
+> | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-URS                                                                                                                                                                                                                                                                  |
+> | Revision       | 1.0                                                                                                                                                                                                                                                                          |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                                                   |
+> | Status         | Draft                                                                                                                                                                                                                                                                        |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                                              |
+> | Classification | User Requirements Specification                                                                                                                                                                                                                                              |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/02-actors-personas.md` §3 (old `BES-<PERS>-NN` namespace, one block per persona), unified onto the flat `URS-ZS-NNN` namespace per the migration plan. Persona identity is kept as a column in §6 rather than in the identifier itself. |
 
 ---
@@ -32,22 +32,22 @@ requirement below cites the persona whose situation motivates it, and every
 
 ### 1.1 Scope
 
-| In scope | Out of scope |
-| -------- | ------------ |
-| The needs of the seven persona types who use ZSchool day to day: school-group leadership, front-office/cashier staff, student-life supervision, teaching staff, parents/guardians, and pupils | The needs of the ZSchool operator itself (provisioning, support, SaaS billing, monitoring) — a platform actor, not a persona with functional needs (`prd/02-actors-personas.md` §1) |
-| Needs that hold across every school configuration the personas describe (single-site, multi-site group, part-time staff across schools) | A generic school-management needs catalogue independent of the Moroccan private-K-12 context — every requirement below is grounded in a specific persona's stated situation |
+| In scope                                                                                                                                                                                                               | Out of scope                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The needs of the seven persona types who use ZSchool day to day: school-group leadership, front-office/cashier staff, student-life supervision, teaching staff, parents/guardians, and pupils                          | The needs of the ZSchool operator itself (provisioning, support, SaaS billing, monitoring) — a platform actor, not a persona with functional needs (`prd/02-actors-personas.md` §1)                |
+| Needs that hold across every school configuration the personas describe (single-site, multi-site group, part-time staff across schools)                                                                                | A generic school-management needs catalogue independent of the Moroccan private-K-12 context — every requirement below is grounded in a specific persona's stated situation                        |
 | Needs a school **tenant** or **organization** (parent tenant) has as a data-isolation/governance unit are represented only through the `DIR` persona who acts on their behalf, not as a requirement in their own right | Requirements of the pupil's global identity considered independently of a guardian or of the pupil's own account holdership — see `spec/invariants.md` for the identity/authorization chain itself |
 
 ## 2. User groups
 
-| Group | Persona code | Needs |
-| ----- | ------------ | ----- |
-| **School-group leadership** | `DIR` | A cross-site consolidated view; collections oversight; regulatory compliance without double entry |
-| **Front-office / cashier staff** | `SEC` | A single-pass enrollment and payment workflow on modest hardware |
-| **Student-life supervision** | `SUR` | Fast, mobile, network-tolerant attendance and discipline tracking |
-| **Teaching staff (incl. part-time, multi-school)** | `ENS` | One portable profile, mobile-first tools, a confidential career record |
-| **Parents / guardians** | `PAR`, `GAR` | One account across every child and school; real-time information; fair, logged access regardless of custody/guardianship status |
-| **Pupils** | `ELE` | Access proportionate to age and majority; a durable academic record that survives a change of school |
+| Group                                              | Persona code | Needs                                                                                                                           |
+| -------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| **School-group leadership**                        | `DIR`        | A cross-site consolidated view; collections oversight; regulatory compliance without double entry                               |
+| **Front-office / cashier staff**                   | `SEC`        | A single-pass enrollment and payment workflow on modest hardware                                                                |
+| **Student-life supervision**                       | `SUR`        | Fast, mobile, network-tolerant attendance and discipline tracking                                                               |
+| **Teaching staff (incl. part-time, multi-school)** | `ENS`        | One portable profile, mobile-first tools, a confidential career record                                                          |
+| **Parents / guardians**                            | `PAR`, `GAR` | One account across every child and school; real-time information; fair, logged access regardless of custody/guardianship status |
+| **Pupils**                                         | `ELE`        | Access proportionate to age and majority; a durable academic record that survives a change of school                            |
 
 ## 3. Functional requirements
 
@@ -55,7 +55,7 @@ requirement below cites the persona whose situation motivates it, and every
 
 ### URS-ZS-001 — View a consolidated multi-site dashboard
 
-*Persona: DIR · Priority: Must · Version: MVP (organization-level read-only consolidation, ADR-ZS-041) · Modules: RAP*
+_Persona: DIR · Priority: Must · Version: MVP (organization-level read-only consolidation, ADR-ZS-041) · Modules: RAP_
 
 A school-group CEO must be able to see headcounts, attendance, results, unpaid
 fees and occupancy consolidated across every site from one dashboard.
@@ -65,7 +65,7 @@ three sites and 1,800 pupils has no overview without it.
 
 ### URS-ZS-002 — Manage collections across sites
 
-*Persona: DIR · Priority: Must · Version: MVP · Modules: FIN, COM*
+_Persona: DIR · Priority: Must · Version: MVP · Modules: FIN, COM_
 
 Group leadership must be able to track unpaid fees by class and by guardian and
 trigger automatic, graduated reminders, without per-site manual follow-up.
@@ -75,7 +75,7 @@ consolidated, automated view is one of the CEO's stated goals.
 
 ### URS-ZS-003 — Produce Massar-compliant exports without double entry
 
-*Persona: DIR · Priority: Must · Version: MVP wave 2 — year-end close (ADR-ZS-041) · Modules: MAS*
+_Persona: DIR · Priority: Must · Version: MVP wave 2 — year-end close (ADR-ZS-041) · Modules: MAS_
 
 Group leadership must be able to produce files matching Massar's own templates
 (rosters, continuous-assessment grades) so the same data is never re-keyed twice.
@@ -85,7 +85,7 @@ is a named, recurring source of workload (H-04).
 
 ### URS-ZS-004 — Steer the group without merging tenant data
 
-*Persona: DIR · Priority: Must · Version: MVP (read-only consolidation); V1 (shared administration, group billing) (ADR-ZS-041) · Modules: RAP, ADM*
+_Persona: DIR · Priority: Must · Version: MVP (read-only consolidation); V1 (shared administration, group billing) (ADR-ZS-041) · Modules: RAP, ADM_
 
 Group leadership must get consolidated views and shared administration across
 sites while each site's data stays isolated from the others.
@@ -95,7 +95,7 @@ and one head per site; consolidation must not become a data merge.
 
 ### URS-ZS-005 — Run the start of year across sites
 
-*Persona: DIR · Priority: Must · Version: MVP wave 2 — year-end close (ADR-ZS-041); V1 (campaign reminders) · Modules: INS, PED*
+_Persona: DIR · Priority: Must · Version: MVP wave 2 — year-end close (ADR-ZS-041); V1 (campaign reminders) · Modules: INS, PED_
 
 Group leadership must be able to run a pre-filled re-enrollment campaign and an
 N+1 year rollover (structure cloned from year N) across every site.
@@ -105,7 +105,7 @@ one of the CEO's explicit annual scenarios.
 
 ### URS-ZS-006 — Close periods and lock report cards
 
-*Persona: DIR · Priority: Must · Version: MVP · Modules: EVA*
+_Persona: DIR · Priority: Must · Version: MVP · Modules: EVA_
 
 Group leadership must be able to approve period closures and lock report cards
 once published.
@@ -115,7 +115,7 @@ issued.
 
 ### URS-ZS-007 — Assign fine-grained staff roles
 
-*Persona: DIR · Priority: Must · Version: MVP · Modules: ADM*
+_Persona: DIR · Priority: Must · Version: MVP · Modules: ADM_
 
 Group leadership must be able to assign staff roles built from fine-grained,
 editable permissions by module and scope.
@@ -126,7 +126,7 @@ separately.
 
 ### URS-ZS-008 — Check regulatory compliance before closing
 
-*Persona: DIR · Priority: Should · Version: MVP (warning, D3); V1 (blocking) · Modules: MAS, EVA*
+_Persona: DIR · Priority: Should · Version: MVP (warning, D3); V1 (blocking) · Modules: MAS, EVA_
 
 Group leadership must be able to check the minimum number of tests per subject
 and per period against the national framework before closing.
@@ -136,7 +136,7 @@ a period close.
 
 ### URS-ZS-009 — Approve outgoing transfer requests
 
-*Persona: DIR · Priority: Must · Version: MVP · Modules: TRA*
+_Persona: DIR · Priority: Must · Version: MVP · Modules: TRA_
 
 Group leadership must be able to approve outgoing transfer requests and track
 incoming ones, checking the guardian's signature and shared scope, and must
@@ -149,7 +149,7 @@ the financial-refusal prohibition a hard rule, not a preference.
 
 ### URS-ZS-010 — Create a complete enrollment in one pass
 
-*Persona: SEC · Priority: Must · Version: MVP · Modules: INS, DOC*
+_Persona: SEC · Priority: Must · Version: MVP · Modules: INS, DOC_
 
 Front-office staff must be able to create identity, guardians and class
 placement, and issue the basic enrollment documents, all in a single front-desk
@@ -160,7 +160,7 @@ re-keying between tools are what this replaces.
 
 ### URS-ZS-011 — Collect every payment method with an immediate receipt
 
-*Persona: SEC · Priority: Must · Version: MVP (full cheque lifecycle, ADR-ZS-041) · Modules: FIN*
+_Persona: SEC · Priority: Must · Version: MVP (full cheque lifecycle, ADR-ZS-041) · Modules: FIN_
 
 Front-office staff must be able to collect cash, cheque and transfer payments,
 issue a tamper-proof numbered receipt immediately, and track cheques by due
@@ -171,7 +171,7 @@ exactly what this need replaces.
 
 ### URS-ZS-012 — Issue bilingual certificates on demand
 
-*Persona: SEC · Priority: Must · Version: V1 (certificate of enrollment and basic enrollment documents ship at MVP under URS-ZS-010; receipt numbering at MVP, ADR-ZS-041) · Modules: DOC*
+_Persona: SEC · Priority: Must · Version: V1 (certificate of enrollment and basic enrollment documents ship at MVP under URS-ZS-010; receipt numbering at MVP, ADR-ZS-041) · Modules: DOC_
 
 Front-office staff must be able to issue bilingual certificates and attestations
 with numbering, stamp, signature and a QR code, on demand.
@@ -180,7 +180,7 @@ Rationale: bilingual official documents are part of everyday front-desk work.
 
 ### URS-ZS-013 — Show arrears without ever blocking documents
 
-*Persona: SEC · Priority: Must · Version: MVP · Modules: DOC, FIN*
+_Persona: SEC · Priority: Must · Version: MVP · Modules: DOC, FIN_
 
 Front-office staff must see an arrears alert on a pupil's file, but must never
 be blocked from issuing an official document because of unpaid fees.
@@ -191,7 +191,7 @@ from the front-desk perspective).
 
 ### URS-ZS-014 — Trigger multi-channel reminders from templates
 
-*Persona: SEC · Priority: Should · Version: MVP (SMS; WhatsApp: V1) · Modules: FIN, COM*
+_Persona: SEC · Priority: Should · Version: MVP (SMS; WhatsApp: V1) · Modules: FIN, COM_
 
 Front-office staff must be able to trigger SMS and WhatsApp reminders from
 templates, without composing each one by hand.
@@ -201,7 +201,7 @@ scale to a full arrears list.
 
 ### URS-ZS-015 — Scan supporting documents with a completeness check
 
-*Persona: SEC · Priority: Should · Version: V1 · Modules: DOC, INS*
+_Persona: SEC · Priority: Should · Version: V1 · Modules: DOC, INS_
 
 Front-office staff must be able to scan supporting documents into a pupil's
 file and see whether the file is complete.
@@ -211,7 +211,7 @@ file adds over a folder.
 
 ### URS-ZS-016 — Prepare and track pre-filled re-enrollments
 
-*Persona: SEC · Priority: Must · Version: MVP wave 2 (pre-filled form, deposit, conversion, ADR-ZS-041); V1 (campaign reminders) · Modules: INS*
+_Persona: SEC · Priority: Must · Version: MVP wave 2 (pre-filled form, deposit, conversion, ADR-ZS-041); V1 (campaign reminders) · Modules: INS_
 
 Front-office staff must be able to prepare a pre-filled re-enrollment campaign
 with a deposit step and track its reminder cadence.
@@ -221,7 +221,7 @@ event this need directly supports.
 
 ### URS-ZS-017 — Work on modest hardware with resumable sessions
 
-*Persona: SEC · Priority: Must · Version: MVP · Modules: cross-cutting*
+_Persona: SEC · Priority: Must · Version: MVP · Modules: cross-cutting_
 
 Front-office staff must be able to use the product on an old PC and a mobile
 phone, with light pages that resume cleanly after a connection drop.
@@ -233,7 +233,7 @@ connection that is sometimes unstable.
 
 ### URS-ZS-018 — Take attendance tolerant of network drops
 
-*Persona: SUR · Priority: Must · Version: MVP · Modules: VSC*
+_Persona: SUR · Priority: Must · Version: MVP · Modules: VSC_
 
 A supervisor must be able to take attendance by class or by course on mobile,
 including while offline, with sync completing once the connection returns.
@@ -243,7 +243,7 @@ connection in class is sometimes unstable.
 
 ### URS-ZS-019 — Notify absentees' families automatically, fast
 
-*Persona: SUR · Priority: Must · Version: MVP · Modules: VSC, COM*
+_Persona: SUR · Priority: Must · Version: MVP · Modules: VSC, COM_
 
 A supervisor must be able to trigger automatic notification to absentees'
 families within five minutes of the attendance call being validated.
@@ -253,7 +253,7 @@ a.m. — the process it's meant to eliminate, not merely speed up.
 
 ### URS-ZS-020 — Receive and validate justifications with an attachment
 
-*Persona: SUR · Priority: Must · Version: MVP · Modules: VSC, COM*
+_Persona: SUR · Priority: Must · Version: MVP · Modules: VSC, COM_
 
 A supervisor must be able to receive a parent's absence justification with an
 attached photo or document and validate it.
@@ -262,7 +262,7 @@ Rationale: there is no reliable record of justifications today.
 
 ### URS-ZS-021 — Log tardiness, early departures, exemptions, late-entry slips
 
-*Persona: SUR · Priority: Must · Version: MVP (tardiness logged at the attendance call, BEH item for BEH-ZS-081); V1 (late-entry slips, early departures, exemptions) · Modules: VSC*
+_Persona: SUR · Priority: Must · Version: MVP (tardiness logged at the attendance call, BEH item for BEH-ZS-081); V1 (late-entry slips, early departures, exemptions) · Modules: VSC_
 
 A supervisor must be able to log tardiness, early departures, exemptions and
 late-entry slips against a pupil's record.
@@ -271,7 +271,7 @@ Rationale: this is currently a paper register with no structured history.
 
 ### URS-ZS-022 — Manage incidents through to disciplinary councils
 
-*Persona: SUR · Priority: Must · Version: V1 · Modules: VSC, COM*
+_Persona: SUR · Priority: Must · Version: V1 · Modules: VSC, COM_
 
 A supervisor must be able to log incidents, apply graduated sanctions, issue
 summonses, and prepare a disciplinary council file from a reliable history.
@@ -281,7 +281,7 @@ draw on.
 
 ### URS-ZS-023 — Work within an assigned scope, with actions logged
 
-*Persona: SUR · Priority: Must · Version: MVP · Modules: cross-cutting, VSC*
+_Persona: SUR · Priority: Must · Version: MVP · Modules: cross-cutting, VSC_
 
 A supervisor's actions must be limited to the cycles assigned to them, and every
 sensitive action they take must be logged.
@@ -292,7 +292,7 @@ discretion.
 
 ### URS-ZS-024 — See the day's student-life picture at a glance
 
-*Persona: SUR · Priority: Must · Version: MVP (day summary: absentees, tardiness, expected calls); V1 (ongoing incidents) · Modules: RAP, VSC*
+_Persona: SUR · Priority: Must · Version: MVP (day summary: absentees, tardiness, expected calls); V1 (ongoing incidents) · Modules: RAP, VSC_
 
 A supervisor must be able to see the day's absentees, tardiness and ongoing
 incidents from one dashboard.
@@ -301,7 +301,7 @@ Rationale: today this picture is obtained by walking the corridors.
 
 ### URS-ZS-025 — Reach a parent from the pupil's file, with history logged
 
-*Persona: SUR · Priority: Should · Version: MVP · Modules: COM, VSC*
+_Persona: SUR · Priority: Should · Version: MVP · Modules: COM, VSC_
 
 A supervisor must be able to call or message a parent directly from the pupil's
 file, with the channel and the exchange logged, without keeping a private paper
@@ -313,7 +313,7 @@ Rationale: numbers are jotted on paper today and calls aren't tracked (INV-ZS-09
 
 ### URS-ZS-026 — Keep one profile across schools, switch context
 
-*Persona: ENS · Priority: Must · Version: MVP · Modules: cross-cutting*
+_Persona: ENS · Priority: Must · Version: MVP · Modules: cross-cutting_
 
 A part-time teacher working at more than one school must be able to keep a
 single profile and switch context between her schools rather than holding a
@@ -324,7 +324,7 @@ part-time teachers in the private sector (H-13), not an edge case.
 
 ### URS-ZS-027 — Take attendance on the phone, including offline
 
-*Persona: ENS · Priority: Must · Version: MVP · Modules: VSC*
+_Persona: ENS · Priority: Must · Version: MVP · Modules: VSC_
 
 A teacher must be able to take attendance for her own courses from her phone in
 class, including while offline.
@@ -333,7 +333,7 @@ Rationale: Khadija doesn't always have a computer in class.
 
 ### URS-ZS-028 — Enter grades on mobile with resume after a drop
 
-*Persona: ENS · Priority: Must · Version: MVP · Modules: EVA*
+_Persona: ENS · Priority: Must · Version: MVP · Modules: EVA_
 
 A teacher must be able to enter grades from her phone in the evening, and
 resume cleanly if the connection drops mid-entry.
@@ -343,7 +343,7 @@ plan with frequent drops.
 
 ### URS-ZS-029 — Keep the lesson log and publish homework
 
-*Persona: ENS · Priority: Should · Version: V1 · Modules: PED*
+_Persona: ENS · Priority: Should · Version: V1 · Modules: PED_
 
 A teacher must be able to keep her lesson log and publish homework and
 resources for her pupils.
@@ -353,7 +353,7 @@ structured log.
 
 ### URS-ZS-030 — Message only her own pupils' parents, moderated
 
-*Persona: ENS · Priority: Must · Version: MVP (moderated in-app, ADR-ZS-062 under ADR-ZS-034) · Modules: COM*
+_Persona: ENS · Priority: Must · Version: MVP (moderated in-app, ADR-ZS-062 under ADR-ZS-034) · Modules: COM_
 
 A teacher must be able to message only the parents of pupils in her own
 courses, within a moderated thread.
@@ -363,7 +363,7 @@ Rationale: the teacher role is scoped to her own courses under least privilege
 
 ### URS-ZS-031 — Own a portable, confidential professional profile
 
-*Persona: ENS · Priority: Should · Version: V1 (network features: V2+) · Modules: CAR*
+_Persona: ENS · Priority: Should · Version: V1 (network features: V2+) · Modules: CAR_
 
 A teacher must be able to hold a professional profile — degrees, subjects,
 verified affiliation periods — that is portable between schools and confidential
@@ -375,7 +375,7 @@ narrower than full network search/applications, which lands later (URS-ZS-032).
 
 ### URS-ZS-032 — Signal availability and apply without alerting her current employer
 
-*Persona: ENS · Priority: Should · Version: V2 · Modules: CAR*
+_Persona: ENS · Priority: Should · Version: V2 · Modules: CAR_
 
 A teacher looking for a new position must be able to mark herself available and
 apply to openings without her current schools being notified.
@@ -385,7 +385,7 @@ leaking to her current employer.
 
 ### URS-ZS-033 — See the day's classes and pending entries at a glance
 
-*Persona: ENS · Priority: Should · Version: MVP · Modules: RAP, EVA*
+_Persona: ENS · Priority: Should · Version: MVP · Modules: RAP, EVA_
 
 A teacher must be able to see the day's classes, pending grade entries, and her
 classes' averages from one dashboard.
@@ -397,7 +397,7 @@ workflow.
 
 ### URS-ZS-034 — One account and password across every child and school
 
-*Persona: PAR · Priority: Must · Version: MVP · Modules: cross-cutting*
+_Persona: PAR · Priority: Must · Version: MVP · Modules: cross-cutting_
 
 A parent with children at more than one school must be able to use a single
 account and password for all of them.
@@ -407,7 +407,7 @@ three children across two schools.
 
 ### URS-ZS-035 — Receive real-time notifications across channels
 
-*Persona: PAR · Priority: Must · Version: MVP (in-app, SMS; WhatsApp presence notifications with minimal templates, first-absence-of-the-day then a summary, ADR-ZS-056); V1 (push, broader rollout) · Modules: COM, VSC, EVA*
+_Persona: PAR · Priority: Must · Version: MVP (in-app, SMS; WhatsApp presence notifications with minimal templates, first-absence-of-the-day then a summary, ADR-ZS-056); V1 (push, broader rollout) · Modules: COM, VSC, EVA_
 
 A parent must receive absences, grades and announcements in real time over SMS,
 WhatsApp and in-app notifications.
@@ -418,7 +418,7 @@ evening.
 
 ### URS-ZS-036 — View the installment plan and payment history per child
 
-*Persona: PAR · Priority: Must · Version: MVP · Modules: FIN*
+_Persona: PAR · Priority: Must · Version: MVP · Modules: FIN_
 
 A parent must be able to view the installment plan, receipts and payment
 history for each of their children.
@@ -428,7 +428,7 @@ currently scattered across paper receipts.
 
 ### URS-ZS-037 — Switch between children and schools from one view
 
-*Persona: PAR · Priority: Must · Version: MVP · Modules: RAP*
+_Persona: PAR · Priority: Must · Version: MVP · Modules: RAP_
 
 A parent must be able to switch between children and schools from a single
 multi-child, multi-school dashboard.
@@ -438,7 +438,7 @@ to re-authenticate to move between them.
 
 ### URS-ZS-038 — Justify an absence with an attachment from the phone
 
-*Persona: PAR · Priority: Must · Version: MVP · Modules: VSC, COM*
+_Persona: PAR · Priority: Must · Version: MVP · Modules: VSC, COM_
 
 A parent must be able to justify a child's absence with a photo or document
 attached, from their phone.
@@ -448,7 +448,7 @@ validation step.
 
 ### URS-ZS-039 — Electronically sign outing and event authorizations
 
-*Persona: PAR · Priority: Should · Version: V1 · Modules: COM*
+_Persona: PAR · Priority: Should · Version: V1 · Modules: COM_
 
 A parent must be able to electronically sign authorizations for school outings
 and events.
@@ -457,7 +457,7 @@ Rationale: this replaces paper permission slips for school-organized events.
 
 ### URS-ZS-040 — Pay online with the school remaining the creditor
 
-*Persona: PAR · Priority: Should · Version: V1 (Fatourati Collect-then-Aggregator primary; card payment in V2, ADR-ZS-031) · Modules: FIN*
+_Persona: PAR · Priority: Should · Version: V1 (Fatourati Collect-then-Aggregator primary; card payment in V2, ADR-ZS-031) · Modules: FIN_
 
 A parent must be able to pay online from their banking app or by card, with the
 school — never ZSchool — remaining the creditor of record.
@@ -467,7 +467,7 @@ with card payment following in V2.
 
 ### URS-ZS-041 — Message the form teacher and subject teachers, moderated
 
-*Persona: PAR · Priority: Should · Version: MVP (moderated in-app, ADR-ZS-062); V1 (WhatsApp and push channels) · Modules: COM*
+_Persona: PAR · Priority: Should · Version: MVP (moderated in-app, ADR-ZS-062); V1 (WhatsApp and push channels) · Modules: COM_
 
 A parent must be able to message their child's form teacher and subject
 teachers within a school-moderated setting.
@@ -476,7 +476,7 @@ Rationale: parent-teacher threads are moderated by the school under ADR-ZS-034.
 
 ### URS-ZS-042 — Change mobile number or recover access without losing children
 
-*Persona: PAR · Priority: Must · Version: MVP · Modules: cross-cutting*
+_Persona: PAR · Priority: Must · Version: MVP · Modules: cross-cutting_
 
 A parent must be able to change their mobile number, or recover account access
 after losing their phone, without losing the link to their children's records.
@@ -486,7 +486,7 @@ contact identifier used as the primary channel (ADR-ZS-022, ADR-ZS-049).
 
 ### URS-ZS-043 — Dispute an absence or request a grade correction
 
-*Persona: PAR · Priority: Should · Version: MVP · Modules: VSC, EVA, COM*
+_Persona: PAR · Priority: Should · Version: MVP · Modules: VSC, EVA, COM_
 
 A parent must be able to dispute an absence logged in error, or request a grade
 correction, before the report card is published.
@@ -499,7 +499,7 @@ that point.
 
 ### URS-ZS-044 — Access all of her daughter's school information as guardian and custodian
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: PRT*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: PRT_
 
 A custodial mother must be able to access all of her child's school information
 on the same footing as the other legal guardian.
@@ -509,7 +509,7 @@ administrative school documents (§2.7 of the source PRD chapter, INV-ZS-065).
 
 ### URS-ZS-045 — See her recorded qualities and rights, per school
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: INS, ADM*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: INS, ADM_
 
 A guardian must be able to see her own recorded qualities (legal guardian,
 custodian, emergency contact) and the rights attached to each, per school.
@@ -519,7 +519,7 @@ distinct, contextual attributes (INV-ZS-066, INV-ZS-067).
 
 ### URS-ZS-046 — Hold her own account, never shared
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: cross-cutting*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: cross-cutting_
 
 A guardian must have her own account that is never shared with another
 guardian.
@@ -530,7 +530,7 @@ subordinated to the other parent's account.
 
 ### URS-ZS-047 — Obtain administrative documents self-service
 
-*Persona: GAR · Priority: Must · Version: V1 (certificate of enrollment already issued at the front desk from MVP under URS-ZS-010) · Modules: DOC*
+_Persona: GAR · Priority: Must · Version: V1 (certificate of enrollment already issued at the front desk from MVP under URS-ZS-010) · Modules: DOC_
 
 A guardian must be able to obtain her child's administrative school documents
 (such as the certificate of enrollment) self-service, without requiring the
@@ -542,7 +542,7 @@ even when policy doesn't require it.
 
 ### URS-ZS-048 — Receive notifications alongside the other guardian by default
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: COM*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: COM_
 
 A guardian must receive the same notifications as the other legal guardian, by
 default, without needing to request parity.
@@ -552,7 +552,7 @@ opposite of a school that communicates only with one parent.
 
 ### URS-ZS-049 — See any access restriction, backed by a logged court order
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: ADM*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: ADM_
 
 A guardian must be able to see any restriction on her own access, and any such
 restriction must be backed by a logged court order with the supporting document
@@ -563,7 +563,7 @@ to the school, never resolved unilaterally by the platform (INV-ZS-065, INV-ZS-0
 
 ### URS-ZS-050 — Keep her access independent of who pays
 
-*Persona: GAR · Priority: Must · Version: MVP · Modules: FIN*
+_Persona: GAR · Priority: Must · Version: MVP · Modules: FIN_
 
 A guardian must be able to let the financial guardian pay the fees without that
 arrangement conditioning her own access to the child's information.
@@ -575,7 +575,7 @@ people, and the two roles are deliberately kept distinct (INV-ZS-064).
 
 ### URS-ZS-051 — Personal access activated by a guardian, with a generated login where needed
 
-*Persona: ELE · Priority: Must · Version: MVP · Modules: cross-cutting, PED, EVA*
+_Persona: ELE · Priority: Must · Version: MVP · Modules: cross-cutting, PED, EVA_
 
 A pupil must be able to have personal access, activated by a legal guardian
 from the level the school sets (default: 1AC), with a platform-generated login
@@ -588,7 +588,7 @@ number.
 
 ### URS-ZS-052 — View the day's timetable and its variants
 
-*Persona: ELE · Priority: Must · Version: V1 · Modules: PED*
+_Persona: ELE · Priority: Must · Version: V1 · Modules: PED_
 
 A pupil must be able to view the day's timetable, including seasonal variants
 (normal, Ramadan, exam periods).
@@ -598,7 +598,7 @@ digital access.
 
 ### URS-ZS-053 — View grades and report cards as soon as published
 
-*Persona: ELE · Priority: Must · Version: MVP (QR verification: V1) · Modules: EVA*
+_Persona: ELE · Priority: Must · Version: MVP (QR verification: V1) · Modules: EVA_
 
 A pupil must be able to view grades and report cards as soon as they are
 published, with the report card immutable and QR-verifiable.
@@ -608,7 +608,7 @@ make immutability and verifiability platform guarantees, not conveniences.
 
 ### URS-ZS-054 — View homework and the lesson log
 
-*Persona: ELE · Priority: Should · Version: V1 · Modules: PED*
+_Persona: ELE · Priority: Should · Version: V1 · Modules: PED_
 
 A pupil must be able to view homework and the lesson log for their courses.
 
@@ -616,7 +616,7 @@ Rationale: homework is currently scattered across WhatsApp groups.
 
 ### URS-ZS-055 — Become the account holder at 18, with rights to restrict parental access
 
-*Persona: ELE · Priority: Must · Version: MVP (ADR-ZS-051) · Modules: cross-cutting, ADM*
+_Persona: ELE · Priority: Must · Version: MVP (ADR-ZS-051) · Modules: cross-cutting, ADM_
 
 A pupil who has turned 18 must become the account holder in their own right,
 be informed of their rights, and be able to restrict parental access to
@@ -627,7 +627,7 @@ dependent on her parents' accounts (INV-ZS-052, ADR-ZS-001).
 
 ### URS-ZS-056 — Download annual and cumulative transcripts
 
-*Persona: ELE · Priority: Must · Version: MVP wave 2 (annual transcript, ADR-ZS-041); V1 (cumulative transcript) · Modules: EVA, DOC*
+_Persona: ELE · Priority: Must · Version: MVP wave 2 (annual transcript, ADR-ZS-041); V1 (cumulative transcript) · Modules: EVA, DOC_
 
 A pupil must be able to download annual and cumulative transcripts for
 post-baccalaureate applications.
@@ -637,7 +637,7 @@ post-baccalaureate file, and today it means chasing signed paper transcripts.
 
 ### URS-ZS-057 — Keep academic access despite a parental restriction; financial guardian keeps financial access
 
-*Persona: ELE · Priority: Must · Version: MVP (ADR-ZS-051) · Modules: FIN, cross-cutting*
+_Persona: ELE · Priority: Must · Version: MVP (ADR-ZS-051) · Modules: FIN, cross-cutting_
 
 An adult pupil restricting parental access must still leave the financial
 guardian's access to financial data intact, as long as that guardian remains
@@ -648,7 +648,7 @@ person paying the fees keeps the visibility that liability implies.
 
 ### URS-ZS-058 — Keep read access to her own record after leaving the school
 
-*Persona: ELE · Priority: Must · Version: V1 · Modules: DOC, PRT*
+_Persona: ELE · Priority: Must · Version: V1 · Modules: DOC, PRT_
 
 A pupil must keep permanent read access to their own published data and
 documents even after leaving the school, with nothing visible to the new school
@@ -685,66 +685,66 @@ directly on that document's offline-tolerance and mobile-first NFRs.
 
 ## 6. Traceability
 
-| Requirement | Persona | Related journey | Satisfied by |
-| ----------- | ------- | ---------------- | ------------ |
-| URS-ZS-001 | DIR | `spec/journeys/01-school-group-director.md` (`JNY-ZS`, ex-`JNY-ZS-001`) | *(behaviors not yet migrated — see `spec/behaviors/11-dashboards-reporting.md` once written)* |
-| URS-ZS-002 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-003 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/12-massar-regulatory-exports.md`)* |
-| URS-ZS-004 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/11-dashboards-reporting.md`, `spec/behaviors/01-administration-onboarding-subscription.md`)* |
-| URS-ZS-005 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/03-academic-structure-timetables.md`)* |
-| URS-ZS-006 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/05-assessments-grades-report-cards.md`)* |
-| URS-ZS-007 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/01-administration-onboarding-subscription.md`)* |
-| URS-ZS-008 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/12-massar-regulatory-exports.md`, `spec/behaviors/05-assessments-grades-report-cards.md`)* |
-| URS-ZS-009 | DIR | `spec/journeys/01-school-group-director.md` | *(→ `spec/behaviors/09-transfers-mobility.md`)* |
-| URS-ZS-010 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/06-documents-certificates.md`)* |
-| URS-ZS-011 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`)* |
-| URS-ZS-012 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/06-documents-certificates.md`)* |
-| URS-ZS-013 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/07-finance-billing-collections.md`)* |
-| URS-ZS-014 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-015 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/02-admissions-enrollment-reenrollment.md`)* |
-| URS-ZS-016 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`)* |
-| URS-ZS-017 | SEC | `spec/journeys/02-secretary-cashier.md` | *(→ `spec/cross-cutting/03-non-functional-requirements.md`)* |
-| URS-ZS-018 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-019 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`, `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-020 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-021 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-022 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-023 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/cross-cutting/01-permissions.md`)* |
-| URS-ZS-024 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/11-dashboards-reporting.md`)* |
-| URS-ZS-025 | SUR | `spec/journeys/03-head-supervisor.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-026 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/cross-cutting/01-permissions.md`)* |
-| URS-ZS-027 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-028 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/05-assessments-grades-report-cards.md`)* |
-| URS-ZS-029 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/03-academic-structure-timetables.md`)* |
-| URS-ZS-030 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-031 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/10-teacher-career-network.md`)* |
-| URS-ZS-032 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/10-teacher-career-network.md`)* |
-| URS-ZS-033 | ENS | `spec/journeys/04-part-time-teacher.md` | *(→ `spec/behaviors/11-dashboards-reporting.md`)* |
-| URS-ZS-034 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/cross-cutting/01-permissions.md`)* |
-| URS-ZS-035 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-036 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`)* |
-| URS-ZS-037 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/11-dashboards-reporting.md`)* |
-| URS-ZS-038 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`)* |
-| URS-ZS-039 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-040 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`)* |
-| URS-ZS-041 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-042 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/cross-cutting/01-permissions.md`)* |
-| URS-ZS-043 | PAR | `spec/journeys/05-multi-school-parent.md` | *(→ `spec/behaviors/04-attendance-student-life-discipline.md`, `spec/behaviors/05-assessments-grades-report-cards.md`)* |
-| URS-ZS-044 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/13-ancillary-services.md`, `spec/domain-model.md`)* |
-| URS-ZS-045 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/01-administration-onboarding-subscription.md`)* |
-| URS-ZS-046 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/cross-cutting/01-permissions.md`)* |
-| URS-ZS-047 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/06-documents-certificates.md`)* |
-| URS-ZS-048 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/08-communication-notifications.md`)* |
-| URS-ZS-049 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/01-administration-onboarding-subscription.md`)* |
-| URS-ZS-050 | GAR | `spec/journeys/06-custodial-mother-and-guardian.md` | *(→ `spec/behaviors/07-finance-billing-collections.md`)* |
-| URS-ZS-051 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/cross-cutting/01-permissions.md`, `spec/invariants.md`)* |
-| URS-ZS-052 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/behaviors/03-academic-structure-timetables.md`)* |
-| URS-ZS-053 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/behaviors/05-assessments-grades-report-cards.md`)* |
-| URS-ZS-054 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/behaviors/03-academic-structure-timetables.md`)* |
-| URS-ZS-055 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/cross-cutting/01-permissions.md`, `spec/invariants.md`)* |
-| URS-ZS-056 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/06-documents-certificates.md`)* |
-| URS-ZS-057 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/invariants.md`)* |
-| URS-ZS-058 | ELE | `spec/journeys/07-students-minor-and-adult.md` | *(→ `spec/behaviors/06-documents-certificates.md`)* |
+| Requirement | Persona | Related journey                                                         | Satisfied by                                                                                                                   |
+| ----------- | ------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| URS-ZS-001  | DIR     | `spec/journeys/01-school-group-director.md` (`JNY-ZS`, ex-`JNY-ZS-001`) | _(behaviors not yet migrated — see `spec/behaviors/11-dashboards-reporting.md` once written)_                                  |
+| URS-ZS-002  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`)_                   |
+| URS-ZS-003  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/12-massar-regulatory-exports.md`)_                                                                         |
+| URS-ZS-004  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/11-dashboards-reporting.md`, `spec/behaviors/01-administration-onboarding-subscription.md`)_               |
+| URS-ZS-005  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/03-academic-structure-timetables.md`)_          |
+| URS-ZS-006  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/05-assessments-grades-report-cards.md`)_                                                                   |
+| URS-ZS-007  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/01-administration-onboarding-subscription.md`)_                                                            |
+| URS-ZS-008  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/12-massar-regulatory-exports.md`, `spec/behaviors/05-assessments-grades-report-cards.md`)_                 |
+| URS-ZS-009  | DIR     | `spec/journeys/01-school-group-director.md`                             | _(→ `spec/behaviors/09-transfers-mobility.md`)_                                                                                |
+| URS-ZS-010  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/06-documents-certificates.md`)_                 |
+| URS-ZS-011  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/07-finance-billing-collections.md`)_                                                                       |
+| URS-ZS-012  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/06-documents-certificates.md`)_                                                                            |
+| URS-ZS-013  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/07-finance-billing-collections.md`)_                        |
+| URS-ZS-014  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/07-finance-billing-collections.md`, `spec/behaviors/08-communication-notifications.md`)_                   |
+| URS-ZS-015  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/06-documents-certificates.md`, `spec/behaviors/02-admissions-enrollment-reenrollment.md`)_                 |
+| URS-ZS-016  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`)_                                                                |
+| URS-ZS-017  | SEC     | `spec/journeys/02-secretary-cashier.md`                                 | _(→ `spec/cross-cutting/03-non-functional-requirements.md`)_                                                                   |
+| URS-ZS-018  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-019  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`, `spec/behaviors/08-communication-notifications.md`)_            |
+| URS-ZS-020  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-021  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-022  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-023  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/cross-cutting/01-permissions.md`)_                                                                                   |
+| URS-ZS-024  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/11-dashboards-reporting.md`)_                                                                              |
+| URS-ZS-025  | SUR     | `spec/journeys/03-head-supervisor.md`                                   | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-026  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/cross-cutting/01-permissions.md`)_                                                                                   |
+| URS-ZS-027  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-028  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/05-assessments-grades-report-cards.md`)_                                                                   |
+| URS-ZS-029  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/03-academic-structure-timetables.md`)_                                                                     |
+| URS-ZS-030  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-031  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/10-teacher-career-network.md`)_                                                                            |
+| URS-ZS-032  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/10-teacher-career-network.md`)_                                                                            |
+| URS-ZS-033  | ENS     | `spec/journeys/04-part-time-teacher.md`                                 | _(→ `spec/behaviors/11-dashboards-reporting.md`)_                                                                              |
+| URS-ZS-034  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/cross-cutting/01-permissions.md`)_                                                                                   |
+| URS-ZS-035  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-036  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/07-finance-billing-collections.md`)_                                                                       |
+| URS-ZS-037  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/11-dashboards-reporting.md`)_                                                                              |
+| URS-ZS-038  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`)_                                                                |
+| URS-ZS-039  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-040  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/07-finance-billing-collections.md`)_                                                                       |
+| URS-ZS-041  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-042  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/cross-cutting/01-permissions.md`)_                                                                                   |
+| URS-ZS-043  | PAR     | `spec/journeys/05-multi-school-parent.md`                               | _(→ `spec/behaviors/04-attendance-student-life-discipline.md`, `spec/behaviors/05-assessments-grades-report-cards.md`)_        |
+| URS-ZS-044  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/13-ancillary-services.md`, `spec/domain-model.md`)_                                                        |
+| URS-ZS-045  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/02-admissions-enrollment-reenrollment.md`, `spec/behaviors/01-administration-onboarding-subscription.md`)_ |
+| URS-ZS-046  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/cross-cutting/01-permissions.md`)_                                                                                   |
+| URS-ZS-047  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/06-documents-certificates.md`)_                                                                            |
+| URS-ZS-048  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/08-communication-notifications.md`)_                                                                       |
+| URS-ZS-049  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/01-administration-onboarding-subscription.md`)_                                                            |
+| URS-ZS-050  | GAR     | `spec/journeys/06-custodial-mother-and-guardian.md`                     | _(→ `spec/behaviors/07-finance-billing-collections.md`)_                                                                       |
+| URS-ZS-051  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/cross-cutting/01-permissions.md`, `spec/invariants.md`)_                                                             |
+| URS-ZS-052  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/behaviors/03-academic-structure-timetables.md`)_                                                                     |
+| URS-ZS-053  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/behaviors/05-assessments-grades-report-cards.md`)_                                                                   |
+| URS-ZS-054  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/behaviors/03-academic-structure-timetables.md`)_                                                                     |
+| URS-ZS-055  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/cross-cutting/01-permissions.md`, `spec/invariants.md`)_                                                             |
+| URS-ZS-056  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/06-documents-certificates.md`)_                    |
+| URS-ZS-057  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/invariants.md`)_                                                                                                     |
+| URS-ZS-058  | ELE     | `spec/journeys/07-students-minor-and-adult.md`                          | _(→ `spec/behaviors/06-documents-certificates.md`)_                                                                            |
 
 The "Satisfied by" links above point at files this same migration writes in a
 later phase (behaviors: Phase 2; journeys: Phase 3). Until those files exist,

@@ -1,5 +1,5 @@
-import * as Layer from "effect/Layer"
 import { AppSqlLive, MigratorLive, SqlLive } from "@zschool/db"
+import * as Layer from "effect/Layer"
 
 /**
  * The database Layer every BDD scenario that touches Postgres shares

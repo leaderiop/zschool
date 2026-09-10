@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-RES-01                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective — Reference                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Research Reference                                             |
+> | Property       | Value                                                                                                                                                                |
+> | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-RES-01                                                                                                                                                       |
+> | Revision       | 1.0                                                                                                                                                                  |
+> | Effective Date | 2026-09-09                                                                                                                                                           |
+> | Status         | Effective — Reference                                                                                                                                                |
+> | Author         | ZSchool Product                                                                                                                                                      |
+> | Classification | Research Reference                                                                                                                                                   |
 > | Change History | 1.0 (2026-09-09): Relocated from `prd/research/01-market-competition.md` (v0.3) during the qadi-style spec migration. No old-scheme ID citations found in this file. |
 
 # Web Research — Market and Competition (09/09/2026)
@@ -24,6 +24,7 @@ Synthesis of research passes: PrivateMarket, NexsoftCompetition, SaaSCompetition
 ## 2. Moroccan competitors
 
 **Nexsoft / Madariss Plus + eMadariss (Rabat, historical leader)**
+
 - 900+ schools claimed (self-reported); Madariss Plus is modular desktop software (492 claimed functions) running on a **local database at the school** (desktop/LAN, not SaaS); eMadariss is web/cloud, delivered per school subdomain; eMadariss Mobile: **white-labeled per-school apps**, 4 languages, offline mode, in-app online payment; 1,000+ downloads, last updated 20/02/2026; Play Store listing states "data not encrypted"; Facebook promo "from MAD 6,800/year"; no cross-school parent account (siloed per school). (nexsoft.ma; play.google.com)
 - Spec takeaway: attack the architecture (real-time SaaS vs. local), a single cross-school parent account, one app (not white-labeled per school), security/CNDP compliance, robust Massar import/export.
 

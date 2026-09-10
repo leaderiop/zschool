@@ -1,17 +1,17 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   attachGuardianProfile,
   attachStudentProfile,
   createPerson,
-  type GuardianQualities,
   findGuardianMatch,
   findPersonMatches,
+  type GuardianQualities,
   isValidE164,
   recordGuardianRelationship
 } from "./Identity.ts"
@@ -85,7 +85,12 @@ export interface StudentImportRow {
 }
 
 export type StudentRowResult =
-  | { readonly rowId: string; readonly status: "active" | "pre_enrolled"; readonly studentPersonId: string; readonly enrollmentId: string }
+  | {
+    readonly rowId: string
+    readonly status: "active" | "pre_enrolled"
+    readonly studentPersonId: string
+    readonly enrollmentId: string
+  }
   | { readonly rowId: string; readonly status: "awaiting_confirmation"; readonly proposedPersonId: string }
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
@@ -101,7 +106,9 @@ const resolveClass = (
   classLabel: string
 ): Effect.Effect<ResolvedClass | undefined, SqlError> =>
   Effect.gen(function*() {
-    const [level] = yield* sql<{ id: string }>`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
+    const [level] = yield* sql<
+      { id: string }
+    >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
     if (level === undefined) return undefined
 
     let trackId: string | null = null
@@ -140,7 +147,11 @@ export const analyzeStudentRows = (
       for (const row of rows) {
         const resolved = yield* resolveClass(sql, schoolId, row.levelCode, row.trackCode, row.classLabel)
         if (resolved === undefined) {
-          results.push({ rowId: row.rowId, status: "error", reason: `No class "${row.classLabel}" under level ${row.levelCode}` })
+          results.push({
+            rowId: row.rowId,
+            status: "error",
+            reason: `No class "${row.classLabel}" under level ${row.levelCode}`
+          })
           continue
         }
         const matches = yield* findPersonMatches(row.massarCode, row.firstName, row.lastName, row.dateOfBirth)
@@ -237,7 +248,10 @@ export const commitImportBatch = (
           guardianResults.set(
             g.mobileNumber,
             unit._tag === "Failure"
-              ? { status: "error", reason: unit.failure._tag === "SqlError" ? unit.failure.reason._tag : unit.failure._tag }
+              ? {
+                status: "error",
+                reason: unit.failure._tag === "SqlError" ? unit.failure.reason._tag : unit.failure._tag
+              }
               : { status: "committed", personId: unit.success }
           )
         }
@@ -246,7 +260,11 @@ export const commitImportBatch = (
         for (const s of input.studentRows) {
           const resolved = yield* resolveClass(sql, input.schoolId, s.levelCode, s.trackCode, s.classLabel)
           if (resolved === undefined) {
-            studentResults.push({ rowId: s.rowId, status: "error", reason: `No class "${s.classLabel}" under level ${s.levelCode}` })
+            studentResults.push({
+              rowId: s.rowId,
+              status: "error",
+              reason: `No class "${s.classLabel}" under level ${s.levelCode}`
+            })
             continue
           }
 

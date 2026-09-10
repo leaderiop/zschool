@@ -1,6 +1,6 @@
+import { NodeRuntime } from "@effect/platform-node"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import { NodeRuntime } from "@effect/platform-node"
 import { MigratorLive } from "./Migrator.ts"
 import { SqlLive } from "./Sql.ts"
 

@@ -51,7 +51,14 @@ export const findPersonMatches = (
   Effect.gen(function*() {
     const sql = yield* SqlClient
     const rows = yield* sql<
-      { person_id: string; first_name: string; last_name: string; date_of_birth: string; massar_code: string | null; match_kind: "strong" | "weak" }
+      {
+        person_id: string
+        first_name: string
+        last_name: string
+        date_of_birth: string
+        massar_code: string | null
+        match_kind: "strong" | "weak"
+      }
     >`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
     return rows.map((r) => ({
       personId: r.person_id,

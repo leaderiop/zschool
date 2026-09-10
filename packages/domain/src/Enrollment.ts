@@ -1,10 +1,10 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 export class DuplicateActiveEnrollmentError extends Data.TaggedError("DuplicateActiveEnrollmentError")<{

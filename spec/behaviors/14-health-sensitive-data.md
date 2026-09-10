@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-BEH-14                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification — Directional (V2+)                  |
+> | Property       | Value                                                                                                                                                                                                                      |
+> | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-BEH-14                                                                                                                                                                                                             |
+> | Revision       | 1.0                                                                                                                                                                                                                        |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                 |
+> | Status         | Draft                                                                                                                                                                                                                      |
+> | Author         | ZSchool Product                                                                                                                                                                                                            |
+> | Classification | Functional Specification — Directional (V2+)                                                                                                                                                                               |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/modules/23-health-sensitive-data.md` (v0.3), old `FR-HEA-01..11` -> `BEH-ZS-301..311`, old `ECR-HEA-01..06` -> `SCR-ZS-161..166`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Health and Sensitive Data (HEA)
@@ -41,16 +41,16 @@
 
 ## 2. Users and use cases
 
-| Role | Access to the health record | Main use cases |
-|---|---|---|
-| Nurse / infirmary (`SchoolMembership`, "nurse" role) | Full read/write of their school's records | Filling in a record submitted on paper at the start of the year; consulting the record in an emergency; producing the emergency summary |
-| Leadership (principal, academic leadership) | Full read; module and retention-period configuration; access-log review | Activating the module after F112; auditing access; overseeing compliance |
-| Parents / legal guardians | Read/write for their own children only | Filling in and keeping the record up to date; attaching the vaccination record; consenting; revoking |
-| Homeroom teacher | Alerts only (allergies, contraindications) for their class, never the full record | Spotting an at-risk student during an outing or a workshop |
-| Student life staff (head supervisor, supervisors) | Alerts only, limited to their assigned cycles ([INV-ZS-091](../invariants.md#inv-zs-091)) | Directing a student to the infirmary in case of an incident |
-| The course's teacher, front office, accounting | No access | — |
-| Minor student | No direct access to their own record | — |
-| Adult student (18 years or older) | Read (permission matrix, Health row, note N8); holder of their own record ([INV-ZS-052](../invariants.md#inv-zs-052)): access and correction through the rights procedure, restriction of parental access | Taking back control of their own health data |
+| Role                                                 | Access to the health record                                                                                                                                                                               | Main use cases                                                                                                                          |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Nurse / infirmary (`SchoolMembership`, "nurse" role) | Full read/write of their school's records                                                                                                                                                                 | Filling in a record submitted on paper at the start of the year; consulting the record in an emergency; producing the emergency summary |
+| Leadership (principal, academic leadership)          | Full read; module and retention-period configuration; access-log review                                                                                                                                   | Activating the module after F112; auditing access; overseeing compliance                                                                |
+| Parents / legal guardians                            | Read/write for their own children only                                                                                                                                                                    | Filling in and keeping the record up to date; attaching the vaccination record; consenting; revoking                                    |
+| Homeroom teacher                                     | Alerts only (allergies, contraindications) for their class, never the full record                                                                                                                         | Spotting an at-risk student during an outing or a workshop                                                                              |
+| Student life staff (head supervisor, supervisors)    | Alerts only, limited to their assigned cycles ([INV-ZS-091](../invariants.md#inv-zs-091))                                                                                                                 | Directing a student to the infirmary in case of an incident                                                                             |
+| The course's teacher, front office, accounting       | No access                                                                                                                                                                                                 | —                                                                                                                                       |
+| Minor student                                        | No direct access to their own record                                                                                                                                                                      | —                                                                                                                                       |
+| Adult student (18 years or older)                    | Read (permission matrix, Health row, note N8); holder of their own record ([INV-ZS-052](../invariants.md#inv-zs-052)): access and correction through the rights procedure, restriction of parental access | Taking back control of their own health data                                                                                            |
 
 Representative use cases:
 
@@ -70,19 +70,19 @@ No dedicated journey is mapped for health: the module is explicitly outside MVP 
 
 ## 4. Functional behaviors
 
-| ID | Title | Priority |
-|---|---|---|
-| BEH-ZS-301 | Maintain a structured health record per student | Must |
-| BEH-ZS-302 | Condition activation on CNDP F112 authorization and express consent | Must |
-| BEH-ZS-303 | Restrict access to the infirmary, leadership, and legal guardians | Must |
-| BEH-ZS-304 | Publish minimal allergy alerts to the homeroom teacher and student life staff | Must |
-| BEH-ZS-305 | Fully log every access and change | Must |
-| BEH-ZS-306 | Forbid any automatic transfer and refuse portability by default | Must |
-| BEH-ZS-307 | Delete health data one year after the end of schooling | Must |
-| BEH-ZS-308 | Enhanced encryption and confining health data to the platform | Must |
-| BEH-ZS-309 | Produce a printable, tracked emergency summary | Must |
-| BEH-ZS-310 | Guarantee the data subject's rights, including the adult student | Must |
-| BEH-ZS-311 | Remind guardians to update records at useful deadlines | Should |
+| ID         | Title                                                                         | Priority |
+| ---------- | ----------------------------------------------------------------------------- | -------- |
+| BEH-ZS-301 | Maintain a structured health record per student                               | Must     |
+| BEH-ZS-302 | Condition activation on CNDP F112 authorization and express consent           | Must     |
+| BEH-ZS-303 | Restrict access to the infirmary, leadership, and legal guardians             | Must     |
+| BEH-ZS-304 | Publish minimal allergy alerts to the homeroom teacher and student life staff | Must     |
+| BEH-ZS-305 | Fully log every access and change                                             | Must     |
+| BEH-ZS-306 | Forbid any automatic transfer and refuse portability by default               | Must     |
+| BEH-ZS-307 | Delete health data one year after the end of schooling                        | Must     |
+| BEH-ZS-308 | Enhanced encryption and confining health data to the platform                 | Must     |
+| BEH-ZS-309 | Produce a printable, tracked emergency summary                                | Must     |
+| BEH-ZS-310 | Guarantee the data subject's rights, including the adult student              | Must     |
+| BEH-ZS-311 | Remind guardians to update records at useful deadlines                        | Should   |
 
 ### BEH-ZS-301: Maintain a structured health record per student
 
@@ -232,26 +232,26 @@ Reminders go out through usual communication channels (in-app notification, push
 
 **Entities used** (dictionary: `spec/domain-model.md`):
 
-| Entity | Role in the module |
-|---|---|
-| `HealthRecord` | Health record (V2): allergies, chronic conditions, treatments, attending physician, emergency contacts, vaccinations; state (empty, partial, complete, frozen, deleted); time-stamped versions. Relationship: one per (`StudentProfile`, `School`) pair, tenant-keyed, tied to the current enrollment. Sensitive data: prior CNDP authorization (F112); never transferred automatically; end of schooling at that school plus 1 year then deletion |
-| `StudentDocument` | Medical documents with restricted access and enhanced encryption (vaccination record, emergency protocols), carrying the tenant key of whoever deposited them |
-| `ConsentGrant` | Health consent: from the data subject to the school, identifying the consenting party (legal guardian or adult student); scope "health", duration, status active/expired/revoked, logged |
-| `ParentStudentRelationship` | Source of authorized legal guardians; the "emergency contact" status distinct from the record's emergency contacts |
-| `AuditLog` | Immutable log of health access and writes, 5-year retention |
-| `Notification` / `DeliveryLog` | Reminders and confirmations to guardians (neutral labels, usual channels) |
+| Entity                         | Role in the module                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HealthRecord`                 | Health record (V2): allergies, chronic conditions, treatments, attending physician, emergency contacts, vaccinations; state (empty, partial, complete, frozen, deleted); time-stamped versions. Relationship: one per (`StudentProfile`, `School`) pair, tenant-keyed, tied to the current enrollment. Sensitive data: prior CNDP authorization (F112); never transferred automatically; end of schooling at that school plus 1 year then deletion |
+| `StudentDocument`              | Medical documents with restricted access and enhanced encryption (vaccination record, emergency protocols), carrying the tenant key of whoever deposited them                                                                                                                                                                                                                                                                                      |
+| `ConsentGrant`                 | Health consent: from the data subject to the school, identifying the consenting party (legal guardian or adult student); scope "health", duration, status active/expired/revoked, logged                                                                                                                                                                                                                                                           |
+| `ParentStudentRelationship`    | Source of authorized legal guardians; the "emergency contact" status distinct from the record's emergency contacts                                                                                                                                                                                                                                                                                                                                 |
+| `AuditLog`                     | Immutable log of health access and writes, 5-year retention                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Notification` / `DeliveryLog` | Reminders and confirmations to guardians (neutral labels, usual channels)                                                                                                                                                                                                                                                                                                                                                                          |
 
 **Domain events produced by the module** (consumed by `spec/behaviors/08-communication-notifications.md` and the log):
 
-| Event | Producer | Consumers and effects |
-|---|---|---|
-| `HealthConsentRecorded` | HEA | Leadership (record activatable), audit log |
-| `HealthConsentRevoked` | HEA | Leadership, HEA (freezing the record, hiding alerts), log |
-| `HealthRecordChanged` | HEA | Infirmary and leadership (versions), log |
-| `HealthAlertPublished` / `HealthAlertLifted` | HEA | Homeroom teacher, the cycle's student life staff (display), log |
-| `EmergencySummaryGenerated` | HEA | Log (printing tracked), documents (PDF, QR code where applicable) |
-| `HealthRecordReminderSent` | HEA | Communication (channels), leadership (completion tracking) |
-| `HealthPurgeCompleted` | HEA (batch) | Leadership (notice), log |
+| Event                                        | Producer    | Consumers and effects                                             |
+| -------------------------------------------- | ----------- | ----------------------------------------------------------------- |
+| `HealthConsentRecorded`                      | HEA         | Leadership (record activatable), audit log                        |
+| `HealthConsentRevoked`                       | HEA         | Leadership, HEA (freezing the record, hiding alerts), log         |
+| `HealthRecordChanged`                        | HEA         | Infirmary and leadership (versions), log                          |
+| `HealthAlertPublished` / `HealthAlertLifted` | HEA         | Homeroom teacher, the cycle's student life staff (display), log   |
+| `EmergencySummaryGenerated`                  | HEA         | Log (printing tracked), documents (PDF, QR code where applicable) |
+| `HealthRecordReminderSent`                   | HEA         | Communication (channels), leadership (completion tracking)        |
+| `HealthPurgeCompleted`                       | HEA (batch) | Leadership (notice), log                                          |
 
 None of these events carries medical content in its external notification data.
 
@@ -264,16 +264,16 @@ None of these events carries medical content in its external notification data.
 
 ## 8. Module-specific non-functional requirements
 
-| Domain | Requirement | Reference |
-|---|---|---|
-| Security | Enhanced encryption (dedicated keys, separation of health data), MFA for school roles accessing the module, anti-enumeration protection on student search | `spec/cross-cutting/02-security-privacy.md` |
-| Auditability | An immutable, exportable log, 5 years; no entry contains medical content, only the fact of access | [INV-ZS-090](../invariants.md#inv-zs-090), [INV-ZS-019](../invariants.md#inv-zs-019) |
-| Performance | Opening the record within 2 s on 4G mobile networks; generating the emergency summary within the platform's document-generation timing (reference: a report card within 3 s) | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, PERF) |
-| Availability | 99.5% outside maintenance; module unavailability must not deprive the infirmary: the systematic fallback is the last printed emergency sheet kept on file at the infirmary | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, DISP) |
-| Languages | Full FR/AR with RTL, bilingual documents, dual-script names | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, I18N) |
-| Mobile | Viewing and entry usable on a smartphone (parents and infirmary) | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, MOB) |
-| Localization | Health data never leaves Morocco (production, backups, logs) | `spec/cross-cutting/06-external-integrations.md` |
-| Backups | Encrypted daily backups covering health data, quarterly restoration tests | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, SAV) |
+| Domain       | Requirement                                                                                                                                                                  | Reference                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Security     | Enhanced encryption (dedicated keys, separation of health data), MFA for school roles accessing the module, anti-enumeration protection on student search                    | `spec/cross-cutting/02-security-privacy.md`                                          |
+| Auditability | An immutable, exportable log, 5 years; no entry contains medical content, only the fact of access                                                                            | [INV-ZS-090](../invariants.md#inv-zs-090), [INV-ZS-019](../invariants.md#inv-zs-019) |
+| Performance  | Opening the record within 2 s on 4G mobile networks; generating the emergency summary within the platform's document-generation timing (reference: a report card within 3 s) | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, PERF)                |
+| Availability | 99.5% outside maintenance; module unavailability must not deprive the infirmary: the systematic fallback is the last printed emergency sheet kept on file at the infirmary   | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, DISP)                |
+| Languages    | Full FR/AR with RTL, bilingual documents, dual-script names                                                                                                                  | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, I18N)                |
+| Mobile       | Viewing and entry usable on a smartphone (parents and infirmary)                                                                                                             | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, MOB)                 |
+| Localization | Health data never leaves Morocco (production, backups, logs)                                                                                                                 | `spec/cross-cutting/06-external-integrations.md`                                     |
+| Backups      | Encrypted daily backups covering health data, quarterly restoration tests                                                                                                    | `spec/cross-cutting/03-non-functional-requirements.md` (NFR-ZS, SAV)                 |
 
 ## 9. Success metrics
 

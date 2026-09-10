@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-BEH-03                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification                                       |
+> | Property       | Value                                                                                                                                                                                                                              |
+> | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-BEH-03                                                                                                                                                                                                                     |
+> | Revision       | 1.0                                                                                                                                                                                                                                |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                         |
+> | Status         | Draft                                                                                                                                                                                                                              |
+> | Author         | ZSchool Product                                                                                                                                                                                                                    |
+> | Classification | Functional Specification                                                                                                                                                                                                           |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/modules/12-academic-structure-timetables.md` (v0.3), old `FR-PED-01..21` -> `BEH-ZS-051..071`, old `ECR-PED-01..12` -> `SCR-ZS-031..042`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Academic Structure and Timetables (PED)
@@ -18,51 +18,51 @@
 
 **Scope included:**
 
-| Function | Version |
-|---|---|
-| Instantiating structure templates: Moroccan national (default, MVP), French curriculum, and international (V1) | MVP / V1 |
-| Section → Cycle → Level → Track/Option → Class → Groups tree | MVP |
-| Subjects with a coefficient and teaching language per level and track (INV-ZS-078), mandatory/optional | MVP |
-| Evaluation periods (semesters or terms) and sub-periods | MVP |
-| Grading scales and computation rules (configuration; applying them to grades: `spec/behaviors/05-assessments-grades-report-cards.md`) | MVP |
-| Rooms and resources per site | V1 |
-| Cloning the structure from year N to N+1 without students (INV-ZS-077) | MVP (wave 2 — year-end close, RDM-ZS-003, [ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md)) |
-| Declared expected sessions per class and day, with no timetable ([ADR-ZS-045](../decisions/045-attendance-session-without-timetable.md)) | MVP |
-| A session not held, teacher absence, substitution ([ADR-ZS-046](../decisions/046-uncovered-session-and-substitution.md)) | MVP |
-| Assigning teachers to courses (`TeacherAssignment`) and homeroom teacher | MVP |
-| Courses (subject × class/group) and mid-year class changes (INV-ZS-061) | MVP |
-| Timetable: weekly grid, assisted manual entry, conflict detection | V1 |
-| Timetable variants (normal, reduced-hours Ramadan, exams) | V1 |
-| Publishing timetables to profiles; PDF export | V1 |
-| Annual calendar (start of school, holidays, fixed and religious dates "to confirm," permanent UTC+0 time zone) | MVP (see OQ-ZS-062) |
-| Class log and homework | V1 |
-| Automatic timetable generation under constraints | V2+ |
+| Function                                                                                                                                 | Version                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Instantiating structure templates: Moroccan national (default, MVP), French curriculum, and international (V1)                           | MVP / V1                                                                                              |
+| Section → Cycle → Level → Track/Option → Class → Groups tree                                                                             | MVP                                                                                                   |
+| Subjects with a coefficient and teaching language per level and track (INV-ZS-078), mandatory/optional                                   | MVP                                                                                                   |
+| Evaluation periods (semesters or terms) and sub-periods                                                                                  | MVP                                                                                                   |
+| Grading scales and computation rules (configuration; applying them to grades: `spec/behaviors/05-assessments-grades-report-cards.md`)    | MVP                                                                                                   |
+| Rooms and resources per site                                                                                                             | V1                                                                                                    |
+| Cloning the structure from year N to N+1 without students (INV-ZS-077)                                                                   | MVP (wave 2 — year-end close, RDM-ZS-003, [ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md)) |
+| Declared expected sessions per class and day, with no timetable ([ADR-ZS-045](../decisions/045-attendance-session-without-timetable.md)) | MVP                                                                                                   |
+| A session not held, teacher absence, substitution ([ADR-ZS-046](../decisions/046-uncovered-session-and-substitution.md))                 | MVP                                                                                                   |
+| Assigning teachers to courses (`TeacherAssignment`) and homeroom teacher                                                                 | MVP                                                                                                   |
+| Courses (subject × class/group) and mid-year class changes (INV-ZS-061)                                                                  | MVP                                                                                                   |
+| Timetable: weekly grid, assisted manual entry, conflict detection                                                                        | V1                                                                                                    |
+| Timetable variants (normal, reduced-hours Ramadan, exams)                                                                                | V1                                                                                                    |
+| Publishing timetables to profiles; PDF export                                                                                            | V1                                                                                                    |
+| Annual calendar (start of school, holidays, fixed and religious dates "to confirm," permanent UTC+0 time zone)                           | MVP (see OQ-ZS-062)                                                                                   |
+| Class log and homework                                                                                                                   | V1                                                                                                    |
+| Automatic timetable generation under constraints                                                                                         | V2+                                                                                                   |
 
 **Out of scope (cross-references):**
 
-| Function | Owner |
-|---|---|
-| Recording grades, averages, class councils, report cards (applying grading scales) | `spec/behaviors/05-assessments-grades-report-cards.md` |
-| Roll call, attendance, tardiness, discipline (consuming the calendar, declared sessions, and, at V1, the timetable) | `spec/behaviors/04-attendance-student-life-discipline.md` |
-| Enrollment, re-enrollment, student rollover, initial class assignment, and the mid-year class-change rule (BEH-ZS-042, sole owner) | `spec/behaviors/02-admissions-enrollment-reenrollment.md` |
-| Tenant creation, setup wizard, Excel import of initial data | `spec/behaviors/01-administration-onboarding-subscription.md` |
-| Massar exports (the PED module supplies subjects, coefficients, periods) | `spec/behaviors/12-massar-regulatory-exports.md` |
-| Notifications (channels, routing, costs) triggered by publication | `spec/behaviors/08-communication-notifications.md` |
-| Tracking the 8-hour quota for outside-the-public-sector teachers and AREF authorizations | `spec/behaviors/10-teacher-career-network.md` |
-| Light e-learning (pushed online resources and homework) | V2+ |
+| Function                                                                                                                           | Owner                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Recording grades, averages, class councils, report cards (applying grading scales)                                                 | `spec/behaviors/05-assessments-grades-report-cards.md`        |
+| Roll call, attendance, tardiness, discipline (consuming the calendar, declared sessions, and, at V1, the timetable)                | `spec/behaviors/04-attendance-student-life-discipline.md`     |
+| Enrollment, re-enrollment, student rollover, initial class assignment, and the mid-year class-change rule (BEH-ZS-042, sole owner) | `spec/behaviors/02-admissions-enrollment-reenrollment.md`     |
+| Tenant creation, setup wizard, Excel import of initial data                                                                        | `spec/behaviors/01-administration-onboarding-subscription.md` |
+| Massar exports (the PED module supplies subjects, coefficients, periods)                                                           | `spec/behaviors/12-massar-regulatory-exports.md`              |
+| Notifications (channels, routing, costs) triggered by publication                                                                  | `spec/behaviors/08-communication-notifications.md`            |
+| Tracking the 8-hour quota for outside-the-public-sector teachers and AREF authorizations                                           | `spec/behaviors/10-teacher-career-network.md`                 |
+| Light e-learning (pushed online resources and homework)                                                                            | V2+                                                           |
 
 ## 2. Users and use cases
 
 Personas and detailed needs are in `spec/urs.md` (`URS-ZS-…` identifiers); fine-grained permissions are in `spec/cross-cutting/01-permissions.md` (least privilege, INV-ZS-091).
 
-| Role | Main use cases | Needs cited |
-|---|---|---|
-| Director (director, group director) | Instantiates and adapts the structure, defines periods and grading scales, assigns teachers, appoints homeroom teachers, builds and publishes timetables, manages the calendar and its variants, clones year N+1 | URS-ZS-005 |
-| Front office | Looks up the structure at the front desk (a student's class, homeroom teacher), enters class changes, prints timetables | — |
-| Head supervisor | Reviews class timetables to organize roll call and supervision, follows the class log | URS-ZS-018, URS-ZS-024 |
-| Teacher | Views their own timetable, keeps the class log and posts homework, reviews their course assignments | URS-ZS-029 |
-| Parent / guardian | Views their children's timetable (variants included) and homework | URS-ZS-052, URS-ZS-054 (via the portal) |
-| Student | Views their timetable for the day and the week, including the Ramadan variant, and the next day's homework | URS-ZS-052, URS-ZS-054 |
+| Role                                | Main use cases                                                                                                                                                                                                   | Needs cited                             |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Director (director, group director) | Instantiates and adapts the structure, defines periods and grading scales, assigns teachers, appoints homeroom teachers, builds and publishes timetables, manages the calendar and its variants, clones year N+1 | URS-ZS-005                              |
+| Front office                        | Looks up the structure at the front desk (a student's class, homeroom teacher), enters class changes, prints timetables                                                                                          | —                                       |
+| Head supervisor                     | Reviews class timetables to organize roll call and supervision, follows the class log                                                                                                                            | URS-ZS-018, URS-ZS-024                  |
+| Teacher                             | Views their own timetable, keeps the class log and posts homework, reviews their course assignments                                                                                                              | URS-ZS-029                              |
+| Parent / guardian                   | Views their children's timetable (variants included) and homework                                                                                                                                                | URS-ZS-052, URS-ZS-054 (via the portal) |
+| Student                             | Views their timetable for the day and the week, including the Ramadan variant, and the next day's homework                                                                                                       | URS-ZS-052, URS-ZS-054                  |
 
 Cross-cutting use cases: the instantiated structure serves as the context for enrollment (level, track, class — INV-ZS-061), roll call per course (INV-ZS-091), assessments (periods, coefficients), and Massar exports (subject names).
 
@@ -70,39 +70,39 @@ Cross-cutting use cases: the instantiated structure serves as the context for en
 
 Reference map: `spec/journeys/00-journey-map.md` (built in Phase 3). This chapter adds no journey and duplicates none.
 
-| Journey | Role of the PED module |
-|---|---|
-| JMP-ZS-003 — Onboarding a school | Instantiating the national structure template, school year, periods, grading scales; rooms and classes ahead of imports |
-| JMP-ZS-002 — Bulk re-enrollment and N → N+1 rollover | Cloning the N+1 structure without students (INV-ZS-077) before class assignment, done by the INS module |
-| JMP-ZS-005 — Morning roll call | At MVP, declared expected sessions (BEH-ZS-070) and the calendar determine the courses and class days called by VSC; at V1, the published timetable automatically feeds the sessions |
-| JMP-ZS-006 — Grades, class council, report cards | Evaluation periods, coefficients, and grading scales configured here, applied by EVA |
-| JMP-ZS-011 — Communication | Timetable publications and variant switches trigger notifications via COM |
+| Journey                                              | Role of the PED module                                                                                                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| JMP-ZS-003 — Onboarding a school                     | Instantiating the national structure template, school year, periods, grading scales; rooms and classes ahead of imports                                                              |
+| JMP-ZS-002 — Bulk re-enrollment and N → N+1 rollover | Cloning the N+1 structure without students (INV-ZS-077) before class assignment, done by the INS module                                                                              |
+| JMP-ZS-005 — Morning roll call                       | At MVP, declared expected sessions (BEH-ZS-070) and the calendar determine the courses and class days called by VSC; at V1, the published timetable automatically feeds the sessions |
+| JMP-ZS-006 — Grades, class council, report cards     | Evaluation periods, coefficients, and grading scales configured here, applied by EVA                                                                                                 |
+| JMP-ZS-011 — Communication                           | Timetable publications and variant switches trigger notifications via COM                                                                                                            |
 
 ## 4. Functional behaviors
 
-| ID | Title | Priority | Version |
-|---|---|---|---|
-| BEH-ZS-051 | Instantiate a section from a provided structure template | Must | MVP / V1 |
-| BEH-ZS-052 | Manage the Section → Cycle → Level → Track → Class → Groups tree | Must | MVP |
-| BEH-ZS-053 | Define coefficient and teaching language per level and track | Must | MVP |
-| BEH-ZS-054 | Define evaluation periods and sub-periods | Must | MVP |
-| BEH-ZS-055 | Configure grading scales and computation rules | Must | MVP / V2+ |
-| BEH-ZS-056 | Manage rooms and resources | Must | V1 |
-| BEH-ZS-057 | Clone the structure from year N to N+1 without students | Must | MVP wave 2 |
-| BEH-ZS-058 | Assign teachers to courses and appoint the homeroom teacher | Must | MVP |
-| BEH-ZS-059 | Build courses (subject × class/group) | Must | MVP |
-| BEH-ZS-060 | Record a mid-year class change | Must | MVP |
-| BEH-ZS-061 | Build the timetable: weekly grid and assisted manual entry | Must | V1 |
-| BEH-ZS-062 | Detect teacher, room, and class conflicts | Must | V1 |
-| BEH-ZS-063 | Manage timetable variants (normal, reduced-hours Ramadan, exams) | Must | V1 |
-| BEH-ZS-064 | Publish timetables to profiles | Must | V1 |
-| BEH-ZS-065 | Export timetables as PDF | Should | V1 |
-| BEH-ZS-066 | Maintain the annual calendar (start of school, holidays, breaks, UTC+0 time zone) | Must | MVP |
-| BEH-ZS-067 | Keep the class log and post homework | Should | V1 |
-| BEH-ZS-068 | Automatically generate timetables under constraints | Could | V2+ |
-| BEH-ZS-069 | Ensure the structure stays consistent with enrollments | Must | MVP |
-| BEH-ZS-070 | Declare expected sessions per class and day with no timetable | Must | MVP |
-| BEH-ZS-071 | Declare a session not held, a teacher absence, or a substitution | Must | MVP |
+| ID         | Title                                                                             | Priority | Version    |
+| ---------- | --------------------------------------------------------------------------------- | -------- | ---------- |
+| BEH-ZS-051 | Instantiate a section from a provided structure template                          | Must     | MVP / V1   |
+| BEH-ZS-052 | Manage the Section → Cycle → Level → Track → Class → Groups tree                  | Must     | MVP        |
+| BEH-ZS-053 | Define coefficient and teaching language per level and track                      | Must     | MVP        |
+| BEH-ZS-054 | Define evaluation periods and sub-periods                                         | Must     | MVP        |
+| BEH-ZS-055 | Configure grading scales and computation rules                                    | Must     | MVP / V2+  |
+| BEH-ZS-056 | Manage rooms and resources                                                        | Must     | V1         |
+| BEH-ZS-057 | Clone the structure from year N to N+1 without students                           | Must     | MVP wave 2 |
+| BEH-ZS-058 | Assign teachers to courses and appoint the homeroom teacher                       | Must     | MVP        |
+| BEH-ZS-059 | Build courses (subject × class/group)                                             | Must     | MVP        |
+| BEH-ZS-060 | Record a mid-year class change                                                    | Must     | MVP        |
+| BEH-ZS-061 | Build the timetable: weekly grid and assisted manual entry                        | Must     | V1         |
+| BEH-ZS-062 | Detect teacher, room, and class conflicts                                         | Must     | V1         |
+| BEH-ZS-063 | Manage timetable variants (normal, reduced-hours Ramadan, exams)                  | Must     | V1         |
+| BEH-ZS-064 | Publish timetables to profiles                                                    | Must     | V1         |
+| BEH-ZS-065 | Export timetables as PDF                                                          | Should   | V1         |
+| BEH-ZS-066 | Maintain the annual calendar (start of school, holidays, breaks, UTC+0 time zone) | Must     | MVP        |
+| BEH-ZS-067 | Keep the class log and post homework                                              | Should   | V1         |
+| BEH-ZS-068 | Automatically generate timetables under constraints                               | Could    | V2+        |
+| BEH-ZS-069 | Ensure the structure stays consistent with enrollments                            | Must     | MVP        |
+| BEH-ZS-070 | Declare expected sessions per class and day with no timetable                     | Must     | MVP        |
+| BEH-ZS-071 | Declare a session not held, a teacher absence, or a substitution                  | Must     | MVP        |
 
 ### BEH-ZS-051: Instantiate a section from a provided structure template
 
@@ -482,27 +482,27 @@ Effects: the session not held drops out of expected roll calls and roll-call rat
 
 Entities from `spec/domain-model.md` used by this module:
 
-| Entity | Role in the module |
-|---|---|
-| `Section` | Education system instantiated from a template (INV-ZS-076) |
-| `Cycle`, `Level`, `Track`, `Class`, `Group` | Academic tree; `Class` carries the homeroom teacher and enrollment membership |
-| `AcademicYear` | School year (preparation, in progress, closed); supports N+1 cloning (INV-ZS-077) |
-| `Calendar`, `Holiday`, `ScheduleVariant` | Annual calendar, holidays (Gregorian and Hijri), schedule variants |
-| `Subject`, `SubjectLevelConfig` | Subjects and per-level/track configuration: coefficient, language, mandatory/optional (INV-ZS-078) |
-| `Course` | Course: subject × class or group; the basis for assignments and slots |
-| `TeacherAssignment` | Teacher × course assignment; homeroom teacher; underpins permissions (INV-ZS-011) |
-| `Room` | Rooms and resources per site |
-| `Timetable`, `TimetableSlot` | Timetables, slots, variants; conflict detection (V1); generate expected sessions |
-| `Session` | A declared session: course × date × slot, status (expected, held, not held, substituted), the actual teacher; underpins roll call from MVP (BEH-ZS-070, BEH-ZS-071) |
-| `GradingScale`, `EvaluationPeriod`, `ComputationRule` | Grading scales, evaluation periods and sub-periods, computation rules |
-| Related entities | `Campus` (sites), `Enrollment` (current class), `StudentClassHistory` (INV-ZS-061), `SchoolMembership` (active affiliations) |
+| Entity                                                | Role in the module                                                                                                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Section`                                             | Education system instantiated from a template (INV-ZS-076)                                                                                                          |
+| `Cycle`, `Level`, `Track`, `Class`, `Group`           | Academic tree; `Class` carries the homeroom teacher and enrollment membership                                                                                       |
+| `AcademicYear`                                        | School year (preparation, in progress, closed); supports N+1 cloning (INV-ZS-077)                                                                                   |
+| `Calendar`, `Holiday`, `ScheduleVariant`              | Annual calendar, holidays (Gregorian and Hijri), schedule variants                                                                                                  |
+| `Subject`, `SubjectLevelConfig`                       | Subjects and per-level/track configuration: coefficient, language, mandatory/optional (INV-ZS-078)                                                                  |
+| `Course`                                              | Course: subject × class or group; the basis for assignments and slots                                                                                               |
+| `TeacherAssignment`                                   | Teacher × course assignment; homeroom teacher; underpins permissions (INV-ZS-011)                                                                                   |
+| `Room`                                                | Rooms and resources per site                                                                                                                                        |
+| `Timetable`, `TimetableSlot`                          | Timetables, slots, variants; conflict detection (V1); generate expected sessions                                                                                    |
+| `Session`                                             | A declared session: course × date × slot, status (expected, held, not held, substituted), the actual teacher; underpins roll call from MVP (BEH-ZS-070, BEH-ZS-071) |
+| `GradingScale`, `EvaluationPeriod`, `ComputationRule` | Grading scales, evaluation periods and sub-periods, computation rules                                                                                               |
+| Related entities                                      | `Campus` (sites), `Enrollment` (current class), `StudentClassHistory` (INV-ZS-061), `SchoolMembership` (active affiliations)                                        |
 
 Domain events:
 
-| Event | Trigger | Consumers |
-|---|---|---|
-| `ClassChanged` | A class change recorded (BEH-ZS-042, triggered from BEH-ZS-060) | Parents, homeroom teacher, teachers involved; logging |
-| `SessionNotHeld` | A teacher-absence, cancellation, or substitution declaration (BEH-ZS-071) | Student life (expected roll calls), the substitute teacher, the class's parents (optional) |
+| Event                                 | Trigger                                                                                      | Consumers                                                                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `ClassChanged`                        | A class change recorded (BEH-ZS-042, triggered from BEH-ZS-060)                              | Parents, homeroom teacher, teachers involved; logging                                                                      |
+| `SessionNotHeld`                      | A teacher-absence, cancellation, or substitution declaration (BEH-ZS-071)                    | Student life (expected roll calls), the substitute teacher, the class's parents (optional)                                 |
 | Publication and variant notifications | Timetable publication, a change after publication, a variant switch (BEH-ZS-063, BEH-ZS-064) | Students (per INV-ZS-043), parents, teachers, student life — routed via `spec/behaviors/08-communication-notifications.md` |
 
 Adding dedicated events to the catalog (timetable publication, variant activation) is proposed in OQ-ZS-063.
@@ -511,28 +511,28 @@ Adding dedicated events to the catalog (timetable publication, variant activatio
 
 Text descriptions, mobile-first, bilingual FR/AR with RTL support ([ADR-ZS-021](../decisions/021-bilingual-fr-ar-interface-from-mvp.md), `spec/cross-cutting/05-ux-ui-mobile-first-rtl.md`).
 
-| ID | Screen | Description |
-|---|---|---|
-| SCR-ZS-032 | Structure instantiation wizard | Three steps: template choice (national selected by default, French curriculum, international, with a summary of each template), school year, confirmation. Shows a preview of the tree that will be created and the school's authorized cycles (INV-ZS-074). States: in progress, success with a link to the browser, explicit blocking errors. |
-| SCR-ZS-031 | Academic tree browser | Navigation by year then section → cycle → level → track → classes/groups; breadcrumb; contextual creation and editing; per-class headcount badges; deactivated elements grayed out; links to the class and to the timetable. |
-| SCR-ZS-033 | Subject record and per-level/track configuration | List of the school's subjects; a subject's detail with its configurations (level × track): coefficient, teaching language, mandatory/optional; inline addition and editing; a warning if a level's class has courses with no valid configuration. |
-| SCR-ZS-034 | Periods and grading scales | Periods column: the year's periods with dates, statuses, and sub-periods; grading scales column: default scale, honors ratings, rounding, certifying weightings versioned per year with their textual reference. Date adjustment with overlap checks and calendar alignment. |
-| SCR-ZS-035 | Teacher assignment | A classes × subjects grid for a level: each cell carries the assigned teacher, the hour load, and the homeroom teacher; per-teacher filters (cumulative weekly load); an alert on orphaned courses after an affiliation closure; quick access to homeroom-teacher appointment. |
-| SCR-ZS-036 | Timetable editor | A weekly grid (Monday–Saturday columns, Saturday restricted to mornings per configuration); a side panel of unplaced courses; drag-and-drop or selection placement; a real-time conflict panel (blocking in red, warnings in orange with a documented confirmation); a variant selector and validity window; draft, global check, publish, and PDF-export buttons. |
-| SCR-ZS-037 | Annual calendar | A year view with class days, breaks, national and religious holidays; a distinctive "to confirm" status on movable holidays with a provisional date; date editing with logging; links to evaluation periods and variant windows. |
-| SCR-ZS-038 | Timetable viewing (mobile) | Day view by default, a week toggle; session cards (subject, time, room, teacher); an active-variant banner (for example "Ramadan Hours"); offline viewing of the last synced grid; prior versions accessible from the history. Variants: student (their class), parent (per child), teacher (their personal grid), supervisor (per class). |
-| SCR-ZS-039 | Class log and homework | Teacher side: the day's and week's session list, quick entry of content and assigned work with a due date and an attachment, a sync indicator in offline mode. Student/parent side: a consolidated list of upcoming homework by subject and day. |
-| SCR-ZS-040 | N → N+1 cloning wizard (MVP wave 2) | Selecting the source year and the target year; a summary of copied elements (structure, subjects, grading scales) and not-copied elements (students, assignments, timetables); launch, progress, a final report with gaps to fill in and a link to the N+1 year in preparation. |
-| SCR-ZS-041 | Expected-sessions grid (MVP) | Per class and per variant: a day × labeled-slot table, each cell carrying a course; a validity window; duplication across parallel classes; a preview of the sessions generated for the current week; no room or conflict check (reserved for the V1 editor). |
-| SCR-ZS-042 | Declaring a session not held (MVP, mobile and web) | From the day's or week's session list: selecting a session or a teacher and a date range; a reason; a choice of "cancelled" or "substituted by" (teacher, course); a "notify parents" checkbox; a declaration history. |
+| ID         | Screen                                             | Description                                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SCR-ZS-032 | Structure instantiation wizard                     | Three steps: template choice (national selected by default, French curriculum, international, with a summary of each template), school year, confirmation. Shows a preview of the tree that will be created and the school's authorized cycles (INV-ZS-074). States: in progress, success with a link to the browser, explicit blocking errors.                    |
+| SCR-ZS-031 | Academic tree browser                              | Navigation by year then section → cycle → level → track → classes/groups; breadcrumb; contextual creation and editing; per-class headcount badges; deactivated elements grayed out; links to the class and to the timetable.                                                                                                                                       |
+| SCR-ZS-033 | Subject record and per-level/track configuration   | List of the school's subjects; a subject's detail with its configurations (level × track): coefficient, teaching language, mandatory/optional; inline addition and editing; a warning if a level's class has courses with no valid configuration.                                                                                                                  |
+| SCR-ZS-034 | Periods and grading scales                         | Periods column: the year's periods with dates, statuses, and sub-periods; grading scales column: default scale, honors ratings, rounding, certifying weightings versioned per year with their textual reference. Date adjustment with overlap checks and calendar alignment.                                                                                       |
+| SCR-ZS-035 | Teacher assignment                                 | A classes × subjects grid for a level: each cell carries the assigned teacher, the hour load, and the homeroom teacher; per-teacher filters (cumulative weekly load); an alert on orphaned courses after an affiliation closure; quick access to homeroom-teacher appointment.                                                                                     |
+| SCR-ZS-036 | Timetable editor                                   | A weekly grid (Monday–Saturday columns, Saturday restricted to mornings per configuration); a side panel of unplaced courses; drag-and-drop or selection placement; a real-time conflict panel (blocking in red, warnings in orange with a documented confirmation); a variant selector and validity window; draft, global check, publish, and PDF-export buttons. |
+| SCR-ZS-037 | Annual calendar                                    | A year view with class days, breaks, national and religious holidays; a distinctive "to confirm" status on movable holidays with a provisional date; date editing with logging; links to evaluation periods and variant windows.                                                                                                                                   |
+| SCR-ZS-038 | Timetable viewing (mobile)                         | Day view by default, a week toggle; session cards (subject, time, room, teacher); an active-variant banner (for example "Ramadan Hours"); offline viewing of the last synced grid; prior versions accessible from the history. Variants: student (their class), parent (per child), teacher (their personal grid), supervisor (per class).                         |
+| SCR-ZS-039 | Class log and homework                             | Teacher side: the day's and week's session list, quick entry of content and assigned work with a due date and an attachment, a sync indicator in offline mode. Student/parent side: a consolidated list of upcoming homework by subject and day.                                                                                                                   |
+| SCR-ZS-040 | N → N+1 cloning wizard (MVP wave 2)                | Selecting the source year and the target year; a summary of copied elements (structure, subjects, grading scales) and not-copied elements (students, assignments, timetables); launch, progress, a final report with gaps to fill in and a link to the N+1 year in preparation.                                                                                    |
+| SCR-ZS-041 | Expected-sessions grid (MVP)                       | Per class and per variant: a day × labeled-slot table, each cell carrying a course; a validity window; duplication across parallel classes; a preview of the sessions generated for the current week; no room or conflict check (reserved for the V1 editor).                                                                                                      |
+| SCR-ZS-042 | Declaring a session not held (MVP, mobile and web) | From the day's or week's session list: selecting a session or a teacher and a date range; a reason; a choice of "cancelled" or "substituted by" (teacher, course); a "notify parents" checkbox; a declaration history.                                                                                                                                             |
 
 ## 8. Integrations
 
-| Item | Role | Cross-reference |
-|---|---|---|
+| Item                 | Role                                                                                                                  | Cross-reference                                                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Massar (file export) | Subject names, coefficients, and periods configured here feed grade files in Massar's template formats; no API exists | `spec/behaviors/12-massar-regulatory-exports.md`; the `INT-MAS` integration is detailed in `spec/cross-cutting/06-external-integrations.md` |
-| Notifications | Timetable publication, variant switch, class change: trigger multi-channel notifications | `spec/behaviors/08-communication-notifications.md` |
-| PDF generation | Timetable exports produced locally, with no external provider | BEH-ZS-065 |
+| Notifications        | Timetable publication, variant switch, class change: trigger multi-channel notifications                              | `spec/behaviors/08-communication-notifications.md`                                                                                          |
+| PDF generation       | Timetable exports produced locally, with no external provider                                                         | BEH-ZS-065                                                                                                                                  |
 
 No other external integration is required by this module; the time-zone reference data (tzdata) is kept up to date on the platform side.
 
@@ -551,13 +551,13 @@ Generic requirements are owned by `spec/cross-cutting/03-non-functional-requirem
 
 Indicators proposed by this module (`KPI-ZS-…` numbering owned by `spec/metrics.md`):
 
-| Indicative measure | Working target |
-|---|---|
-| Share of classes with a published timetable on the first day of class | High target at the start of the year (measurement to be set with the pilots) |
-| Average structure-instantiation time during onboarding (JMP-ZS-003) | On the order of one configuration session, with no re-entry |
-| Class-log coverage rate (sessions logged / sessions taught) | Tracked weekly by the director |
-| Number of blocking conflicts detected in the global check before publication | Downward trend after the first few weeks |
-| Timetable and homework views by students and parents | Adoption measured via usage statistics |
+| Indicative measure                                                           | Working target                                                               |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Share of classes with a published timetable on the first day of class        | High target at the start of the year (measurement to be set with the pilots) |
+| Average structure-instantiation time during onboarding (JMP-ZS-003)          | On the order of one configuration session, with no re-entry                  |
+| Class-log coverage rate (sessions logged / sessions taught)                  | Tracked weekly by the director                                               |
+| Number of blocking conflicts detected in the global check before publication | Downward trend after the first few weeks                                     |
+| Timetable and homework views by students and parents                         | Adoption measured via usage statistics                                       |
 
 ## 11. Open questions
 

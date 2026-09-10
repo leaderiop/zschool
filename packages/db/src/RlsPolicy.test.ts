@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "@effect/vitest"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { AppSqlLive } from "./AppSql.ts"
-import { SqlLive } from "./Sql.ts"
 import { withSchool } from "./SchoolScope.ts"
+import { SqlLive } from "./Sql.ts"
 
 /**
  * Issue #13's second test seam: proves the `person_select`/`relationship_select`
@@ -80,7 +80,13 @@ const seedFixture: Effect.Effect<Fixture, never, SqlClient> = Effect.gen(functio
     RETURNING id
   `
 
-  return { schoolAId: schoolA.id, schoolBId: schoolB.id, studentPersonId: student.id, guardianPersonId: guardian.id, relationshipId: relationship.id }
+  return {
+    schoolAId: schoolA.id,
+    schoolBId: schoolB.id,
+    studentPersonId: student.id,
+    guardianPersonId: guardian.id,
+    relationshipId: relationship.id
+  }
 }).pipe(Effect.orDie)
 
 /** Reverse-FK-order teardown so the shared Neon branch doesn't accumulate a growing set of RLS-test rows across runs. */
@@ -103,50 +109,61 @@ describe("RLS policy enforcement (ADR-ZS-107)", () => {
   // verification reads, and teardown, all on one connection per role —
   // comfortably exceeds vitest's 5s default, same rationale as the bdd
   // project's testTimeout in vitest.config.ts.
-  it("blocks a cross-tenant read of persons and parent_student_relationships, while allowing the legitimate same-school read", async () => {
-    const fixture = await Effect.runPromise(seedFixture.pipe(Effect.provide(SqlLive)))
+  it.effect(
+    "blocks a cross-tenant read of persons and parent_student_relationships, while allowing the legitimate same-school read",
+    () =>
+      Effect.gen(function*() {
+        const fixture = yield* seedFixture.pipe(Effect.provide(SqlLive))
 
-    try {
-      const verify = Effect.gen(function*() {
-        const readAsSchool = (schoolId: string, personId: string) =>
-          withSchool(schoolId, Effect.gen(function*() {
-            const sql = yield* SqlClient
-            return yield* sql<{ id: string }>`SELECT id FROM persons WHERE id = ${personId}`
-          }))
+        const verify = Effect.gen(function*() {
+          const readAsSchool = (schoolId: string, personId: string) =>
+            withSchool(
+              schoolId,
+              Effect.gen(function*() {
+                const sql = yield* SqlClient
+                return yield* sql<{ id: string }>`SELECT id FROM persons WHERE id = ${personId}`
+              })
+            )
 
-        const readRelationshipAsSchool = (schoolId: string) =>
-          withSchool(schoolId, Effect.gen(function*() {
-            const sql = yield* SqlClient
-            return yield* sql<{ id: string }>`SELECT id FROM parent_student_relationships WHERE id = ${fixture.relationshipId}`
-          }))
+          const readRelationshipAsSchool = (schoolId: string) =>
+            withSchool(
+              schoolId,
+              Effect.gen(function*() {
+                const sql = yield* SqlClient
+                return yield* sql<
+                  { id: string }
+                >`SELECT id FROM parent_student_relationships WHERE id = ${fixture.relationshipId}`
+              })
+            )
 
-        // Positive control FIRST — proves the policy actually allows the
-        // legitimate same-school read, so the negative checks below prove
-        // real tenant isolation rather than a policy that blocks everything.
-        const studentAtA = yield* readAsSchool(fixture.schoolAId, fixture.studentPersonId)
-        expect(studentAtA).toHaveLength(1)
+          // Positive control FIRST — proves the policy actually allows the
+          // legitimate same-school read, so the negative checks below prove
+          // real tenant isolation rather than a policy that blocks everything.
+          const studentAtA = yield* readAsSchool(fixture.schoolAId, fixture.studentPersonId)
+          expect(studentAtA).toHaveLength(1)
 
-        const guardianAtA = yield* readAsSchool(fixture.schoolAId, fixture.guardianPersonId)
-        expect(guardianAtA).toHaveLength(1)
+          const guardianAtA = yield* readAsSchool(fixture.schoolAId, fixture.guardianPersonId)
+          expect(guardianAtA).toHaveLength(1)
 
-        const relationshipAtA = yield* readRelationshipAsSchool(fixture.schoolAId)
-        expect(relationshipAtA).toHaveLength(1)
+          const relationshipAtA = yield* readRelationshipAsSchool(fixture.schoolAId)
+          expect(relationshipAtA).toHaveLength(1)
 
-        // The actual proof: school B's own session cannot see school A's
-        // student, guardian, or relationship rows at all.
-        const studentAtB = yield* readAsSchool(fixture.schoolBId, fixture.studentPersonId)
-        expect(studentAtB).toHaveLength(0)
+          // The actual proof: school B's own session cannot see school A's
+          // student, guardian, or relationship rows at all.
+          const studentAtB = yield* readAsSchool(fixture.schoolBId, fixture.studentPersonId)
+          expect(studentAtB).toHaveLength(0)
 
-        const guardianAtB = yield* readAsSchool(fixture.schoolBId, fixture.guardianPersonId)
-        expect(guardianAtB).toHaveLength(0)
+          const guardianAtB = yield* readAsSchool(fixture.schoolBId, fixture.guardianPersonId)
+          expect(guardianAtB).toHaveLength(0)
 
-        const relationshipAtB = yield* readRelationshipAsSchool(fixture.schoolBId)
-        expect(relationshipAtB).toHaveLength(0)
-      }).pipe(Effect.orDie)
+          const relationshipAtB = yield* readRelationshipAsSchool(fixture.schoolBId)
+          expect(relationshipAtB).toHaveLength(0)
+        }).pipe(Effect.orDie, Effect.provide(AppSqlLive))
 
-      await Effect.runPromise(verify.pipe(Effect.provide(AppSqlLive)))
-    } finally {
-      await Effect.runPromise(deleteFixture(fixture).pipe(Effect.provide(SqlLive)))
-    }
-  }, 30_000)
+        yield* verify.pipe(
+          Effect.ensuring(deleteFixture(fixture).pipe(Effect.provide(SqlLive), Effect.orDie))
+        )
+      }),
+    30_000
+  )
 })

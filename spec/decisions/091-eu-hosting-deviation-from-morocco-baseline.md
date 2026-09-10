@@ -51,7 +51,7 @@ are superseded and have been redefined for AWS `eu-central-1`; SEC-ZS-025/INT-ZS
 (Moroccan cross-site DR) are redefined as cross-region EU DR (`eu-central-1` primary,
 `eu-west-3` secondary, matching `spec/stack.md` §3 risk 3). RSK-ZS-011 (single OCI
 availability domain in Casablanca) is likewise redefined around AWS `eu-central-1`'s
-multi-AZ footprint and the remaining single-*region* dependency.
+multi-AZ footprint and the remaining single-_region_ dependency.
 
 **Trade-off accepted**: accepted by the product owner on 2026-09-09. The commercial
 loss of the "hosted in Morocco" argument and the compliance shift to the CNDP

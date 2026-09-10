@@ -1,10 +1,10 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
 
 export { EntityNotFoundError }
@@ -134,7 +134,9 @@ export const updateSubjectLevelConfig = (
           WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
         `
         if (rows.length === 0) {
-          return yield* Effect.fail(new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId }))
+          return yield* Effect.fail(
+            new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId })
+          )
         }
 
         if (command.coefficient !== undefined) {

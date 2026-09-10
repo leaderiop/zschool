@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-BEH-02                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification                                      |
+> | Property       | Value                                                                                                                                                                                                                                   |
+> | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-BEH-02                                                                                                                                                                                                                          |
+> | Revision       | 1.0                                                                                                                                                                                                                                     |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                              |
+> | Status         | Draft                                                                                                                                                                                                                                   |
+> | Author         | ZSchool Product                                                                                                                                                                                                                         |
+> | Classification | Functional Specification                                                                                                                                                                                                                |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/modules/11-admissions-enrollment-reenrollment.md` (v0.3), old `FR-INS-01..27` -> `BEH-ZS-021..047`, old `ECR-INS-01..12` -> `SCR-ZS-011..022`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Admissions, Enrollment and Re-enrollment (INS)
@@ -20,38 +20,38 @@ This chapter operationalizes, within the admissions-enrollment flow, the domain 
 
 **In scope:**
 
-| Item | Version |
-|---|---|
-| Core front-desk enrollment: student and guardian identity, strong and weak matching by Massar code, guardian matching by mobile number, provisional profile with invitation code and claim with knowledge challenge, pre-enrollment, activation, activation via import, closures (cancelled, active, completed, transferred, withdrawn), immediate enrollment documents, arrears alert, Massar transfer reference field, class-change history | MVP |
-| Global identities, invitations and claims throughout enrollment; a parent declaring a child; a declared prior history for a student coming from a non-ZSchool school; the identity engine and bulk imports remain owned by `spec/behaviors/01-administration-onboarding-subscription.md` | MVP |
-| Law 59.21 parent contract (generation, legal-guardian signature, financial-guardian countersignature, archiving); audited profile merges reserved for ZSchool support | MVP (wave 1) |
-| Re-enrollment campaign (pre-filled form, deposit, N+1 conversion), year-end rollover (bulk decisions, creation of N+1 enrollments as PRE-ENROLLED, class assignment, year-end departures) | MVP (wave 2 — year-end close) |
-| Full application file (CANDIDATE state, online submission, supporting documents, admission tests, waitlist, tooled decision), SUSPENDED and EXPELLED states, scheduled campaign reminders, merge by an authorized school role | V1 |
-| Option attributes (transport, canteen) carried by the enrollment; the services themselves are delivered by `spec/behaviors/13-ancillary-services.md` | V2+ |
+| Item                                                                                                                                                                                                                                                                                                                                                                                                                                          | Version                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Core front-desk enrollment: student and guardian identity, strong and weak matching by Massar code, guardian matching by mobile number, provisional profile with invitation code and claim with knowledge challenge, pre-enrollment, activation, activation via import, closures (cancelled, active, completed, transferred, withdrawn), immediate enrollment documents, arrears alert, Massar transfer reference field, class-change history | MVP                           |
+| Global identities, invitations and claims throughout enrollment; a parent declaring a child; a declared prior history for a student coming from a non-ZSchool school; the identity engine and bulk imports remain owned by `spec/behaviors/01-administration-onboarding-subscription.md`                                                                                                                                                      | MVP                           |
+| Law 59.21 parent contract (generation, legal-guardian signature, financial-guardian countersignature, archiving); audited profile merges reserved for ZSchool support                                                                                                                                                                                                                                                                         | MVP (wave 1)                  |
+| Re-enrollment campaign (pre-filled form, deposit, N+1 conversion), year-end rollover (bulk decisions, creation of N+1 enrollments as PRE-ENROLLED, class assignment, year-end departures)                                                                                                                                                                                                                                                     | MVP (wave 2 — year-end close) |
+| Full application file (CANDIDATE state, online submission, supporting documents, admission tests, waitlist, tooled decision), SUSPENDED and EXPELLED states, scheduled campaign reminders, merge by an authorized school role                                                                                                                                                                                                                 | V1                            |
+| Option attributes (transport, canteen) carried by the enrollment; the services themselves are delivered by `spec/behaviors/13-ancillary-services.md`                                                                                                                                                                                                                                                                                          | V2+                           |
 
 **Out of scope (cross-references):**
 
-| Excluded item | Owner | Link to this module |
-|---|---|---|
-| Payment schedules, deposit collection, arrears reminders | `spec/behaviors/07-finance-billing-collections.md` | This module triggers the reservation deposit and shows the arrears alert |
-| Transfer procedure, sharing consents, leaving file | `spec/behaviors/09-transfers-mobility.md` | This module carries the Massar transfer reference field and TRANSFERRED/WITHDRAWN closures |
-| Document templates, numbering, stamp, QR code and self-service | `spec/behaviors/06-documents-certificates.md` | This module requires immediate issuance of enrollment documents by cross-reference |
-| Expulsion decision (disciplinary council) | `spec/behaviors/04-attendance-student-life-discipline.md` | This module records the EXPELLED closure on a transmitted decision |
-| Massar exports and compliance checks | `spec/behaviors/12-massar-regulatory-exports.md` | This module supplies the data (enrollments, classes, Massar code) |
-| Progression decisions made by the class council | `spec/behaviors/05-assessments-grades-report-cards.md` | This module consumes the decision and carries it on the enrollment |
-| Dual schooling (tutoring centers, external activities) | Out of scope until V2+ | No requirement here |
+| Excluded item                                                  | Owner                                                     | Link to this module                                                                        |
+| -------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Payment schedules, deposit collection, arrears reminders       | `spec/behaviors/07-finance-billing-collections.md`        | This module triggers the reservation deposit and shows the arrears alert                   |
+| Transfer procedure, sharing consents, leaving file             | `spec/behaviors/09-transfers-mobility.md`                 | This module carries the Massar transfer reference field and TRANSFERRED/WITHDRAWN closures |
+| Document templates, numbering, stamp, QR code and self-service | `spec/behaviors/06-documents-certificates.md`             | This module requires immediate issuance of enrollment documents by cross-reference         |
+| Expulsion decision (disciplinary council)                      | `spec/behaviors/04-attendance-student-life-discipline.md` | This module records the EXPELLED closure on a transmitted decision                         |
+| Massar exports and compliance checks                           | `spec/behaviors/12-massar-regulatory-exports.md`          | This module supplies the data (enrollments, classes, Massar code)                          |
+| Progression decisions made by the class council                | `spec/behaviors/05-assessments-grades-report-cards.md`    | This module consumes the decision and carries it on the enrollment                         |
+| Dual schooling (tutoring centers, external activities)         | Out of scope until V2+                                    | No requirement here                                                                        |
 
 ## 2. Users and use cases
 
-| Actor | Main use cases in this module | Related needs |
-|---|---|---|
-| Front office (persona SEC, Fatima) | Entering a complete enrollment at the front desk in one pass; scanning documents; immediate document issuance; tracking the re-enrollment campaign; arrears alert without blocking | URS-ZS-010, URS-ZS-013, URS-ZS-015, URS-ZS-016 |
-| Director (persona DIR, Si Abdellah) | Admission policy, documented admission decision, running the re-enrollment campaign, executing the rollover and bulk decisions, managing departures | URS-ZS-005 |
-| Academic leadership / homeroom teachers | Assigning students to N+1 classes, mid-year class changes | URS-ZS-005 |
-| Parent or legal guardian (personas PAR, GAR) | Submitting an online application, providing documents, signing the parent contract, confirming re-enrollment and paying the deposit, claiming the child's profile | URS-ZS-034, URS-ZS-036, URS-ZS-045 |
-| A student who has come of age (persona ELE, Salma) | Informed of their rights at the age of majority and at each re-enrollment ([INV-ZS-052](../invariants.md#inv-zs-052), [ADR-ZS-001](../decisions/001-adult-student-account-holder.md)) | URS-ZS-055 |
-| Accounting / cashier | Collecting the reservation deposit, viewing the arrears alert on the file | URS-ZS-012 |
-| ZSchool support (MVP) or an authorized school role (V1) | Audited merge of two student profiles, arbitrating complex matches | [INV-ZS-056](../invariants.md#inv-zs-056); [ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md) |
+| Actor                                                   | Main use cases in this module                                                                                                                                                         | Related needs                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Front office (persona SEC, Fatima)                      | Entering a complete enrollment at the front desk in one pass; scanning documents; immediate document issuance; tracking the re-enrollment campaign; arrears alert without blocking    | URS-ZS-010, URS-ZS-013, URS-ZS-015, URS-ZS-016                                                        |
+| Director (persona DIR, Si Abdellah)                     | Admission policy, documented admission decision, running the re-enrollment campaign, executing the rollover and bulk decisions, managing departures                                   | URS-ZS-005                                                                                            |
+| Academic leadership / homeroom teachers                 | Assigning students to N+1 classes, mid-year class changes                                                                                                                             | URS-ZS-005                                                                                            |
+| Parent or legal guardian (personas PAR, GAR)            | Submitting an online application, providing documents, signing the parent contract, confirming re-enrollment and paying the deposit, claiming the child's profile                     | URS-ZS-034, URS-ZS-036, URS-ZS-045                                                                    |
+| A student who has come of age (persona ELE, Salma)      | Informed of their rights at the age of majority and at each re-enrollment ([INV-ZS-052](../invariants.md#inv-zs-052), [ADR-ZS-001](../decisions/001-adult-student-account-holder.md)) | URS-ZS-055                                                                                            |
+| Accounting / cashier                                    | Collecting the reservation deposit, viewing the arrears alert on the file                                                                                                             | URS-ZS-012                                                                                            |
+| ZSchool support (MVP) or an authorized school role (V1) | Audited merge of two student profiles, arbitrating complex matches                                                                                                                    | [INV-ZS-056](../invariants.md#inv-zs-056); [ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md) |
 
 Seasonality is strong: admissions run from March to September (peaks in July-August), the re-enrollment campaign runs in spring, the rollover happens in June (see `spec/journeys/00-journey-map.md` §4). Pilots activated mid-year enter via import activation (BEH-ZS-047) and experience their first year-end close in June 2027 with MVP wave 2.
 
@@ -59,45 +59,45 @@ Seasonality is strong: admissions run from March to September (peaks in July-Aug
 
 End-to-end journeys are mapped in `spec/journeys/00-journey-map.md`; the detailed journey steps are owned by the persona files `spec/journeys/01-school-group-director.md` through `spec/journeys/07-students-minor-and-adult.md`. This chapter does not duplicate those steps.
 
-| Journey | Content related to the module | Chapter requirements |
-|---|---|---|
-| JMP-ZS-001 — Admitting a new student | File, documents, test, decision, enrollment, immediate documents; prior history of a student coming from a non-ZSchool school | BEH-ZS-021 to BEH-ZS-039, BEH-ZS-046 |
-| JMP-ZS-002 — Bulk re-enrollment and N-to-N+1 rollover | Pre-filled campaign, deposits, bulk decisions, N+1 creation, class assignment, departures | BEH-ZS-040 to BEH-ZS-044 |
-| JMP-ZS-003 — Onboarding and mid-year catch-up | Activating enrollments via import | BEH-ZS-047 |
-| JMP-ZS-004 — A parent claims an identity | Invitation code, knowledge challenge, account activation, linking the identity; a parent declaring a child | BEH-ZS-028, BEH-ZS-031, BEH-ZS-045 |
-| JMP-ZS-009 — Transfers and departures | TRANSFERRED/WITHDRAWN closure, Massar transfer reference, leaving file | BEH-ZS-035, BEH-ZS-039, BEH-ZS-044 |
+| Journey                                               | Content related to the module                                                                                                 | Chapter requirements                 |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| JMP-ZS-001 — Admitting a new student                  | File, documents, test, decision, enrollment, immediate documents; prior history of a student coming from a non-ZSchool school | BEH-ZS-021 to BEH-ZS-039, BEH-ZS-046 |
+| JMP-ZS-002 — Bulk re-enrollment and N-to-N+1 rollover | Pre-filled campaign, deposits, bulk decisions, N+1 creation, class assignment, departures                                     | BEH-ZS-040 to BEH-ZS-044             |
+| JMP-ZS-003 — Onboarding and mid-year catch-up         | Activating enrollments via import                                                                                             | BEH-ZS-047                           |
+| JMP-ZS-004 — A parent claims an identity              | Invitation code, knowledge challenge, account activation, linking the identity; a parent declaring a child                    | BEH-ZS-028, BEH-ZS-031, BEH-ZS-045   |
+| JMP-ZS-009 — Transfers and departures                 | TRANSFERRED/WITHDRAWN closure, Massar transfer reference, leaving file                                                        | BEH-ZS-035, BEH-ZS-039, BEH-ZS-044   |
 
 ## 4. Functional behaviors
 
-| ID | Title | Priority |
-|---|---|---|
-| BEH-ZS-021 | Submit an application file at the front desk and online | Must |
-| BEH-ZS-022 | Collect and verify supporting documents | Must |
-| BEH-ZS-023 | Organize admission tests | Should |
-| BEH-ZS-024 | Manage the waitlist | Should |
-| BEH-ZS-025 | Record the admission decision and open pre-enrollment | Must |
-| BEH-ZS-026 | Create the student identity with strong matching by Massar code | Must |
-| BEH-ZS-027 | Detect probable duplicates via weak matching | Must |
-| BEH-ZS-028 | Create a provisional profile with an invitation code and claiming | Must |
-| BEH-ZS-029 | Merge two student profiles under audit | Must |
-| BEH-ZS-030 | Correct identity with logging and cross-school notification | Must |
-| BEH-ZS-031 | Record guardians, their relationship types, and their qualities | Must |
-| BEH-ZS-032 | Require an active legal guardian and a financial guardian, signed by the legal guardian | Must |
-| BEH-ZS-033 | Apply default rights and accept only a court-ordered restriction | Must |
-| BEH-ZS-034 | Create the enrollment with its full academic context | Must |
-| BEH-ZS-035 | Run the enrollment lifecycle (state machine) | Must |
-| BEH-ZS-036 | Generate, have signed, and archive the parent contract (Law 59.21) | Must |
-| BEH-ZS-037 | Immediately issue enrollment documents | Must |
-| BEH-ZS-038 | Show the arrears alert without ever blocking | Must |
-| BEH-ZS-039 | Record the Massar transfer reference | Should |
-| BEH-ZS-040 | Run the re-enrollment campaign | Must |
-| BEH-ZS-041 | Execute the year-end rollover (bulk decisions, N+1 creation) | Must |
-| BEH-ZS-042 | Log mid-year class changes | Must |
-| BEH-ZS-043 | Bulk-assign students to N+1 classes | Must |
-| BEH-ZS-044 | Handle departures during the rollover and on an ongoing basis | Must |
-| BEH-ZS-045 | Declare a child from the parent account and link it to the enrollment | Must |
-| BEH-ZS-046 | Record the declared prior history of a student coming from a non-ZSchool school | Must |
-| BEH-ZS-047 | Activate an enrollment via import (data catch-up) | Must |
+| ID         | Title                                                                                   | Priority |
+| ---------- | --------------------------------------------------------------------------------------- | -------- |
+| BEH-ZS-021 | Submit an application file at the front desk and online                                 | Must     |
+| BEH-ZS-022 | Collect and verify supporting documents                                                 | Must     |
+| BEH-ZS-023 | Organize admission tests                                                                | Should   |
+| BEH-ZS-024 | Manage the waitlist                                                                     | Should   |
+| BEH-ZS-025 | Record the admission decision and open pre-enrollment                                   | Must     |
+| BEH-ZS-026 | Create the student identity with strong matching by Massar code                         | Must     |
+| BEH-ZS-027 | Detect probable duplicates via weak matching                                            | Must     |
+| BEH-ZS-028 | Create a provisional profile with an invitation code and claiming                       | Must     |
+| BEH-ZS-029 | Merge two student profiles under audit                                                  | Must     |
+| BEH-ZS-030 | Correct identity with logging and cross-school notification                             | Must     |
+| BEH-ZS-031 | Record guardians, their relationship types, and their qualities                         | Must     |
+| BEH-ZS-032 | Require an active legal guardian and a financial guardian, signed by the legal guardian | Must     |
+| BEH-ZS-033 | Apply default rights and accept only a court-ordered restriction                        | Must     |
+| BEH-ZS-034 | Create the enrollment with its full academic context                                    | Must     |
+| BEH-ZS-035 | Run the enrollment lifecycle (state machine)                                            | Must     |
+| BEH-ZS-036 | Generate, have signed, and archive the parent contract (Law 59.21)                      | Must     |
+| BEH-ZS-037 | Immediately issue enrollment documents                                                  | Must     |
+| BEH-ZS-038 | Show the arrears alert without ever blocking                                            | Must     |
+| BEH-ZS-039 | Record the Massar transfer reference                                                    | Should   |
+| BEH-ZS-040 | Run the re-enrollment campaign                                                          | Must     |
+| BEH-ZS-041 | Execute the year-end rollover (bulk decisions, N+1 creation)                            | Must     |
+| BEH-ZS-042 | Log mid-year class changes                                                              | Must     |
+| BEH-ZS-043 | Bulk-assign students to N+1 classes                                                     | Must     |
+| BEH-ZS-044 | Handle departures during the rollover and on an ongoing basis                           | Must     |
+| BEH-ZS-045 | Declare a child from the parent account and link it to the enrollment                   | Must     |
+| BEH-ZS-046 | Record the declared prior history of a student coming from a non-ZSchool school         | Must     |
+| BEH-ZS-047 | Activate an enrollment via import (data catch-up)                                       | Must     |
 
 ### 4.1 Application file and admission decision
 
@@ -395,38 +395,38 @@ REQUIREMENT: A dedicated (import) → ACTIVE transition, reserved for bulk impor
 
 **Entities used** (`spec/domain-model.md`):
 
-| Entity | Usage in this module |
-|---|---|
-| `Person`, `User`, `StudentProfile` (provisional, linked statuses), `ParentProfile` | Identity of the student and guardians; Massar code; individual accounts |
-| `ParentStudentRelationship` | Relationship type, cumulative qualities, rights, supporting documents, context attributes |
-| `Enrollment` | Application (CANDIDATE) and enrollment; level, track, section, class, arrangement, options, status (including CANCELLED), effective date, entry reason, dates, financial guardian, acceptances, registry identity snapshot, Massar transfer reference |
-| `StudentClassHistory` | Class-change history (append-only) |
-| `YearDecision` | Year-end decision carried by the COMPLETED enrollment |
-| `StudentDocument` | Application-file and student-file documents, carrying the tenant key of whoever uploaded them |
-| `StudentProfile` — declared schools attended | Prior history from outside ZSchool, marked "declared, unverified" or "declared, document attached" |
-| `User` | Login identifier distinct from contact identifiers; a household's shared contact |
-| `School`, `AcademicYear`, `Section`, `Cycle`, `Level`, `Track`, `Class`, `Group` | Enrollment's academic context (managed by `spec/behaviors/03-academic-structure-timetables.md`) |
-| `TransferRequest`, `ConsentGrant` | Massar transfer reference; sharing consents |
-| `MergeOperation`, `AuditLog` | Audited merge; logging of decisions, transitions, and sensitive access |
-| `FeeSchedule`, `Invoice`, `Installment`, `Payment`, `Dunning`, `FinancialAccount` | Deposit, payment schedule, arrears alert (owned by `spec/behaviors/07-finance-billing-collections.md`) |
-| `Certificate` | Enrollment documents (owned by `spec/behaviors/06-documents-certificates.md`) |
+| Entity                                                                             | Usage in this module                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Person`, `User`, `StudentProfile` (provisional, linked statuses), `ParentProfile` | Identity of the student and guardians; Massar code; individual accounts                                                                                                                                                                               |
+| `ParentStudentRelationship`                                                        | Relationship type, cumulative qualities, rights, supporting documents, context attributes                                                                                                                                                             |
+| `Enrollment`                                                                       | Application (CANDIDATE) and enrollment; level, track, section, class, arrangement, options, status (including CANCELLED), effective date, entry reason, dates, financial guardian, acceptances, registry identity snapshot, Massar transfer reference |
+| `StudentClassHistory`                                                              | Class-change history (append-only)                                                                                                                                                                                                                    |
+| `YearDecision`                                                                     | Year-end decision carried by the COMPLETED enrollment                                                                                                                                                                                                 |
+| `StudentDocument`                                                                  | Application-file and student-file documents, carrying the tenant key of whoever uploaded them                                                                                                                                                         |
+| `StudentProfile` — declared schools attended                                       | Prior history from outside ZSchool, marked "declared, unverified" or "declared, document attached"                                                                                                                                                    |
+| `User`                                                                             | Login identifier distinct from contact identifiers; a household's shared contact                                                                                                                                                                      |
+| `School`, `AcademicYear`, `Section`, `Cycle`, `Level`, `Track`, `Class`, `Group`   | Enrollment's academic context (managed by `spec/behaviors/03-academic-structure-timetables.md`)                                                                                                                                                       |
+| `TransferRequest`, `ConsentGrant`                                                  | Massar transfer reference; sharing consents                                                                                                                                                                                                           |
+| `MergeOperation`, `AuditLog`                                                       | Audited merge; logging of decisions, transitions, and sensitive access                                                                                                                                                                                |
+| `FeeSchedule`, `Invoice`, `Installment`, `Payment`, `Dunning`, `FinancialAccount`  | Deposit, payment schedule, arrears alert (owned by `spec/behaviors/07-finance-billing-collections.md`)                                                                                                                                                |
+| `Certificate`                                                                      | Enrollment documents (owned by `spec/behaviors/06-documents-certificates.md`)                                                                                                                                                                         |
 
 No new entity is created by this module; the CANCELLED state, the import-activation transition, the effective date, and the entry reason are carried by `spec/domain-model.md`. Admission-specific attributes (test sessions, waitlist rank, application origin) remain to be specified in the model (see `spec/open-questions.md`).
 
 **Domain events**:
 
-| Event | Module's role | Effects |
-|---|---|---|
-| `EnrollmentStatusChanged` | Produced | Director, guardians (depending on state), dashboards; delivered via `spec/behaviors/08-communication-notifications.md` |
-| `ProbableDuplicateDetected` | Produced | School involved and the authorized role (alert without linking) |
-| `IdentityClaimed` | Produced | The school that created the provisional profile |
-| `IdentityCorrected` | Produced | Other schools involved and guardians |
-| `MergeCompleted` | Produced | Schools involved, legal guardian, audit |
-| `StudentReachedMajority` | Produced (platform-triggered) | Informs the student of their rights; the school |
-| `AccessRestrictionRecorded` | Produced | Guardian concerned, other schools with an active enrollment, director, log |
-| `ConsentGranted` / `ConsentRevoked` | Produced | Audit log, receiving school |
-| `PaymentReceived` | Consumed | Confirming the reservation (deposit), meeting activation conditions |
-| Invitation, admission-decision, and campaign-reminder notifications | Issued via `Notification` / `DeliveryLog` | Multi-channel routing and costs owned by `spec/behaviors/08-communication-notifications.md` |
+| Event                                                               | Module's role                             | Effects                                                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `EnrollmentStatusChanged`                                           | Produced                                  | Director, guardians (depending on state), dashboards; delivered via `spec/behaviors/08-communication-notifications.md` |
+| `ProbableDuplicateDetected`                                         | Produced                                  | School involved and the authorized role (alert without linking)                                                        |
+| `IdentityClaimed`                                                   | Produced                                  | The school that created the provisional profile                                                                        |
+| `IdentityCorrected`                                                 | Produced                                  | Other schools involved and guardians                                                                                   |
+| `MergeCompleted`                                                    | Produced                                  | Schools involved, legal guardian, audit                                                                                |
+| `StudentReachedMajority`                                            | Produced (platform-triggered)             | Informs the student of their rights; the school                                                                        |
+| `AccessRestrictionRecorded`                                         | Produced                                  | Guardian concerned, other schools with an active enrollment, director, log                                             |
+| `ConsentGranted` / `ConsentRevoked`                                 | Produced                                  | Audit log, receiving school                                                                                            |
+| `PaymentReceived`                                                   | Consumed                                  | Confirming the reservation (deposit), meeting activation conditions                                                    |
+| Invitation, admission-decision, and campaign-reminder notifications | Issued via `Notification` / `DeliveryLog` | Multi-channel routing and costs owned by `spec/behaviors/08-communication-notifications.md`                            |
 
 ## 7. Screens
 
@@ -447,12 +447,12 @@ All screens exist in French and Arabic (full RTL), mobile-first (`spec/cross-cut
 
 ## 8. Integrations
 
-| Family | Usage in this module |
-|---|---|
-| `INT-MAS` (Massar) | Massar-code format check; exports of student and enrollment lists; Massar transfer reference logged. Details: `spec/behaviors/12-massar-regulatory-exports.md` |
-| `INT-SIG` (electronic signature) | Advanced signature and timestamp for the parent contract and enrollment documents at V1; qualified signature at V2 |
-| `INT-SMS`, `INT-WAP`, `INT-EML` | Invitations and claim codes, admission decisions, campaign reminders; routing and costs owned by `spec/behaviors/08-communication-notifications.md` |
-| `INT-FAT` (Fatourati) | Paying the re-enrollment deposit from V1, with the school remaining the creditor; owned by `spec/behaviors/07-finance-billing-collections.md` |
+| Family                           | Usage in this module                                                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INT-MAS` (Massar)               | Massar-code format check; exports of student and enrollment lists; Massar transfer reference logged. Details: `spec/behaviors/12-massar-regulatory-exports.md` |
+| `INT-SIG` (electronic signature) | Advanced signature and timestamp for the parent contract and enrollment documents at V1; qualified signature at V2                                             |
+| `INT-SMS`, `INT-WAP`, `INT-EML`  | Invitations and claim codes, admission decisions, campaign reminders; routing and costs owned by `spec/behaviors/08-communication-notifications.md`            |
+| `INT-FAT` (Fatourati)            | Paying the re-enrollment deposit from V1, with the school remaining the creditor; owned by `spec/behaviors/07-finance-billing-collections.md`                  |
 
 Full integration specifications: `spec/cross-cutting/06-external-integrations.md`.
 

@@ -1,14 +1,14 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import { qadiTestLayer, subjectWith } from "@qadi/testing"
+import { withSchool } from "@zschool/db"
+import { createClass, deactivateCourse, generateCoursesForClass, instantiateNationalTemplate } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import { createClass, deactivateCourse, generateCoursesForClass, instantiateNationalTemplate } from "@zschool/domain"
+import { fileURLToPath } from "node:url"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -122,7 +122,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
       capacity: 30
     }).pipe(Effect.provide(asDirectorOf(school.id)))
 
-    yield* generateCoursesForClass(school.id, result.academicYearId, classId).pipe(Effect.provide(asDirectorOf(school.id)))
+    yield* generateCoursesForClass(school.id, result.academicYearId, classId).pipe(
+      Effect.provide(asDirectorOf(school.id))
+    )
 
     yield* Ref.set(world.schoolId, school.id)
     yield* Ref.set(world.academicYearId, result.academicYearId)

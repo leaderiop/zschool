@@ -1,9 +1,9 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -78,7 +78,11 @@ export const analyzeClassImport = (
             SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
           `
           if (existing.length > 0) {
-            results.push({ row, status: "duplicate", reason: `A class labeled "${row.label}" already exists under ${row.levelCode}` })
+            results.push({
+              row,
+              status: "duplicate",
+              reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+            })
             continue
           }
 

@@ -1,12 +1,12 @@
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 export class PeriodOverlapError extends Data.TaggedError("PeriodOverlapError")<{
   readonly periodId: string
@@ -40,7 +40,11 @@ export interface AddSubPeriodCommand {
  */
 export const setEvaluationPeriodDates = (
   command: SetEvaluationPeriodDatesCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | PeriodOverlapError | SqlError, SqlClient | EvaluationServices> =>
+): Effect.Effect<
+  void,
+  EnforcementError | EntityNotFoundError | PeriodOverlapError | SqlError,
+  SqlClient | EvaluationServices
+> =>
   authorized(
     command.schoolId,
     withSchool(
@@ -137,47 +141,47 @@ export const seedCalendarEvents = (
   Effect.gen(function*() {
     const rows: Array<Record<string, unknown>> = []
 
-        for (const holiday of fixedHolidayDatesForYear(academicYearLabel)) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: holiday.code,
-            name: holiday.name,
-            event_type: "holiday",
-            is_movable: false,
-            confirmation_status: "confirmed",
-            start_date: holiday.date,
-            end_date: holiday.date
-          })
-        }
+    for (const holiday of fixedHolidayDatesForYear(academicYearLabel)) {
+      rows.push({
+        school_id: schoolId,
+        academic_year_id: academicYearId,
+        code: holiday.code,
+        name: holiday.name,
+        event_type: "holiday",
+        is_movable: false,
+        confirmation_status: "confirmed",
+        start_date: holiday.date,
+        end_date: holiday.date
+      })
+    }
 
-        for (const brk of publishedBreaksByYear[academicYearLabel] ?? []) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: brk.code,
-            name: brk.name,
-            event_type: "break",
-            is_movable: false,
-            confirmation_status: "confirmed",
-            start_date: brk.startDate,
-            end_date: brk.endDate
-          })
-        }
+    for (const brk of publishedBreaksByYear[academicYearLabel] ?? []) {
+      rows.push({
+        school_id: schoolId,
+        academic_year_id: academicYearId,
+        code: brk.code,
+        name: brk.name,
+        event_type: "break",
+        is_movable: false,
+        confirmation_status: "confirmed",
+        start_date: brk.startDate,
+        end_date: brk.endDate
+      })
+    }
 
-        for (const holiday of movableReligiousHolidays) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: holiday.code,
-            name: holiday.name,
-            event_type: "holiday",
-            is_movable: true,
-            confirmation_status: "to_confirm",
-            start_date: null,
-            end_date: null
-          })
-        }
+    for (const holiday of movableReligiousHolidays) {
+      rows.push({
+        school_id: schoolId,
+        academic_year_id: academicYearId,
+        code: holiday.code,
+        name: holiday.name,
+        event_type: "holiday",
+        is_movable: true,
+        confirmation_status: "to_confirm",
+        start_date: null,
+        end_date: null
+      })
+    }
 
     if (rows.length > 0) {
       yield* sql`INSERT INTO calendar_events ${sql.insert(rows)}`

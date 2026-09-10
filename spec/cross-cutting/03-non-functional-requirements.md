@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-CC-03                                                  |
-> | Revision       | 1.1                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification — Non-Functional Requirements         |
+> | Property       | Value                                                                                                                                                                                                                                                                                                             |
+> | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-CC-03                                                                                                                                                                                                                                                                                                     |
+> | Revision       | 1.1                                                                                                                                                                                                                                                                                                               |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                                                                                        |
+> | Status         | Draft                                                                                                                                                                                                                                                                                                             |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                                                                                   |
+> | Classification | Functional Specification — Non-Functional Requirements                                                                                                                                                                                                                                                            |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/cross-cutting/32-non-functional-requirements.md` (v0.3), old `NFR-<DOM>-NN` -> `NFR-ZS-001..050`, per `spec/process/id-migration-map.md` (CCR-ZS-001). 1.1 (2026-09-09): NFR-ZS-009/010 redefined for AWS `eu-central-1`/`eu-west-3` per ADR-ZS-091 (Accepted) (CCR-ZS-002). |
 
 # Non-Functional Requirements
@@ -20,58 +20,58 @@ Module chapters (`spec/behaviors/01-administration-onboarding-subscription.md` t
 
 ## 1. ID/Title/Priority summary
 
-| ID | Domain | Title | Priority | Version |
-|---|---|---|---|---|
-| NFR-ZS-001 | PERF | Usual pages displayed in under 2 seconds on 4G | Must | MVP |
-| NFR-ZS-002 | DISP | Maintenance windows outside critical periods | Must | MVP |
-| NFR-ZS-003 | PERF | Report card generated in under 3 seconds | Must | MVP |
-| NFR-ZS-004 | PERF | Low-bandwidth mode and degraded networks | Must | MVP |
-| NFR-ZS-005 | PERF | Report cards for a 2,000-student school published in under 10 minutes | Must | MVP |
-| NFR-ZS-006 | PERF | Imports and bulk operations handled without blocking | Must | MVP |
-| NFR-ZS-007 | MOB | Channel reliability and automatic fallback | Must | MVP / V1 |
-| NFR-ZS-008 | DISP | 99.5% availability excluding announced maintenance | Must | MVP |
-| NFR-ZS-009 | DISP | Disaster recovery plan across two EU regions | Must | MVP (fallback) / V1 (full) |
-| NFR-ZS-010 | SAV | Daily backups hosted in the EU | Must | MVP |
-| NFR-ZS-011 | SAV | Quarterly restore test | Must | MVP |
-| NFR-ZS-012 | DISP | Degraded mode and read priority | Should | V1 |
-| NFR-ZS-013 | DISP | Error budget and peak absorption | Must | MVP |
-| NFR-ZS-014 | DISP | Standard support commitment included | Must | MVP |
-| NFR-ZS-015 | I18N | Bilingual FR/AR interface with full RTL from MVP | Must | MVP |
-| NFR-ZS-016 | I18N | People's names in dual script throughout | Must | MVP |
-| NFR-ZS-017 | I18N | English in V2 | Should | V2 |
-| NFR-ZS-018 | I18N | `Africa/Casablanca` timezone at permanent UTC+0 | Must | MVP |
-| NFR-ZS-019 | I18N | Hijri and Gregorian calendars for holidays | Must | MVP |
-| NFR-ZS-020 | I18N | Bilingual school-defined content | Should | MVP |
-| NFR-ZS-021 | MOB | Responsive web and PWA from MVP | Must | MVP |
-| NFR-ZS-022 | MOB | Native Android and iOS apps in V2 | Must (Android) / Should (iOS) | V2 |
-| NFR-ZS-023 | MOB | Absence notification in under 5 minutes after attendance is taken | Must | MVP |
-| NFR-ZS-024 | OBS | Service metrics and operational alerts | Must | MVP |
-| NFR-ZS-025 | MOB | Critical journeys adapted to entry-level devices | Must | MVP |
-| NFR-ZS-026 | MOB | Supported browser and OS floor | Must | MVP |
-| NFR-ZS-027 | OFF | Attendance-taking tolerant of outages | Must | MVP |
-| NFR-ZS-028 | OFF | Dedicated offline test plan for iOS (PWA) | Must | MVP |
-| NFR-ZS-029 | OFF | Grade entry tolerant of outages | Must | MVP |
-| NFR-ZS-030 | OFF | Idempotent sync when the network returns | Must | MVP |
-| NFR-ZS-031 | OFF | Deterministic resolution of entry conflicts | Must | MVP (basic) / V1 (review UI) |
-| NFR-ZS-032 | DOC | Every document produced as a bilingual PDF | Must | MVP / V1 |
-| NFR-ZS-033 | DOC | Correct Arabic fonts and A4/A5 formats | Must | MVP / V1 |
-| NFR-ZS-034 | DOC | Batch printing | Must | MVP / V1 |
-| NFR-ZS-035 | DOC | Printed, scannable verification QR code | Must | V1 |
-| NFR-ZS-036 | OBS | Per-tenant observability | Must | MVP |
-| NFR-ZS-037 | OBS | Immutable, exportable audit log | Must | MVP / V1 |
-| NFR-ZS-038 | OBS | End-to-end correlation and logged support access | Must | MVP |
-| NFR-ZS-039 | OBS | Per-school consumption counters | Must | MVP |
-| NFR-ZS-040 | INT | Excel, CSV, and PDF exports on every list and report | Must | MVP / V1 |
-| NFR-ZS-041 | INT | File exchange conventions | Must | MVP |
-| NFR-ZS-042 | INT | Documented public API in V2 | Should | V2 |
-| NFR-ZS-043 | INT | Business-event webhooks in V2 | Should | V2 |
-| NFR-ZS-044 | SAV | At least 30-day retention | Must | MVP |
-| NFR-ZS-045 | SAV | Granular per-school restore | Must | V1 |
-| NFR-ZS-046 | RES | Three-year capacity target | Must | V1 (validation) |
-| NFR-ZS-047 | RES | Absorbing seasonal peaks | Must | V1 |
-| NFR-ZS-048 | RES | Fair service across tenants | Must | V1 |
-| NFR-ZS-049 | RES | Controlled document storage | Must | MVP |
-| NFR-ZS-050 | RES | Accessibility of the main journeys | Must | MVP (WCAG target) / V1 (audit) |
+| ID         | Domain | Title                                                                 | Priority                      | Version                        |
+| ---------- | ------ | --------------------------------------------------------------------- | ----------------------------- | ------------------------------ |
+| NFR-ZS-001 | PERF   | Usual pages displayed in under 2 seconds on 4G                        | Must                          | MVP                            |
+| NFR-ZS-002 | DISP   | Maintenance windows outside critical periods                          | Must                          | MVP                            |
+| NFR-ZS-003 | PERF   | Report card generated in under 3 seconds                              | Must                          | MVP                            |
+| NFR-ZS-004 | PERF   | Low-bandwidth mode and degraded networks                              | Must                          | MVP                            |
+| NFR-ZS-005 | PERF   | Report cards for a 2,000-student school published in under 10 minutes | Must                          | MVP                            |
+| NFR-ZS-006 | PERF   | Imports and bulk operations handled without blocking                  | Must                          | MVP                            |
+| NFR-ZS-007 | MOB    | Channel reliability and automatic fallback                            | Must                          | MVP / V1                       |
+| NFR-ZS-008 | DISP   | 99.5% availability excluding announced maintenance                    | Must                          | MVP                            |
+| NFR-ZS-009 | DISP   | Disaster recovery plan across two EU regions                          | Must                          | MVP (fallback) / V1 (full)     |
+| NFR-ZS-010 | SAV    | Daily backups hosted in the EU                                        | Must                          | MVP                            |
+| NFR-ZS-011 | SAV    | Quarterly restore test                                                | Must                          | MVP                            |
+| NFR-ZS-012 | DISP   | Degraded mode and read priority                                       | Should                        | V1                             |
+| NFR-ZS-013 | DISP   | Error budget and peak absorption                                      | Must                          | MVP                            |
+| NFR-ZS-014 | DISP   | Standard support commitment included                                  | Must                          | MVP                            |
+| NFR-ZS-015 | I18N   | Bilingual FR/AR interface with full RTL from MVP                      | Must                          | MVP                            |
+| NFR-ZS-016 | I18N   | People's names in dual script throughout                              | Must                          | MVP                            |
+| NFR-ZS-017 | I18N   | English in V2                                                         | Should                        | V2                             |
+| NFR-ZS-018 | I18N   | `Africa/Casablanca` timezone at permanent UTC+0                       | Must                          | MVP                            |
+| NFR-ZS-019 | I18N   | Hijri and Gregorian calendars for holidays                            | Must                          | MVP                            |
+| NFR-ZS-020 | I18N   | Bilingual school-defined content                                      | Should                        | MVP                            |
+| NFR-ZS-021 | MOB    | Responsive web and PWA from MVP                                       | Must                          | MVP                            |
+| NFR-ZS-022 | MOB    | Native Android and iOS apps in V2                                     | Must (Android) / Should (iOS) | V2                             |
+| NFR-ZS-023 | MOB    | Absence notification in under 5 minutes after attendance is taken     | Must                          | MVP                            |
+| NFR-ZS-024 | OBS    | Service metrics and operational alerts                                | Must                          | MVP                            |
+| NFR-ZS-025 | MOB    | Critical journeys adapted to entry-level devices                      | Must                          | MVP                            |
+| NFR-ZS-026 | MOB    | Supported browser and OS floor                                        | Must                          | MVP                            |
+| NFR-ZS-027 | OFF    | Attendance-taking tolerant of outages                                 | Must                          | MVP                            |
+| NFR-ZS-028 | OFF    | Dedicated offline test plan for iOS (PWA)                             | Must                          | MVP                            |
+| NFR-ZS-029 | OFF    | Grade entry tolerant of outages                                       | Must                          | MVP                            |
+| NFR-ZS-030 | OFF    | Idempotent sync when the network returns                              | Must                          | MVP                            |
+| NFR-ZS-031 | OFF    | Deterministic resolution of entry conflicts                           | Must                          | MVP (basic) / V1 (review UI)   |
+| NFR-ZS-032 | DOC    | Every document produced as a bilingual PDF                            | Must                          | MVP / V1                       |
+| NFR-ZS-033 | DOC    | Correct Arabic fonts and A4/A5 formats                                | Must                          | MVP / V1                       |
+| NFR-ZS-034 | DOC    | Batch printing                                                        | Must                          | MVP / V1                       |
+| NFR-ZS-035 | DOC    | Printed, scannable verification QR code                               | Must                          | V1                             |
+| NFR-ZS-036 | OBS    | Per-tenant observability                                              | Must                          | MVP                            |
+| NFR-ZS-037 | OBS    | Immutable, exportable audit log                                       | Must                          | MVP / V1                       |
+| NFR-ZS-038 | OBS    | End-to-end correlation and logged support access                      | Must                          | MVP                            |
+| NFR-ZS-039 | OBS    | Per-school consumption counters                                       | Must                          | MVP                            |
+| NFR-ZS-040 | INT    | Excel, CSV, and PDF exports on every list and report                  | Must                          | MVP / V1                       |
+| NFR-ZS-041 | INT    | File exchange conventions                                             | Must                          | MVP                            |
+| NFR-ZS-042 | INT    | Documented public API in V2                                           | Should                        | V2                             |
+| NFR-ZS-043 | INT    | Business-event webhooks in V2                                         | Should                        | V2                             |
+| NFR-ZS-044 | SAV    | At least 30-day retention                                             | Must                          | MVP                            |
+| NFR-ZS-045 | SAV    | Granular per-school restore                                           | Must                          | V1                             |
+| NFR-ZS-046 | RES    | Three-year capacity target                                            | Must                          | V1 (validation)                |
+| NFR-ZS-047 | RES    | Absorbing seasonal peaks                                              | Must                          | V1                             |
+| NFR-ZS-048 | RES    | Fair service across tenants                                           | Must                          | V1                             |
+| NFR-ZS-049 | RES    | Controlled document storage                                           | Must                          | MVP                            |
+| NFR-ZS-050 | RES    | Accessibility of the main journeys                                    | Must                          | MVP (WCAG target) / V1 (audit) |
 
 ## 2. Measurement and versioning conventions
 
@@ -162,16 +162,16 @@ A monthly availability report (global and per tenant) is kept by operations and 
 > **Version:** MVP (daily off-site replication, 24-hour fallback RPO recorded, ADR-ZS-066 §ARB-25h); V1 (full disaster recovery plan, tested failover)
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09), superseding the original Morocco-hosting baseline
-             ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).**
-             Production MUST be hosted in the EU, on AWS `eu-central-1` (Frankfurt): a
-             disaster recovery plan to a second EU region, `eu-west-3` (Paris), is
-             mandatory. Targets, applicable only to a region-level disaster (historical
-             alias D5, ADR-ZS-066 §ARB-25i; NFR-ZS-008's SLA excludes a disaster):
-             service recovery within 8 hours maximum (RTO) and data loss of 15 minutes
-             maximum (RPO); meeting a 15-minute RPO requires continuous replication or
-             log archiving at least every fifteen minutes to the second region, in
-             addition to daily backups (NFR-ZS-010).
+(Accepted, 2026-09-09), superseding the original Morocco-hosting baseline
+([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)).**
+Production MUST be hosted in the EU, on AWS `eu-central-1` (Frankfurt): a
+disaster recovery plan to a second EU region, `eu-west-3` (Paris), is
+mandatory. Targets, applicable only to a region-level disaster (historical
+alias D5, ADR-ZS-066 §ARB-25i; NFR-ZS-008's SLA excludes a disaster):
+service recovery within 8 hours maximum (RTO) and data loss of 15 minutes
+maximum (RPO); meeting a 15-minute RPO requires continuous replication or
+log archiving at least every fifteen minutes to the second region, in
+addition to daily backups (NFR-ZS-010).
 
 From MVP onward (ADR-ZS-066 §ARB-25h), encrypted backups MUST be replicated daily to `eu-west-3` (SEC-ZS-023, CNF-ZS-012): the MVP fallback RPO is 24 hours and the fallback RTO is that of a full restore as measured by NFR-ZS-011; these fallback values are recorded in the pilot agreement (CNF-ZS-002). The full disaster recovery plan (failover, RTO 8h / RPO 15min, annual exercise) ships in V1. Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-091, ADR-ZS-007 (superseded baseline); `spec/appendices/01-review-history.md` (H-18). Actors: ZSchool operator.
 
@@ -510,11 +510,11 @@ The baseline cites webhooks in §10 without a version; they are placed in V2 alo
 > **Version:** MVP
 
 REQUIREMENT: **Redefined by [ADR-ZS-091](../decisions/091-eu-hosting-deviation-from-morocco-baseline.md)
-             (Accepted, 2026-09-09).** An automatic daily backup MUST cover all data:
-             databases (operational data, global identities), document files, tenant
-             configuration, and logs. Backups MUST be stored within the EU (AWS
-             `eu-central-1`), encrypted, and their integrity automatically verified after
-             each run, with an alert on failure.
+(Accepted, 2026-09-09).** An automatic daily backup MUST cover all data:
+databases (operational data, global identities), document files, tenant
+configuration, and logs. Backups MUST be stored within the EU (AWS
+`eu-central-1`), encrypted, and their integrity automatically verified after
+each run, with an alert on failure.
 
 Traceability: `spec/appendices/00-project-baseline.md` §10; ADR-ZS-091, ADR-ZS-007 (superseded baseline). Actors: ZSchool operator.
 
