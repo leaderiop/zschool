@@ -34,11 +34,11 @@ export type ClassImportRowResult =
   | { readonly row: ClassImportRow; readonly status: "duplicate"; readonly reason: string }
   | { readonly row: ClassImportRow; readonly status: "error"; readonly reason: string }
 
-export const analyzeClassImport = (
+export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImport")(function*(
   schoolId: string,
   rows: ReadonlyArray<ClassImportRow>
-): Effect.Effect<ReadonlyArray<ClassImportRowResult>, EnforcementError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
+): Effect.fn.Return<ReadonlyArray<ClassImportRowResult>, EnforcementError | SqlError, SqlClient | EvaluationServices> {
+  return yield* authorized(
     schoolId,
     withSchool(
       schoolId,
@@ -93,3 +93,4 @@ export const analyzeClassImport = (
       })
     )
   )
+})

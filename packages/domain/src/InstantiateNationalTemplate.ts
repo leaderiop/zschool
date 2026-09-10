@@ -70,14 +70,12 @@ const insertBatch = <A extends Record<string, unknown>>(
  * risk 6) makes a row-at-a-time loop the difference between low hundreds
  * of milliseconds and tens of seconds.
  */
-export const instantiateNationalTemplate = (
-  command: InstantiateNationalTemplateCommand
-): Effect.Effect<
-  InstantiateNationalTemplateResult,
-  UnauthorizedCycleError | EnforcementError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  Effect.gen(function*() {
+export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplate.instantiateNationalTemplate")(
+  function*(command: InstantiateNationalTemplateCommand): Effect.fn.Return<
+    InstantiateNationalTemplateResult,
+    UnauthorizedCycleError | EnforcementError | SqlError,
+    SqlClient | EvaluationServices
+  > {
     yield* Qadi.assert(canManageAcademicStructure, {
       resource: { school_id: command.schoolId },
       action: "instantiate-template"
@@ -275,4 +273,5 @@ export const instantiateNationalTemplate = (
         }
       })
     )
-  })
+  }
+)

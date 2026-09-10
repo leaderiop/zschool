@@ -43,31 +43,30 @@ export type GuardianRowResult =
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
 /** Analyze-only, read-only — no DB writes, same contract as #8's `analyzeClassImport`. */
-export const analyzeGuardianRows = (
+export const analyzeGuardianRows = Effect.fn("StudentGuardianImport.analyzeGuardianRows")(function*(
   rows: ReadonlyArray<GuardianImportRow>
-): Effect.Effect<ReadonlyArray<GuardianRowResult>, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const results: Array<GuardianRowResult> = []
-    for (const row of rows) {
-      if (!isValidE164(row.mobileNumber)) {
-        results.push({ rowId: row.rowId, status: "error", reason: `Invalid mobile number: ${row.mobileNumber}` })
-        continue
-      }
-      const phoneMatch = yield* findGuardianMatch(row.mobileNumber)
-      if (phoneMatch !== undefined) {
-        results.push({ rowId: row.rowId, status: "phone_match_proposed", personId: phoneMatch.personId })
-        continue
-      }
-      const nameMatches = yield* findPersonMatches(undefined, row.firstName, row.lastName, row.dateOfBirth)
-      const weak = nameMatches.find((m) => m.matchKind === "weak")
-      results.push(
-        weak === undefined
-          ? { rowId: row.rowId, status: "creatable" }
-          : { rowId: row.rowId, status: "weak_match_alert", personId: weak.personId }
-      )
+): Effect.fn.Return<ReadonlyArray<GuardianRowResult>, SqlError, SqlClient> {
+  const results: Array<GuardianRowResult> = []
+  for (const row of rows) {
+    if (!isValidE164(row.mobileNumber)) {
+      results.push({ rowId: row.rowId, status: "error", reason: `Invalid mobile number: ${row.mobileNumber}` })
+      continue
     }
-    return results
-  })
+    const phoneMatch = yield* findGuardianMatch(row.mobileNumber)
+    if (phoneMatch !== undefined) {
+      results.push({ rowId: row.rowId, status: "phone_match_proposed", personId: phoneMatch.personId })
+      continue
+    }
+    const nameMatches = yield* findPersonMatches(undefined, row.firstName, row.lastName, row.dateOfBirth)
+    const weak = nameMatches.find((m) => m.matchKind === "weak")
+    results.push(
+      weak === undefined
+        ? { rowId: row.rowId, status: "creatable" }
+        : { rowId: row.rowId, status: "weak_match_alert", personId: weak.personId }
+    )
+  }
+  return results
+})
 
 export interface StudentImportRow {
   readonly rowId: string
@@ -98,35 +97,34 @@ interface ResolvedClass {
   readonly id: string
 }
 
-const resolveClass = (
+const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
   sql: SqlClient,
   schoolId: string,
   levelCode: string,
   trackCode: string | undefined,
   classLabel: string
-): Effect.Effect<ResolvedClass | undefined, SqlError> =>
-  Effect.gen(function*() {
-    const [level] = yield* sql<
-      { id: string }
-    >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
-    if (level === undefined) return undefined
+): Effect.fn.Return<ResolvedClass | undefined, SqlError> {
+  const [level] = yield* sql<
+    { id: string }
+  >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
+  if (level === undefined) return undefined
 
-    let trackId: string | null = null
-    if (trackCode !== undefined) {
-      const [track] = yield* sql<{ id: string }>`
-        SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${trackCode}
-      `
-      if (track === undefined) return undefined
-      trackId = track.id
-    }
-
-    const [cls] = yield* sql<{ id: string }>`
-      SELECT id FROM classes
-      WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${classLabel}
-        AND track_id IS NOT DISTINCT FROM ${trackId}
+  let trackId: string | null = null
+  if (trackCode !== undefined) {
+    const [track] = yield* sql<{ id: string }>`
+      SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${trackCode}
     `
-    return cls === undefined ? undefined : { id: cls.id }
-  })
+    if (track === undefined) return undefined
+    trackId = track.id
+  }
+
+  const [cls] = yield* sql<{ id: string }>`
+    SELECT id FROM classes
+    WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${classLabel}
+      AND track_id IS NOT DISTINCT FROM ${trackId}
+  `
+  return cls === undefined ? undefined : { id: cls.id }
+})
 
 export type StudentAnalysisResult =
   | { readonly rowId: string; readonly status: "creatable" }
@@ -135,11 +133,11 @@ export type StudentAnalysisResult =
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
 /** Analyze-only, read-only. `schoolId` is only used to resolve the target class — `persons` matching is platform-wide by design (ADR-ZS-108). */
-export const analyzeStudentRows = (
+export const analyzeStudentRows = Effect.fn("StudentGuardianImport.analyzeStudentRows")(function*(
   schoolId: string,
   rows: ReadonlyArray<StudentImportRow>
-): Effect.Effect<ReadonlyArray<StudentAnalysisResult>, SqlError, SqlClient> =>
-  withSchool(
+): Effect.fn.Return<ReadonlyArray<StudentAnalysisResult>, SqlError, SqlClient> {
+  return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
@@ -170,6 +168,7 @@ export const analyzeStudentRows = (
       return results
     })
   )
+})
 
 export interface CommitImportBatchInput {
   readonly schoolId: string
@@ -201,10 +200,10 @@ export interface ImportBatchResult {
  * re-validation: a match found at analyze time can go stale by commit time
  * (e.g. another import ran in between).
  */
-export const commitImportBatch = (
+export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBatch")(function*(
   input: CommitImportBatchInput
-): Effect.Effect<ImportBatchResult, EnforcementError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
+): Effect.fn.Return<ImportBatchResult, EnforcementError | SqlError, SqlClient | EvaluationServices> {
+  return yield* authorized(
     input.schoolId,
     withSchool(
       input.schoolId,
@@ -326,3 +325,4 @@ export const commitImportBatch = (
       })
     )
   )
+})
