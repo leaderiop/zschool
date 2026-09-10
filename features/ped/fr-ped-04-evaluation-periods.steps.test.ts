@@ -1,7 +1,6 @@
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
 import type { EnforcementError } from "@qadi/core/Qadi"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { withSchool } from "@zschool/db"
 import {
   addSubPeriod,
@@ -17,6 +16,7 @@ import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -43,9 +43,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ And, Given, Then, When }) => {
   Given("a school instantiating the national template for school year {word}", function*(year) {

@@ -1,6 +1,5 @@
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { SqlLive, withSchool } from "@zschool/db"
 import {
   analyzeStudentRows,
@@ -18,6 +17,7 @@ import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -46,9 +46,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 /**
  * Verification-only: runs a query as `neondb_owner` rather than
