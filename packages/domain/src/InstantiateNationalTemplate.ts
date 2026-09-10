@@ -8,7 +8,7 @@ import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 import { seedCalendarEvents } from "./Calendar.ts"
-import { seedDefaultComputationRules } from "./GradingScales.ts"
+import { GradingScales } from "./GradingScales.ts"
 import {
   type CycleCode,
   defaultEvaluationPeriods,
@@ -74,7 +74,7 @@ export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplat
   function*(command: InstantiateNationalTemplateCommand): Effect.fn.Return<
     InstantiateNationalTemplateResult,
     UnauthorizedCycleError | EnforcementError | SqlError,
-    SqlClient | EvaluationServices
+    SqlClient | EvaluationServices | GradingScales
   > {
     yield* Qadi.assert(canManageAcademicStructure, {
       resource: { school_id: command.schoolId },
@@ -263,7 +263,8 @@ export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplat
         yield* seedCalendarEvents(sql, schoolId, academicYearId, command.academicYearLabel)
 
         // BEH-ZS-055: default certifying-exam weightings for 6AP/3AC/2BAC.
-        yield* seedDefaultComputationRules(sql, schoolId, academicYearId, levelIdByCode)
+        const gradingScales = yield* GradingScales
+        yield* gradingScales.seedDefaultComputationRules(sql, schoolId, academicYearId, levelIdByCode)
 
         return {
           academicYearId,

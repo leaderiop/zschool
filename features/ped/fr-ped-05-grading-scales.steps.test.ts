@@ -1,12 +1,7 @@
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
 import { withSchool } from "@zschool/db"
-import {
-  instantiateNationalTemplate,
-  InvalidWeightingError,
-  setComputationRule,
-  updateGradingScale
-} from "@zschool/domain"
+import { GradingScales, instantiateNationalTemplate, InvalidWeightingError } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
@@ -118,7 +113,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const level6APId = yield* Ref.get(world.level6APId)
 
-    yield* setComputationRule({
+    const gradingScales = yield* GradingScales
+    yield* gradingScales.setComputationRule({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       levelId: level6APId!,
@@ -150,7 +146,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const level6APId = yield* Ref.get(world.level6APId)
 
-    const outcome = yield* setComputationRule({
+    const gradingScales = yield* GradingScales
+    const outcome = yield* gradingScales.setComputationRule({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       levelId: level6APId!,
@@ -196,7 +193,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const sectionId = yield* Ref.get(world.sectionId)
 
-    yield* updateGradingScale({
+    const gradingScales = yield* GradingScales
+    yield* gradingScales.updateGradingScale({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       sectionId: sectionId!,

@@ -1,8 +1,10 @@
 import type { EvaluationServices } from "@qadi/core/Evaluate"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
+import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
@@ -65,7 +67,7 @@ export interface SetComputationRuleCommand {
 }
 
 /** Seeds the default computation rules for the levels the ministry publishes them for (6AP, 3AC, 2BAC) — called from `InstantiateNationalTemplate.ts` at year creation, same pattern as `seedCalendarEvents`. */
-export const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputationRules")(function*(
+const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputationRules")(function*(
   sql: SqlClient,
   schoolId: string,
   academicYearId: string,
@@ -89,7 +91,7 @@ export const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultC
 })
 
 /** BEH-ZS-055: edits a section's grading scale — scoped to this year's own snapshot (ADR-ZS-105), never a prior closed year's. */
-export const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
+const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
 ): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
@@ -138,7 +140,7 @@ export const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(
  * and kept, a new row is inserted as current, so "a change creates a dated
  * version for the year, with the previous one still viewable" (fr-ped-05).
  */
-export const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
+const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
 ): Effect.fn.Return<
   string,
@@ -177,3 +179,28 @@ export const setComputationRule = Effect.fn("GradingScales.setComputationRule")(
     )
   )
 })
+
+/**
+ * Pilot (ticket #23): the grading-scales area restructured as a single
+ * injectable service instead of loose exported functions, to validate the
+ * pattern before deciding whether to roll it out to the rest of
+ * `packages/domain`. Every caller now goes through `yield* GradingScales`
+ * rather than importing `seedDefaultComputationRules`/`updateGradingScale`/
+ * `setComputationRule` directly — those three stay as private
+ * implementations the service methods delegate to, so the tracing-span
+ * names from ticket #19 aren't duplicated.
+ */
+export class GradingScales extends Context.Service<GradingScales, {
+  readonly seedDefaultComputationRules: typeof seedDefaultComputationRules
+  readonly updateGradingScale: typeof updateGradingScale
+  readonly setComputationRule: typeof setComputationRule
+}>()("@zschool/domain/GradingScales") {
+  static readonly layer = Layer.succeed(
+    this,
+    GradingScales.of({
+      seedDefaultComputationRules,
+      updateGradingScale,
+      setComputationRule
+    })
+  )
+}
