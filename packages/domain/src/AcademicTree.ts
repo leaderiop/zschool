@@ -1,14 +1,12 @@
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { CurrentSubject } from "@qadi/core/CurrentSubject"
-import * as Qadi from "@qadi/core/Qadi"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import { canManageAcademicStructure } from "./authorization/Policies.ts"
-import { EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
@@ -33,18 +31,6 @@ export interface CreateGroupCommand {
   readonly name: string
   readonly groupType: "language" | "option" | "lab"
 }
-
-const authorized = <A, E, R>(
-  schoolId: string,
-  effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E | EnforcementError, R | EvaluationServices> =>
-  Effect.gen(function*() {
-    yield* Qadi.assert(canManageAcademicStructure, {
-      resource: { school_id: schoolId },
-      action: "manage-academic-tree"
-    })
-    return yield* effect
-  })
 
 /**
  * BEH-ZS-052 / REQ-ZS-054: `Class` under a `Level`/`Track`. Every write goes

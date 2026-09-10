@@ -1,0 +1,171 @@
+import * as Data from "effect/Data"
+import * as Effect from "effect/Effect"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
+import type { SqlError } from "effect/unstable/sql/SqlError"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import { withSchool } from "@zschool/db"
+import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+
+/**
+ * BEH-ZS-055: default ministry certifying-exam weightings, by level code —
+ * continuous assessment / first exam / second exam, summing to 100
+ * (migration 0005's own CHECK constraint), each with the ministry's
+ * tracked textual reference.
+ */
+export const defaultComputationRules: ReadonlyArray<
+  { levelCode: string; weightContinuous: number; weightExam1: number; weightExam2: number; referenceText: string }
+> = [
+  {
+    levelCode: "6AP",
+    weightContinuous: 50,
+    weightExam1: 25,
+    weightExam2: 25,
+    referenceText: "Ministry circular — 6AP certifying exam weighting 50/25/25"
+  },
+  {
+    levelCode: "3AC",
+    weightContinuous: 30,
+    weightExam1: 30,
+    weightExam2: 40,
+    referenceText: "Ministry circular — 3AC certifying exam (Brevet) weighting 30/30/40"
+  },
+  {
+    levelCode: "2BAC",
+    weightContinuous: 25,
+    weightExam1: 25,
+    weightExam2: 50,
+    referenceText: "Ministry circular — Baccalaureate certifying exam weighting 25/25/50"
+  }
+]
+
+export class InvalidWeightingError extends Data.TaggedError("InvalidWeightingError")<{
+  readonly levelId: string
+  readonly total: number
+}> {}
+
+export interface UpdateGradingScaleCommand {
+  readonly schoolId: string
+  readonly academicYearId: string
+  readonly sectionId: string
+  readonly maxScore?: number
+  readonly decimals?: number
+  readonly rounding?: string
+}
+
+export interface SetComputationRuleCommand {
+  readonly schoolId: string
+  readonly academicYearId: string
+  readonly levelId: string
+  readonly weightContinuous: number
+  readonly weightExam1: number
+  readonly weightExam2: number
+  readonly referenceText: string
+}
+
+/** Seeds the default computation rules for the levels the ministry publishes them for (6AP, 3AC, 2BAC) — called from `InstantiateNationalTemplate.ts` at year creation, same pattern as `seedCalendarEvents`. */
+export const seedDefaultComputationRules = (
+  sql: SqlClient,
+  schoolId: string,
+  academicYearId: string,
+  levelIdByCode: ReadonlyMap<string, string>
+): Effect.Effect<void, SqlError> =>
+  Effect.gen(function*() {
+    const rows = defaultComputationRules
+      .filter((rule) => levelIdByCode.has(rule.levelCode))
+      .map((rule) => ({
+        school_id: schoolId,
+        academic_year_id: academicYearId,
+        level_id: levelIdByCode.get(rule.levelCode)!,
+        weight_continuous: rule.weightContinuous,
+        weight_exam_1: rule.weightExam1,
+        weight_exam_2: rule.weightExam2,
+        reference_text: rule.referenceText
+      }))
+
+    if (rows.length > 0) {
+      yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
+    }
+  })
+
+/** BEH-ZS-055: edits a section's grading scale — scoped to this year's own snapshot (ADR-ZS-105), never a prior closed year's. */
+export const updateGradingScale = (
+  command: UpdateGradingScaleCommand
+): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
+  authorized(
+    command.schoolId,
+    withSchool(
+      command.schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const rows = yield* sql`
+          SELECT id FROM grading_scales
+          WHERE section_id = ${command.sectionId} AND school_id = ${command.schoolId}
+            AND academic_year_id = ${command.academicYearId}
+        `
+        if (rows.length === 0) {
+          return yield* Effect.fail(new EntityNotFoundError({ entityType: "grading_scale", entityId: command.sectionId }))
+        }
+
+        if (command.maxScore !== undefined) {
+          yield* sql`
+            UPDATE grading_scales SET max_score = ${command.maxScore}
+            WHERE section_id = ${command.sectionId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
+          `
+        }
+        if (command.decimals !== undefined) {
+          yield* sql`
+            UPDATE grading_scales SET decimals = ${command.decimals}
+            WHERE section_id = ${command.sectionId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
+          `
+        }
+        if (command.rounding !== undefined) {
+          yield* sql`
+            UPDATE grading_scales SET rounding = ${command.rounding}
+            WHERE section_id = ${command.sectionId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
+          `
+        }
+      })
+    )
+  )
+
+/**
+ * BEH-ZS-055 / REQ-ZS-057: sets a level's computation-rule weighting,
+ * versioned — the previous rule (if any) is marked `is_current = false`
+ * and kept, a new row is inserted as current, so "a change creates a dated
+ * version for the year, with the previous one still viewable" (fr-ped-05).
+ */
+export const setComputationRule = (
+  command: SetComputationRuleCommand
+): Effect.Effect<string, EnforcementError | EntityNotFoundError | InvalidWeightingError | SqlError, SqlClient | EvaluationServices> =>
+  authorized(
+    command.schoolId,
+    withSchool(
+      command.schoolId,
+      Effect.gen(function*() {
+        const total = command.weightContinuous + command.weightExam1 + command.weightExam2
+        if (total !== 100) {
+          return yield* Effect.fail(new InvalidWeightingError({ levelId: command.levelId, total }))
+        }
+
+        const sql = yield* SqlClient
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
+
+        yield* sql`
+          UPDATE computation_rules SET is_current = false
+          WHERE level_id = ${command.levelId} AND school_id = ${command.schoolId} AND is_current
+        `
+
+        const [row] = yield* sql<{ id: string }>`
+          INSERT INTO computation_rules
+            (school_id, academic_year_id, level_id, weight_continuous, weight_exam_1, weight_exam_2, reference_text)
+          VALUES (
+            ${command.schoolId}, ${command.academicYearId}, ${command.levelId},
+            ${command.weightContinuous}, ${command.weightExam1}, ${command.weightExam2}, ${command.referenceText}
+          )
+          RETURNING id
+        `
+        return row.id
+      })
+    )
+  )

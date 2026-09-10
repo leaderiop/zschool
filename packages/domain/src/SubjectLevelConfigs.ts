@@ -2,12 +2,10 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import * as Qadi from "@qadi/core/Qadi"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
-import { EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
-import { canManageAcademicStructure } from "./authorization/Policies.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
@@ -47,18 +45,6 @@ export interface UpdateSubjectLevelConfigCommand {
   readonly teachingLanguage?: string
   readonly isMandatory?: boolean
 }
-
-const authorized = <A, E, R>(
-  schoolId: string,
-  effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E | EnforcementError, R | EvaluationServices> =>
-  Effect.gen(function*() {
-    yield* Qadi.assert(canManageAcademicStructure, {
-      resource: { school_id: schoolId },
-      action: "manage-academic-tree"
-    })
-    return yield* effect
-  })
 
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
 export const createSubject = (

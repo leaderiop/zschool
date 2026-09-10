@@ -2,6 +2,23 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import * as Qadi from "@qadi/core/Qadi"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import type { EvaluationServices } from "@qadi/core/Evaluate"
+import { canManageAcademicStructure } from "./authorization/Policies.ts"
+
+/** Every academic-structure write goes through this same `@qadi` policy — a director may only act on their own school. Shared so a change to how failures surface doesn't need editing in every domain module. */
+export const authorized = <A, E, R>(
+  schoolId: string,
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, E | EnforcementError, R | EvaluationServices> =>
+  Effect.gen(function*() {
+    yield* Qadi.assert(canManageAcademicStructure, {
+      resource: { school_id: schoolId },
+      action: "manage-academic-structure"
+    })
+    return yield* effect
+  })
 
 /**
  * The target entity a command names either doesn't exist, or doesn't belong

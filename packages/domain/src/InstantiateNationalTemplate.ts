@@ -8,6 +8,7 @@ import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 import { seedCalendarEvents } from "./Calendar.ts"
+import { seedDefaultComputationRules } from "./GradingScales.ts"
 import {
   type CycleCode,
   type LevelDefinition,
@@ -253,6 +254,9 @@ export const instantiateNationalTemplate = (
 
         // BEH-ZS-066: the ministry calendar is preloaded at year creation.
         yield* seedCalendarEvents(sql, schoolId, academicYearId, command.academicYearLabel)
+
+        // BEH-ZS-055: default certifying-exam weightings for 6AP/3AC/2BAC.
+        yield* seedDefaultComputationRules(sql, schoolId, academicYearId, levelIdByCode)
 
         return {
           academicYearId,
