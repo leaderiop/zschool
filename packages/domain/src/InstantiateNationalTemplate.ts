@@ -7,6 +7,7 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
+import { seedCalendarEvents } from "./Calendar.ts"
 import {
   type CycleCode,
   type LevelDefinition,
@@ -249,6 +250,9 @@ export const instantiateNationalTemplate = (
             sequence: period.sequence
           }))
         )
+
+        // BEH-ZS-066: the ministry calendar is preloaded at year creation.
+        yield* seedCalendarEvents(sql, schoolId, academicYearId, command.academicYearLabel)
 
         return {
           academicYearId,
