@@ -13,6 +13,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
+import type { SchemaError } from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fileURLToPath } from "node:url"
@@ -27,7 +28,9 @@ class World extends Context.Service<World, {
   readonly schoolId: Ref.Ref<string | undefined>
   readonly academicYearId: Ref.Ref<string | undefined>
   readonly semester1Id: Ref.Ref<string | undefined>
-  readonly error: Ref.Ref<PeriodOverlapError | EntityNotFoundError | EnforcementError | SqlError | undefined>
+  readonly error: Ref.Ref<
+    PeriodOverlapError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+  >
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -36,7 +39,9 @@ class World extends Context.Service<World, {
         schoolId: yield* Ref.make<string | undefined>(undefined),
         academicYearId: yield* Ref.make<string | undefined>(undefined),
         semester1Id: yield* Ref.make<string | undefined>(undefined),
-        error: yield* Ref.make<PeriodOverlapError | EntityNotFoundError | EnforcementError | SqlError | undefined>(
+        error: yield* Ref.make<
+          PeriodOverlapError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+        >(
           undefined
         )
       })

@@ -14,6 +14,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
+import type { SchemaError } from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fileURLToPath } from "node:url"
@@ -29,7 +30,9 @@ class World extends Context.Service<World, {
   readonly academicYearId: Ref.Ref<string | undefined>
   readonly sectionId: Ref.Ref<string | undefined>
   readonly otherAcademicYearId: Ref.Ref<string | undefined>
-  readonly error: Ref.Ref<DuplicateConfigError | EntityNotFoundError | EnforcementError | SqlError | undefined>
+  readonly error: Ref.Ref<
+    DuplicateConfigError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+  >
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -39,7 +42,9 @@ class World extends Context.Service<World, {
         academicYearId: yield* Ref.make<string | undefined>(undefined),
         sectionId: yield* Ref.make<string | undefined>(undefined),
         otherAcademicYearId: yield* Ref.make<string | undefined>(undefined),
-        error: yield* Ref.make<DuplicateConfigError | EntityNotFoundError | EnforcementError | SqlError | undefined>(
+        error: yield* Ref.make<
+          DuplicateConfigError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+        >(
           undefined
         )
       })
