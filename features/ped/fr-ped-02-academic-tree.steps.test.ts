@@ -11,7 +11,7 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { withSchool } from "@zschool/db"
 import {
-  ActiveEnrollmentsExistError,
+  EnrollmentsExistError,
   createClass,
   createGroup,
   deleteClass,
@@ -30,7 +30,7 @@ class World extends Context.Service<World, {
   readonly academicYearId: Ref.Ref<string | undefined>
   readonly levelId: Ref.Ref<string | undefined>
   readonly classId: Ref.Ref<string | undefined>
-  readonly error: Ref.Ref<ActiveEnrollmentsExistError | EnforcementError | SqlError | undefined>
+  readonly error: Ref.Ref<EnrollmentsExistError | EnforcementError | SqlError | undefined>
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -40,7 +40,7 @@ class World extends Context.Service<World, {
         academicYearId: yield* Ref.make<string | undefined>(undefined),
         levelId: yield* Ref.make<string | undefined>(undefined),
         classId: yield* Ref.make<string | undefined>(undefined),
-        error: yield* Ref.make<ActiveEnrollmentsExistError | EnforcementError | SqlError | undefined>(undefined)
+        error: yield* Ref.make<EnrollmentsExistError | EnforcementError | SqlError | undefined>(undefined)
       })
     })
   )

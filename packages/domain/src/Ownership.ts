@@ -27,8 +27,14 @@ export const authorized = <A, E, R>(
  * in your school" (that would itself leak cross-tenant existence).
  *
  * Every domain module scopes its own lookups by `school_id` explicitly
- * (rather than relying on Postgres RLS) because every Neon role currently
- * carries un-strippable `BYPASSRLS` — see `packages/db/src/AppSql.ts`.
+ * rather than relying solely on Postgres RLS — application-level
+ * authorization (`@qadi`, ADR-ZS-096) stays the primary gate even though RLS
+ * is now also an enforced backstop (`packages/db/src/AppSql.ts`), since a
+ * caller must never learn "that id exists, just not in your school" from
+ * the *shape* of the response (an RLS-filtered empty result and a
+ * genuinely-missing row look identical here, which is correct — but a
+ * slower, differently-erroring path for "wrong school" versus "doesn't
+ * exist" would itself leak that distinction).
  */
 export class EntityNotFoundError extends Data.TaggedError("EntityNotFoundError")<{
   readonly entityType: string

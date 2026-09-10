@@ -6,11 +6,12 @@ import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import { hasEnrollments } from "./Enrollment.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
-export class ActiveEnrollmentsExistError extends Data.TaggedError("ActiveEnrollmentsExistError")<{
+export class EnrollmentsExistError extends Data.TaggedError("EnrollmentsExistError")<{
   readonly classId: string
 }> {}
 
@@ -192,24 +193,18 @@ export const deactivateClass = (
   )
 
 /**
- * Deleting a class with active enrollments must be refused, offering
- * deactivation instead (BEH-ZS-052, ticket #3 acceptance criterion 5). The
- * `Enrollment` entity itself doesn't exist yet (built by ticket #9, spec
- * #13) — nothing can have an active enrollment today, so this check is
- * currently a structural no-op returning `false` rather than a query
- * against a table that isn't there. Replace `hasActiveEnrollments` with a
- * real query the moment `Enrollment` lands; nothing else in `deleteClass`
- * needs to change. A class's own `Group`s are not a blocker — `groups.class_id`
- * cascades on delete (migration 0003).
+ * Deleting a class with enrollments must be refused, offering deactivation
+ * instead (BEH-ZS-052, ticket #3 acceptance criterion 5) — `hasEnrollments`
+ * (`Enrollment.ts`, ticket #9) is the real query this stub used to await.
+ * A class's own `Group`s are not a blocker — `groups.class_id` cascades on
+ * delete (migration 0003).
  */
-const hasActiveEnrollments = (_classId: string): Effect.Effect<boolean> => Effect.succeed(false)
-
 export const deleteClass = (
   schoolId: string,
   classId: string
 ): Effect.Effect<
   void,
-  EnforcementError | EntityNotFoundError | ActiveEnrollmentsExistError | SqlError,
+  EnforcementError | EntityNotFoundError | EnrollmentsExistError | SqlError,
   SqlClient | EvaluationServices
 > =>
   authorized(
@@ -220,9 +215,9 @@ export const deleteClass = (
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "classes", "class", classId, schoolId)
 
-        const occupied = yield* hasActiveEnrollments(classId)
+        const occupied = yield* hasEnrollments(schoolId, classId)
         if (occupied) {
-          return yield* Effect.fail(new ActiveEnrollmentsExistError({ classId }))
+          return yield* Effect.fail(new EnrollmentsExistError({ classId }))
         }
         yield* sql`DELETE FROM classes WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deleted", null, null)

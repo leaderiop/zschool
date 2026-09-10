@@ -50,4 +50,20 @@ export default Effect.gen(function*() {
 
   yield* sql`REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM zschool_app`
   yield* sql`REVOKE USAGE ON SCHEMA public FROM zschool_app`
+  // Migration 0002's `ALTER DEFAULT PRIVILEGES ... TO zschool_app` is a
+  // standing rule, not a one-time grant — revoking zschool_app's access to
+  // EXISTING tables above does nothing to it, and left in place it would
+  // keep granting zschool_app plain ACL access to every table any *future*
+  // migration creates (caught empirically: migration 0008's new tables were
+  // reachable this way, even though its new functions correctly were not —
+  // EXECUTE isn't covered by an `ON TABLES` default-privileges rule).
+  //
+  // This REVOKE closes that specific path, but is NOT the reason
+  // zschool_app is actually decommissioned: per `AppSql.ts`, zschool_app's
+  // real access comes from its `neon_superuser` role membership, which
+  // `has_table_privilege` honors regardless of any GRANT/REVOKE issued here
+  // — plain ACL statements were never the operative mechanism. The thing
+  // that actually matters is simply that nothing points `APP_DATABASE_URL`
+  // at zschool_app anymore.
+  yield* sql`ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM zschool_app`
 })

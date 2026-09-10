@@ -414,22 +414,36 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const schoolId = yield* Ref.get(world.schoolId)
     const otherSchoolId = yield* Ref.get(world.otherSchoolId)
 
-    // Explicit `WHERE school_id = ...`, proving the application-level
-    // scoping is correct: this does NOT exercise Postgres RLS as a second,
-    // independent layer — every Neon role, this connection's role included,
-    // carries `BYPASSRLS`, unalterable by the project owner (verified
-    // directly, see `packages/db/src/AppSql.ts`), so RLS cannot be shown to
-    // block anything in this environment. The next step checks what RLS
-    // enforcement we CAN still verify: the policies are correctly installed.
-    const sections = yield* sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${schoolId}`
+    // Explicit `WHERE school_id = ...`, run under each school's own
+    // `withSchool` scope — since migration 0007, `zschool_service` does not
+    // carry `BYPASSRLS` (see `packages/db/src/AppSql.ts`), so the
+    // `tenant_isolation` policy is a real, independent second layer here:
+    // reading `sections` from OUTSIDE any `withSchool` scope would now be
+    // RLS-filtered to nothing rather than freely returning every school's
+    // rows, which is exactly the isolation this assertion is checking for.
+    const sections = yield* withSchool(
+      schoolId!,
+      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${schoolId}`
+    )
     assert.isAbove(sections.length, 0)
     assert.isTrue(sections.every((row) => row.school_id === schoolId))
 
-    const otherSections = yield* sql<{ school_id: string }>`
-      SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}
-    `
+    const otherSections = yield* withSchool(
+      otherSchoolId!,
+      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
+    )
     assert.isAbove(otherSections.length, 0)
     assert.isTrue(otherSections.every((row) => row.school_id === otherSchoolId))
+
+    // The actual RLS-blocking proof: scoped to `schoolId`, a query for the
+    // OTHER school's own rows (by their real id, no `WHERE school_id`
+    // mismatch involved) must come back empty — the two same-school checks
+    // above would pass identically even if `tenant_isolation` were broken.
+    const crossTenantRead = yield* withSchool(
+      schoolId!,
+      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
+    )
+    assert.strictEqual(crossTenantRead.length, 0)
 
     assert.notStrictEqual(schoolId, otherSchoolId)
   })
