@@ -17,16 +17,16 @@ if (process.env.NEON_TEST_BRANCH_URL) {
 
 /**
  * Migrations run once against `SqlLive` (`neondb_owner`) — a Scenario's own
- * steps then query through `AppSqlLive` (`zschool_app`) instead, on
- * ordinary least-privilege grounds (it holds no `CREATE`/`ALTER`/`DROP`).
+ * steps then query through `AppSqlLive` (`zschool_service`, migration 0007)
+ * instead, on ordinary least-privilege grounds (it holds no
+ * `CREATE`/`ALTER`/`DROP`).
  *
- * This does NOT make the suite an end-to-end proof of RLS enforcement: on
- * Neon, every role in the project — `zschool_app` included — carries
- * `BYPASSRLS`, unalterable by the project owner (verified against
- * `zschool_app` directly; see `AppSql.ts`). The "isolated to the
- * instantiating school" scenario tests what that leaves provable — the
- * `tenant_isolation` policies are correctly installed — not that a query
- * run through either role is actually blocked by them.
+ * Since migration 0007, this suite IS a genuine (if incidental) proof of RLS
+ * enforcement, not just correctly-installed-but-inert SQL: `zschool_service`
+ * does not carry `BYPASSRLS` (see `AppSql.ts`), so the "isolated to the
+ * instantiating school" scenarios only pass because the `tenant_isolation`
+ * policies actually block cross-school rows for this role, in addition to
+ * `@qadi`'s own filtering.
  *
  * `describeFeature`'s `shared` tier requires an error channel of exactly
  * `never` (it builds the Layer through its own `Effect.orDie`) — `orDie`

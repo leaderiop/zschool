@@ -6,3 +6,4 @@ dist/
 .env.*
 *.tsbuildinfo
 infra/remote-cache/.env.fly
+.claude/settings.local.json
