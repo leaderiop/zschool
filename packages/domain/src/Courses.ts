@@ -19,16 +19,16 @@ export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError
  * only ever adds courses for newly-mandatory subjects, never touches or
  * removes an existing one.
  */
-export const generateCoursesForClass = (
+export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClass")(function*(
   schoolId: string,
   academicYearId: string,
   classId: string
-): Effect.Effect<
+): Effect.fn.Return<
   ReadonlyArray<string>,
   EnforcementError | EntityNotFoundError | SqlError,
   SqlClient | EvaluationServices
-> =>
-  authorized(
+> {
+  return yield* authorized(
     schoolId,
     withSchool(
       schoolId,
@@ -73,18 +73,19 @@ export const generateCoursesForClass = (
       })
     )
   )
+})
 
 /** BEH-ZS-058: a language/option/lab group's course, once the group is linked to a subject configuration (`groups.subject_level_config_id`, migration 0006). */
-export const generateCourseForGroup = (
+export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup")(function*(
   schoolId: string,
   academicYearId: string,
   groupId: string
-): Effect.Effect<
+): Effect.fn.Return<
   string,
   EnforcementError | EntityNotFoundError | NoSubjectLinkedError | SqlError,
   SqlClient | EvaluationServices
-> =>
-  authorized(
+> {
+  return yield* authorized(
     schoolId,
     withSchool(
       schoolId,
@@ -116,14 +117,15 @@ export const generateCourseForGroup = (
       })
     )
   )
+})
 
 /** A director deactivates a generated course when a configured subject isn't actually taught in that class/group. */
-export const deactivateCourse = (
+export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   schoolId: string,
   courseId: string,
   reason: string
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
+): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+  return yield* authorized(
     schoolId,
     withSchool(
       schoolId,
@@ -137,3 +139,4 @@ export const deactivateCourse = (
       })
     )
   )
+})

@@ -64,35 +64,34 @@ export interface SetComputationRuleCommand {
 }
 
 /** Seeds the default computation rules for the levels the ministry publishes them for (6AP, 3AC, 2BAC) — called from `InstantiateNationalTemplate.ts` at year creation, same pattern as `seedCalendarEvents`. */
-export const seedDefaultComputationRules = (
+export const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputationRules")(function*(
   sql: SqlClient,
   schoolId: string,
   academicYearId: string,
   levelIdByCode: ReadonlyMap<string, string>
-): Effect.Effect<void, SqlError> =>
-  Effect.gen(function*() {
-    const rows = defaultComputationRules
-      .filter((rule) => levelIdByCode.has(rule.levelCode))
-      .map((rule) => ({
-        school_id: schoolId,
-        academic_year_id: academicYearId,
-        level_id: levelIdByCode.get(rule.levelCode)!,
-        weight_continuous: rule.weightContinuous,
-        weight_exam_1: rule.weightExam1,
-        weight_exam_2: rule.weightExam2,
-        reference_text: rule.referenceText
-      }))
+): Effect.fn.Return<void, SqlError> {
+  const rows = defaultComputationRules
+    .filter((rule) => levelIdByCode.has(rule.levelCode))
+    .map((rule) => ({
+      school_id: schoolId,
+      academic_year_id: academicYearId,
+      level_id: levelIdByCode.get(rule.levelCode)!,
+      weight_continuous: rule.weightContinuous,
+      weight_exam_1: rule.weightExam1,
+      weight_exam_2: rule.weightExam2,
+      reference_text: rule.referenceText
+    }))
 
-    if (rows.length > 0) {
-      yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
-    }
-  })
+  if (rows.length > 0) {
+    yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
+  }
+})
 
 /** BEH-ZS-055: edits a section's grading scale — scoped to this year's own snapshot (ADR-ZS-105), never a prior closed year's. */
-export const updateGradingScale = (
+export const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
+): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+  return yield* authorized(
     command.schoolId,
     withSchool(
       command.schoolId,
@@ -130,6 +129,7 @@ export const updateGradingScale = (
       })
     )
   )
+})
 
 /**
  * BEH-ZS-055 / REQ-ZS-057: sets a level's computation-rule weighting,
@@ -137,14 +137,14 @@ export const updateGradingScale = (
  * and kept, a new row is inserted as current, so "a change creates a dated
  * version for the year, with the previous one still viewable" (fr-ped-05).
  */
-export const setComputationRule = (
+export const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
-): Effect.Effect<
+): Effect.fn.Return<
   string,
   EnforcementError | EntityNotFoundError | InvalidWeightingError | SqlError,
   SqlClient | EvaluationServices
-> =>
-  authorized(
+> {
+  return yield* authorized(
     command.schoolId,
     withSchool(
       command.schoolId,
@@ -175,3 +175,4 @@ export const setComputationRule = (
       })
     )
   )
+})
