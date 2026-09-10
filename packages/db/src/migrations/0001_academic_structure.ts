@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { applyTenantIsolation } from "./shared.ts"
 
 export default Effect.gen(function*() {
   const sql = yield* SqlClient
@@ -22,12 +23,7 @@ export default Effect.gen(function*() {
       UNIQUE (school_id, label)
     )
   `
-  yield* sql`ALTER TABLE academic_years ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE academic_years FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON academic_years
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "academic_years")
 
   yield* sql`
     CREATE TABLE sections (
@@ -39,12 +35,7 @@ export default Effect.gen(function*() {
       created_at timestamptz NOT NULL DEFAULT now()
     )
   `
-  yield* sql`ALTER TABLE sections ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE sections FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON sections
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "sections")
 
   yield* sql`
     CREATE TABLE cycles (
@@ -58,12 +49,7 @@ export default Effect.gen(function*() {
       UNIQUE (section_id, code)
     )
   `
-  yield* sql`ALTER TABLE cycles ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE cycles FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON cycles
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "cycles")
 
   yield* sql`
     CREATE TABLE levels (
@@ -77,12 +63,7 @@ export default Effect.gen(function*() {
       UNIQUE (cycle_id, code)
     )
   `
-  yield* sql`ALTER TABLE levels ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE levels FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON levels
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "levels")
 
   yield* sql`
     CREATE TABLE tracks (
@@ -95,12 +76,7 @@ export default Effect.gen(function*() {
       UNIQUE (level_id, code)
     )
   `
-  yield* sql`ALTER TABLE tracks ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE tracks FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON tracks
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "tracks")
 
   yield* sql`
     CREATE TABLE subjects (
@@ -113,12 +89,7 @@ export default Effect.gen(function*() {
       UNIQUE (section_id, code)
     )
   `
-  yield* sql`ALTER TABLE subjects ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE subjects FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON subjects
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "subjects")
 
   yield* sql`
     CREATE TABLE subject_level_configs (
@@ -130,16 +101,24 @@ export default Effect.gen(function*() {
       track_id uuid REFERENCES tracks (id),
       coefficient numeric NOT NULL,
       teaching_language text NOT NULL,
-      is_mandatory boolean NOT NULL DEFAULT true,
-      UNIQUE (subject_id, level_id, track_id)
+      is_mandatory boolean NOT NULL DEFAULT true
     )
   `
-  yield* sql`ALTER TABLE subject_level_configs ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE subject_level_configs FORCE ROW LEVEL SECURITY`
+  // A plain `UNIQUE (subject_id, level_id, track_id)` never fires for an
+  // untracked level: Postgres treats every NULL track_id as distinct from
+  // every other, so a second configuration for the same (subject, level)
+  // would silently insert instead of being refused. Two partial indexes
+  // instead, split on whether track_id is present (same fix as `classes`,
+  // migration 0003).
   yield* sql`
-    CREATE POLICY tenant_isolation ON subject_level_configs
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
+    CREATE UNIQUE INDEX subject_level_configs_untracked_key
+      ON subject_level_configs (subject_id, level_id) WHERE track_id IS NULL
   `
+  yield* sql`
+    CREATE UNIQUE INDEX subject_level_configs_tracked_key
+      ON subject_level_configs (subject_id, level_id, track_id) WHERE track_id IS NOT NULL
+  `
+  yield* applyTenantIsolation(sql, "subject_level_configs")
 
   yield* sql`
     CREATE TABLE grading_scales (
@@ -154,12 +133,7 @@ export default Effect.gen(function*() {
       UNIQUE (section_id)
     )
   `
-  yield* sql`ALTER TABLE grading_scales ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE grading_scales FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON grading_scales
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "grading_scales")
 
   yield* sql`
     CREATE TABLE evaluation_periods (
@@ -176,10 +150,5 @@ export default Effect.gen(function*() {
       UNIQUE (section_id, code)
     )
   `
-  yield* sql`ALTER TABLE evaluation_periods ENABLE ROW LEVEL SECURITY`
-  yield* sql`ALTER TABLE evaluation_periods FORCE ROW LEVEL SECURITY`
-  yield* sql`
-    CREATE POLICY tenant_isolation ON evaluation_periods
-      USING (school_id = current_setting('app.current_school_id', true)::uuid)
-  `
+  yield* applyTenantIsolation(sql, "evaluation_periods")
 })

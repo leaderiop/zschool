@@ -8,20 +8,12 @@ import { withSchool } from "@zschool/db"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
+import { EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
+
+export { EntityNotFoundError }
 
 export class ActiveEnrollmentsExistError extends Data.TaggedError("ActiveEnrollmentsExistError")<{
   readonly classId: string
-}> {}
-
-/**
- * The target entity a command names either doesn't exist, or doesn't belong
- * to `schoolId` — the two cases are indistinguishable to the caller by
- * design: a director must never learn "that id exists, just not in your
- * school" (that would itself leak cross-tenant existence).
- */
-export class EntityNotFoundError extends Data.TaggedError("EntityNotFoundError")<{
-  readonly entityType: string
-  readonly entityId: string
 }> {}
 
 export interface CreateClassCommand {
@@ -55,33 +47,6 @@ const authorized = <A, E, R>(
   })
 
 /**
- * `@qadi`'s check above only proves the caller may act on `schoolId` — it
- * says nothing about whether the entity id a command names actually belongs
- * to that school. Postgres RLS would ordinarily be the backstop for that
- * (ADR-ZS-092), but every Neon role currently carries `BYPASSRLS`
- * (`packages/db/src/AppSql.ts`), so it isn't one yet: every lookup here
- * scopes explicitly by `school_id` itself rather than relying on it.
- */
-const requireOwnedRow = <A extends Record<string, unknown>>(
-  sql: SqlClient,
-  table: string,
-  entityType: string,
-  entityId: string,
-  schoolId: string,
-  columns = "id"
-): Effect.Effect<A, EntityNotFoundError | SqlError> =>
-  Effect.gen(function*() {
-    const rows = yield* sql<A>`
-      SELECT ${sql.literal(columns)} FROM ${sql(table)} WHERE id = ${entityId} AND school_id = ${schoolId}
-    `
-    const [row] = rows
-    if (row === undefined) {
-      return yield* Effect.fail(new EntityNotFoundError({ entityType, entityId }))
-    }
-    return row
-  })
-
-/**
  * BEH-ZS-052 / REQ-ZS-054: `Class` under a `Level`/`Track`. Every write goes
  * through `@qadi` (a director may only manage their own school's tree) and
  * is scoped by `withSchool`'s RLS session GUC, same pattern as
@@ -98,7 +63,7 @@ export const createClass = (
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
         if (command.trackId !== undefined) {
-          yield* requireOwnedRow(sql, "tracks", "track", command.trackId, command.schoolId)
+          yield* requireTrackBelongsToLevel(sql, command.trackId, command.levelId, command.schoolId)
         }
 
         const [row] = yield* sql<{ id: string }>`

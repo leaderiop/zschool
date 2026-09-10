@@ -31,3 +31,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm turbo run lint typecheck test build --filter=...[HEAD^]
+
+      # Covers features/**/*.ts (root tsconfig.json) — the workspace packages'
+      # own `tsc -b` above doesn't include this tree.
+      - run: pnpm exec tsc --noEmit -p tsconfig.json
+
+      # DATABASE_URL/APP_DATABASE_URL must be configured as repo secrets
+      # (see env.example) — today every run shares the one provisioned Neon
+      # branch (ADR-ZS-103's per-PR/per-BDD-run branching isn't wired up
+      # yet), so this step is skipped rather than failing red until they are.
+      - if: ${{ secrets.DATABASE_URL != '' && secrets.APP_DATABASE_URL != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
+        run: |
+          pnpm --filter @zschool/db run migrate
+          pnpm run test:bdd

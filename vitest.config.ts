@@ -18,10 +18,14 @@ export default defineConfig({
           // `@skip`/`@only` are declared unconditionally so either is usable
           // even before a `.feature` file uses it; deduped by name against
           // `gherkinTags`'s own discovery since a tag already in use there
-          // (e.g. `@skip`) would otherwise be declared twice.
+          // (e.g. `@skip`) would otherwise be declared twice. The stub
+          // entries come FIRST in the array below and `gherkinTags`' own
+          // discoveries LAST — `Map` keeps the last value per key, so a real
+          // discovered tag (with whatever metadata `@effect-cucumber/vitest`
+          // attaches) wins over the bare stub, never the other way around.
           tags: [
             ...new Map(
-              [...gherkinTags("features/**/*.feature", { cwd: process.cwd() }), { name: "@skip" }, { name: "@only" }]
+              [{ name: "@skip" }, { name: "@only" }, ...gherkinTags("features/**/*.feature", { cwd: process.cwd() })]
                 .map((tag) => [tag.name, tag] as const)
             ).values()
           ]

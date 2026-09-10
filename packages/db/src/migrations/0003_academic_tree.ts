@@ -1,22 +1,15 @@
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-
-/** Enables RLS on `table` and installs the standard `tenant_isolation` policy every school-scoped table in this schema carries (ADR-ZS-092). Shared here so a future migration copying this block can't drop `FORCE` or typo the GUC name without the type system/reuse making that obvious — migration 0001 predates this helper and keeps its original hand-written form since it's already applied. */
-const applyTenantIsolation = (sql: SqlClient, table: string) =>
-  Effect.gen(function*() {
-    yield* sql`ALTER TABLE ${sql(table)} ENABLE ROW LEVEL SECURITY`
-    yield* sql`ALTER TABLE ${sql(table)} FORCE ROW LEVEL SECURITY`
-    yield* sql`
-      CREATE POLICY tenant_isolation ON ${sql(table)}
-        USING (school_id = current_setting('app.current_school_id', true)::uuid)
-    `
-  })
+import { applyTenantIsolation } from "./shared.ts"
 
 /**
  * BEH-ZS-052 (REQ-ZS-054): `Class` under a `Level`/`Track`, `Group` under a
  * `Class`, and a small structure-change audit log (rename logging, ticket
  * #3's own acceptance criteria — not `@qadi/audit`, which audits
- * authorization decisions, a different concern).
+ * authorization decisions, a different concern). `entity_type` also allows
+ * `subject`/`subject_level_config` ahead of any code actually writing those
+ * rows (ticket #4 doesn't audit subject-level-config changes) so a later
+ * ticket can without a migration to widen this constraint first.
  *
  * `migration 0002`'s `ALTER DEFAULT PRIVILEGES` already covers these new
  * tables for `zschool_app` — no additional GRANT needed here.
@@ -34,19 +27,9 @@ export default Effect.gen(function*() {
       label text NOT NULL,
       capacity integer NOT NULL CHECK (capacity > 0),
       is_active boolean NOT NULL DEFAULT true,
-      created_at timestamptz NOT NULL DEFAULT now()
+      created_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (level_id, label)
     )
-  `
-  // A plain `UNIQUE (level_id, track_id, label)` never fires for an
-  // untracked level: Postgres treats every NULL track_id as distinct from
-  // every other, so two classes named "2AC-1" under the same trackless
-  // level would silently both insert. Two partial indexes instead, split on
-  // whether track_id is present.
-  yield* sql`
-    CREATE UNIQUE INDEX classes_level_label_untracked_key ON classes (level_id, label) WHERE track_id IS NULL
-  `
-  yield* sql`
-    CREATE UNIQUE INDEX classes_level_track_label_key ON classes (level_id, track_id, label) WHERE track_id IS NOT NULL
   `
   yield* applyTenantIsolation(sql, "classes")
 
@@ -69,7 +52,7 @@ export default Effect.gen(function*() {
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       school_id uuid NOT NULL REFERENCES schools (id),
       actor_subject_id text NOT NULL,
-      entity_type text NOT NULL CHECK (entity_type IN ('cycle', 'level', 'track', 'class')),
+      entity_type text NOT NULL CHECK (entity_type IN ('cycle', 'level', 'track', 'class', 'subject', 'subject_level_config')),
       entity_id uuid NOT NULL,
       action text NOT NULL CHECK (action IN ('renamed', 'deactivated', 'reactivated', 'deleted')),
       old_value jsonb,
