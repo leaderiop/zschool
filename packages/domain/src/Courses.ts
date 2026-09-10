@@ -5,6 +5,7 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError")<{
@@ -29,7 +30,7 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
-    schoolId,
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -39,7 +40,7 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
           "classes",
           "class",
           classId,
-          schoolId,
+          SchoolId(schoolId),
           "level_id, track_id"
         )
 
@@ -86,7 +87,7 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
-    schoolId,
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -96,7 +97,7 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
           "groups",
           "group",
           groupId,
-          schoolId,
+          SchoolId(schoolId),
           "subject_level_config_id"
         )
         if (group.subject_level_config_id === null) {
@@ -126,12 +127,12 @@ export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   reason: string
 ): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    schoolId,
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "courses", "course", courseId, schoolId)
+        yield* requireOwnedRow(sql, "courses", "course", courseId, SchoolId(schoolId))
         yield* sql`
           UPDATE courses SET is_active = false, deactivation_reason = ${reason}
           WHERE id = ${courseId} AND school_id = ${schoolId}

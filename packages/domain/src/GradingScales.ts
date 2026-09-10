@@ -5,6 +5,7 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 /**
@@ -92,7 +93,7 @@ export const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(
   command: UpdateGradingScaleCommand
 ): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -145,7 +146,7 @@ export const setComputationRule = Effect.fn("GradingScales.setComputationRule")(
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -155,7 +156,7 @@ export const setComputationRule = Effect.fn("GradingScales.setComputationRule")(
         }
 
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId))
 
         yield* sql`
           UPDATE computation_rules SET is_current = false

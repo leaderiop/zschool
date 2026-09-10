@@ -15,6 +15,7 @@ import {
   isValidE164,
   recordGuardianRelationship
 } from "./Identity.ts"
+import { GuardianPersonId, SchoolId, StudentPersonId } from "./Ids.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -204,7 +205,7 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
   input: CommitImportBatchInput
 ): Effect.fn.Return<ImportBatchResult, EnforcementError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    input.schoolId,
+    SchoolId(input.schoolId),
     withSchool(
       input.schoolId,
       Effect.gen(function*() {
@@ -288,7 +289,11 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
             for (const g of s.guardians) {
               const guardian = guardianResults.get(g.mobileNumber)
               if (guardian === undefined || guardian.status === "error") continue
-              yield* recordGuardianRelationship(guardian.personId, studentPersonId, g.qualities)
+              yield* recordGuardianRelationship(
+                GuardianPersonId(guardian.personId),
+                StudentPersonId(studentPersonId),
+                g.qualities
+              )
               hasLegalGuardian ||= g.qualities.isLegalGuardian
               hasFinancialGuardian ||= g.qualities.isFinancialGuardian
             }

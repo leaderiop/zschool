@@ -2,6 +2,7 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
 export class InvalidMobileNumberError extends Data.TaggedError("InvalidMobileNumberError")<{
   readonly mobileNumber: string
@@ -164,8 +165,8 @@ export interface GuardianQualities {
  * Re-importing the same relationship leaves the existing row as-is.
  */
 export const recordGuardianRelationship = Effect.fn("Identity.recordGuardianRelationship")(function*(
-  guardianPersonId: string,
-  studentPersonId: string,
+  guardianPersonId: GuardianPersonId,
+  studentPersonId: StudentPersonId,
   qualities: GuardianQualities
 ): Effect.fn.Return<void, SqlError, SqlClient> {
   const sql = yield* SqlClient

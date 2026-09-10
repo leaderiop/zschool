@@ -6,10 +6,11 @@ import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
+import type { LevelId, SchoolId, TrackId } from "./Ids.ts"
 
 /** Every academic-structure write goes through this same `@qadi` policy — a director may only act on their own school. Shared so a change to how failures surface doesn't need editing in every domain module. */
 export const authorized = Effect.fn("Ownership.authorized")(function*<A, E, R>(
-  schoolId: string,
+  schoolId: SchoolId,
   effect: Effect.Effect<A, E, R>
 ): Effect.fn.Return<A, E | EnforcementError, R | EvaluationServices> {
   yield* Qadi.assert(canManageAcademicStructure, {
@@ -47,7 +48,7 @@ export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<
   table: string,
   entityType: string,
   entityId: string,
-  schoolId: string,
+  schoolId: SchoolId,
   columns = "id"
 ): Effect.fn.Return<A, EntityNotFoundError | SqlError> {
   const rows = yield* sql<A>`
@@ -63,9 +64,9 @@ export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<
 /** A track belongs to a specific level, not just to the school — checked separately since a track and a level can each independently belong to the right school while the track still belongs to a *different* level (e.g. a 1BAC track passed alongside a 2BAC levelId). */
 export const requireTrackBelongsToLevel = Effect.fn("Ownership.requireTrackBelongsToLevel")(function*(
   sql: SqlClient,
-  trackId: string,
-  levelId: string,
-  schoolId: string
+  trackId: TrackId,
+  levelId: LevelId,
+  schoolId: SchoolId
 ): Effect.fn.Return<void, EntityNotFoundError | SqlError> {
   const rows = yield* sql`
     SELECT id FROM tracks WHERE id = ${trackId} AND level_id = ${levelId} AND school_id = ${schoolId}

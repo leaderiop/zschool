@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
+import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 export class PeriodOverlapError extends Data.TaggedError("PeriodOverlapError")<{
@@ -46,7 +47,7 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -60,7 +61,7 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
           "evaluation_periods",
           "evaluation_period",
           command.periodId,
-          command.schoolId,
+          SchoolId(command.schoolId),
           "id, academic_year_id"
         )
 
@@ -90,7 +91,7 @@ export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
   command: AddSubPeriodCommand
 ): Effect.fn.Return<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -103,7 +104,7 @@ export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
           "evaluation_periods",
           "evaluation_period",
           command.evaluationPeriodId,
-          command.schoolId,
+          SchoolId(command.schoolId),
           "id, academic_year_id"
         )
 
@@ -203,7 +204,7 @@ export const preloadNationalCalendar = Effect.fn("Calendar.preloadNationalCalend
   academicYearLabel: string
 ): Effect.fn.Return<void, EnforcementError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    schoolId,
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -221,7 +222,7 @@ export const confirmMovableHoliday = Effect.fn("Calendar.confirmMovableHoliday")
   confirmedDate: string
 ): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
   return yield* authorized(
-    schoolId,
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {

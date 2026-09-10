@@ -5,6 +5,7 @@ import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import { LevelId, SchoolId, TrackId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
 
 export { EntityNotFoundError }
@@ -51,12 +52,12 @@ export const createSubject = (
   command: CreateSubjectCommand
 ): Effect.Effect<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
   authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, command.schoolId)
+        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, SchoolId(command.schoolId))
 
         const [row] = yield* sql<{ id: string }>`
           INSERT INTO subjects (school_id, academic_year_id, section_id, code, name)
@@ -83,15 +84,20 @@ export const configureSubjectLevel = (
   SqlClient | EvaluationServices
 > =>
   authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, command.schoolId)
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
+        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, SchoolId(command.schoolId))
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId))
         if (command.trackId !== undefined) {
-          yield* requireTrackBelongsToLevel(sql, command.trackId, command.levelId, command.schoolId)
+          yield* requireTrackBelongsToLevel(
+            sql,
+            TrackId(command.trackId),
+            LevelId(command.levelId),
+            SchoolId(command.schoolId)
+          )
         }
 
         const insert = sql<{ id: string }>`
@@ -124,7 +130,7 @@ export const updateSubjectLevelConfig = (
   command: UpdateSubjectLevelConfigCommand
 ): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
   authorized(
-    command.schoolId,
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
