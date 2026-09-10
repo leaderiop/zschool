@@ -1,4 +1,36 @@
+import * as Config from "effect/Config"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { pgLayer } from "./Sql.ts"
+
+const EXPECTED_APP_ROLE = "zschool_service"
+
+/**
+ * Fails loudly, the moment `AppSqlLive` is built, if `APP_DATABASE_URL`
+ * connects as anything other than the expected role — this exact mistake
+ * (`.env.local` still pointing at the decommissioned `zschool_app`) cost
+ * real time across this project's history, every time surfacing only as a
+ * confusing "permission denied for function ..." or RLS violation deep
+ * inside unrelated business logic, minutes after the actual cause. Failing
+ * here, immediately, with the actual vs. expected role in the message, is
+ * cheaper than debugging that trail again. Overridable via
+ * `APP_EXPECTED_ROLE` for a deliberate future role change.
+ */
+const assertExpectedAppRole: Effect.Effect<void, Error, SqlClient> = Effect.gen(function*() {
+  const expected = yield* Config.string("APP_EXPECTED_ROLE").pipe(Config.withDefault(EXPECTED_APP_ROLE))
+  const sql = yield* SqlClient
+  const [row] = yield* sql<{ current_user: string }>`SELECT current_user`
+  if (row.current_user !== expected) {
+    return yield* Effect.fail(
+      new Error(
+        `APP_DATABASE_URL connects as "${row.current_user}", expected "${expected}". `
+          + `Check .env.local's APP_DATABASE_URL (see AppSql.ts for why the role matters — `
+          + `only ${expected} has RLS actually enforced).`
+      )
+    )
+  }
+})
 
 /**
  * The restricted, least-privilege runtime role every application query (and
@@ -32,4 +64,6 @@ import { pgLayer } from "./Sql.ts"
  * access via that inherited path regardless — the fix that actually matters
  * is simply that nothing points `APP_DATABASE_URL` at it anymore.
  */
-export const AppSqlLive = pgLayer("APP_DATABASE_URL")
+export const AppSqlLive = pgLayer("APP_DATABASE_URL").pipe(
+  Layer.tap((context) => Effect.provide(assertExpectedAppRole, context))
+)

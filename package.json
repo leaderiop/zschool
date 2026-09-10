@@ -11,22 +11,23 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck && tsc --noEmit -p tsconfig.json",
-    "test": "turbo run test",
-    "test:bdd": "vitest run --project bdd"
+    "test": "dotenv -c -- turbo run test",
+    "test:bdd": "dotenv -c -- vitest run --project bdd"
   },
   "devDependencies": {
-    "turbo": "^2.10.12",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.0",
-    "oxlint": "^1.82.0",
-    "effect": "4.0.0-rc.112",
-    "@effect/platform-node": "4.0.0-rc.112",
-    "@effect-cucumber/vitest": "^0.7.0",
     "@effect-cucumber/gherkin": "^0.7.0",
+    "@effect-cucumber/vitest": "^0.7.0",
+    "@effect/platform-node": "4.0.0-rc.112",
     "@qadi/core": "0.5.0",
     "@qadi/testing": "0.5.0",
+    "@zschool/db": "workspace:*",
     "@zschool/domain": "workspace:*",
-    "@zschool/db": "workspace:*"
+    "dotenv-cli": "^11.0.0",
+    "effect": "4.0.0-rc.112",
+    "oxlint": "^1.82.0",
+    "turbo": "^2.10.12",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
   },
   "pnpm": {
     "overrides": {
