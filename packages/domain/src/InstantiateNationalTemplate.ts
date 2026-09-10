@@ -238,33 +238,38 @@ export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplat
           }))
         )
 
-        yield* sql`
-          INSERT INTO grading_scales (school_id, academic_year_id, section_id, max_score, decimals, rounding)
-          VALUES (
-            ${schoolId}, ${academicYearId}, ${sectionId},
-            ${defaultGradingScale.maxScore}, ${defaultGradingScale.decimals}, ${defaultGradingScale.rounding}
-          )
-        `
-
-        yield* insertBatch(
-          sql,
-          "evaluation_periods",
-          defaultEvaluationPeriods.map((period) => ({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            section_id: sectionId,
-            code: period.code,
-            name: period.name,
-            sequence: period.sequence
-          }))
-        )
-
-        // BEH-ZS-066: the ministry calendar is preloaded at year creation.
-        yield* seedCalendarEvents(sql, schoolId, academicYearId, command.academicYearLabel)
-
-        // BEH-ZS-055: default certifying-exam weightings for 6AP/3AC/2BAC.
+        // Four independent, read-nothing-back seed steps — none depends on
+        // another's output, so they run concurrently instead of paying one
+        // sequential round trip each.
         const gradingScales = yield* GradingScales
-        yield* gradingScales.seedDefaultComputationRules(sql, schoolId, academicYearId, levelIdByCode)
+        yield* Effect.all(
+          [
+            sql`
+              INSERT INTO grading_scales (school_id, academic_year_id, section_id, max_score, decimals, rounding)
+              VALUES (
+                ${schoolId}, ${academicYearId}, ${sectionId},
+                ${defaultGradingScale.maxScore}, ${defaultGradingScale.decimals}, ${defaultGradingScale.rounding}
+              )
+            `,
+            insertBatch(
+              sql,
+              "evaluation_periods",
+              defaultEvaluationPeriods.map((period) => ({
+                school_id: schoolId,
+                academic_year_id: academicYearId,
+                section_id: sectionId,
+                code: period.code,
+                name: period.name,
+                sequence: period.sequence
+              }))
+            ),
+            // BEH-ZS-066: the ministry calendar is preloaded at year creation.
+            seedCalendarEvents(schoolId, academicYearId, command.academicYearLabel),
+            // BEH-ZS-055: default certifying-exam weightings for 6AP/3AC/2BAC.
+            gradingScales.seedDefaultComputationRules(schoolId, academicYearId, levelIdByCode)
+          ],
+          { concurrency: "unbounded", discard: true }
+        )
 
         return {
           academicYearId,
