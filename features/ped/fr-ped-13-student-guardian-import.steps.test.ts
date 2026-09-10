@@ -2,12 +2,15 @@ import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
 import { SqlLive, withSchool } from "@zschool/db"
 import {
+  analyzeGuardianRows,
   analyzeStudentRows,
   commitImportBatch,
   createClass,
   type GuardianImportRow,
+  type GuardianRowResult,
   type ImportBatchResult,
   instantiateNationalTemplate,
+  type StudentAnalysisResult,
   type StudentImportRow
 } from "@zschool/domain"
 import * as Context from "effect/Context"
@@ -31,6 +34,8 @@ class World extends Context.Service<World, {
   readonly guardianRows: Ref.Ref<ReadonlyArray<GuardianImportRow>>
   readonly studentRows: Ref.Ref<ReadonlyArray<StudentImportRow>>
   readonly commitResult: Ref.Ref<ImportBatchResult | undefined>
+  readonly guardianAnalysis: Ref.Ref<ReadonlyArray<GuardianRowResult> | undefined>
+  readonly studentAnalysis: Ref.Ref<ReadonlyArray<StudentAnalysisResult> | undefined>
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -41,7 +46,9 @@ class World extends Context.Service<World, {
         existingPersonId: yield* Ref.make<string | undefined>(undefined),
         guardianRows: yield* Ref.make<ReadonlyArray<GuardianImportRow>>([]),
         studentRows: yield* Ref.make<ReadonlyArray<StudentImportRow>>([]),
-        commitResult: yield* Ref.make<ImportBatchResult | undefined>(undefined)
+        commitResult: yield* Ref.make<ImportBatchResult | undefined>(undefined),
+        guardianAnalysis: yield* Ref.make<ReadonlyArray<GuardianRowResult> | undefined>(undefined),
+        studentAnalysis: yield* Ref.make<ReadonlyArray<StudentAnalysisResult> | undefined>(undefined)
       })
     })
   )
@@ -489,5 +496,62 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     `
     )
     assert.strictEqual(activeCount, 1)
+  })
+
+  Given("a guardian import row with an invalid phone number", function*() {
+    const world = yield* World
+    yield* Ref.set(world.guardianRows, [{
+      rowId: "g1",
+      firstName: "Yassine",
+      lastName: "Amrani",
+      dateOfBirth: "1980-01-01",
+      mobileNumber: "0600000000"
+    }])
+  })
+
+  When("the guardian rows are analyzed", function*() {
+    const world = yield* World
+    const guardianRows = yield* Ref.get(world.guardianRows)
+    const analysis = yield* analyzeGuardianRows(guardianRows)
+    yield* Ref.set(world.guardianAnalysis, analysis)
+  })
+
+  Then("the row is rejected with a reason naming the phone number field", function*() {
+    const world = yield* World
+    const analysis = yield* Ref.get(world.guardianAnalysis)
+    const [row] = analysis!
+    assert.strictEqual(row.status, "error")
+    if (row.status !== "error") throw new Error("unreachable")
+    assert.include(row.reason, "mobileNumber")
+  })
+
+  Given("a student import row missing a required first name", function*() {
+    const world = yield* World
+    yield* Ref.set(world.studentRows, [{
+      rowId: "s1",
+      firstName: "",
+      lastName: "Amrani",
+      dateOfBirth: "2013-09-01",
+      levelCode: "1AC",
+      classLabel: "1AC-1",
+      effectiveDate: "2020-01-01",
+      guardians: []
+    }])
+  })
+
+  When("the student rows are analyzed", function*() {
+    const world = yield* World
+    const studentRows = yield* Ref.get(world.studentRows)
+    const analysis = yield* analyzeStudentRows("00000000-0000-0000-0000-000000000000", studentRows)
+    yield* Ref.set(world.studentAnalysis, analysis)
+  })
+
+  Then("the row is rejected with a reason naming the first name field", function*() {
+    const world = yield* World
+    const analysis = yield* Ref.get(world.studentAnalysis)
+    const [row] = analysis!
+    assert.strictEqual(row.status, "error")
+    if (row.status !== "error") throw new Error("unreachable")
+    assert.include(row.reason, "firstName")
   })
 })

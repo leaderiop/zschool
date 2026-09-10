@@ -35,7 +35,7 @@ export const GuardianMatchRow = Schema.Struct({
   person_id: Schema.String
 })
 
-const E164_PATTERN = /^\+[1-9]\d{7,14}$/
+export const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
 export const isValidE164 = (mobileNumber: string): boolean => E164_PATTERN.test(mobileNumber)
 
