@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
+import { isSqlError, type SqlError } from "effect/unstable/sql/SqlError"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   attachGuardianProfile,
@@ -252,6 +252,22 @@ export interface ImportBatchResult {
   readonly studentResults: ReadonlyArray<StudentRowResult>
 }
 
+/** A `SqlError`'s own reason tag is more specific than the generic "SqlError" tag; every other tagged failure just uses its own `_tag`. */
+const failureReason = (failure: { readonly _tag: string }): string =>
+  isSqlError(failure) ? failure.reason._tag : failure._tag
+
+/**
+ * The one place a committed-transaction outcome becomes a row result, for
+ * both the guardian and student commit paths below — so the failure-to-reason
+ * mapping can't drift out of sync between them the way two independently
+ * hand-walked `unit._tag === "Failure"` branches could.
+ */
+const mapCommitOutcome = <A, B>(
+  unit: Result.Result<A, { readonly _tag: string }>,
+  onSuccess: (success: A) => B,
+  onFailure: (reason: string) => B
+): B => Result.match(unit, { onFailure: (failure) => onFailure(failureReason(failure)), onSuccess })
+
 /**
  * The dependency-ordered commit (user stories 12-14, 19): guardians first
  * (deduplicated by mobile number within this call, each committed once even
@@ -316,12 +332,11 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
 
           guardianResults.set(
             g.mobileNumber,
-            unit._tag === "Failure"
-              ? {
-                status: "error",
-                reason: unit.failure._tag === "SqlError" ? unit.failure.reason._tag : unit.failure._tag
-              }
-              : { status: "committed", personId: unit.success }
+            mapCommitOutcome(
+              unit,
+              (personId): GuardianCommitResult => ({ status: "committed", personId }),
+              (reason): GuardianCommitResult => ({ status: "error", reason })
+            )
           )
         }
 
@@ -379,20 +394,18 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
             return { studentPersonId, enrollment }
           })))
 
-          if (unit._tag === "Failure") {
-            studentResults.push({
-              rowId: s.rowId,
-              status: "error",
-              reason: unit.failure._tag === "SqlError" ? unit.failure.reason._tag : unit.failure._tag
-            })
-          } else {
-            studentResults.push({
-              rowId: s.rowId,
-              status: unit.success.enrollment.status,
-              studentPersonId: unit.success.studentPersonId,
-              enrollmentId: unit.success.enrollment.id
-            })
-          }
+          studentResults.push(
+            mapCommitOutcome(
+              unit,
+              ({ enrollment, studentPersonId }): StudentRowResult => ({
+                rowId: s.rowId,
+                status: enrollment.status,
+                studentPersonId,
+                enrollmentId: enrollment.id
+              }),
+              (reason): StudentRowResult => ({ rowId: s.rowId, status: "error", reason })
+            )
+          )
         }
 
         return { guardianResults, studentResults }
