@@ -63,53 +63,54 @@ export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImp
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const results: Array<ClassImportRowResult> = []
 
-        for (const row of rows) {
-          const decoded = decodeClassImportRow(row)
-          if (Result.isFailure(decoded)) {
-            results.push({ row, status: "error", reason: decoded.failure.message })
-            continue
-          }
-
-          const [level] = yield* sql<{ id: string }>`
-            SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
-          `
-          if (level === undefined) {
-            results.push({ row, status: "error", reason: `Unknown level code: ${row.levelCode}` })
-            continue
-          }
-
-          if (row.trackCode !== undefined) {
-            const [track] = yield* sql<{ id: string }>`
-              SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
-            `
-            if (track === undefined) {
-              results.push({
-                row,
-                status: "error",
-                reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
-              })
-              continue
+        const analyzeRow = (row: ClassImportRow): Effect.Effect<ClassImportRowResult, SqlError> =>
+          Effect.gen(function*() {
+            const decoded = decodeClassImportRow(row)
+            if (Result.isFailure(decoded)) {
+              return { row, status: "error", reason: decoded.failure.message } as const
             }
-          }
 
-          const existing = yield* sql`
-            SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
-          `
-          if (existing.length > 0) {
-            results.push({
-              row,
-              status: "duplicate",
-              reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
-            })
-            continue
-          }
+            const [level] = yield* sql<{ id: string }>`
+              SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
+            `
+            if (level === undefined) {
+              return { row, status: "error", reason: `Unknown level code: ${row.levelCode}` } as const
+            }
 
-          results.push({ row, status: "creatable" })
-        }
+            if (row.trackCode !== undefined) {
+              const [track] = yield* sql<{ id: string }>`
+                SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
+              `
+              if (track === undefined) {
+                return {
+                  row,
+                  status: "error",
+                  reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
+                } as const
+              }
+            }
 
-        return results
+            const existing = yield* sql`
+              SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
+            `
+            if (existing.length > 0) {
+              return {
+                row,
+                status: "duplicate",
+                reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+              } as const
+            }
+
+            return { row, status: "creatable" } as const
+          })
+
+        // Each row's lookups are independent and read-only — bounded
+        // concurrency (rather than unbounded) caps how many connections a
+        // single large import batch can hold from the pool at once.
+        // `Effect.forEach` preserves input order in the returned array
+        // regardless of concurrency.
+        return yield* Effect.forEach(rows, analyzeRow, { concurrency: 5 })
       })
     )
   )
