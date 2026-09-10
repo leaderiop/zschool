@@ -1,7 +1,10 @@
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
 export class InvalidMobileNumberError extends Data.TaggedError("InvalidMobileNumberError")<{
@@ -16,6 +19,21 @@ export interface PersonMatch {
   readonly massarCode: string | null
   readonly matchKind: "strong" | "weak"
 }
+
+/** The `find_person_matches` (migration 0008) row shape, decoded rather than trusted via a compile-time-only cast — a future column rename/type change is caught here instead of silently producing wrong fields. */
+export const PersonMatchRow = Schema.Struct({
+  person_id: Schema.String,
+  first_name: Schema.String,
+  last_name: Schema.String,
+  date_of_birth: Schema.String,
+  massar_code: Schema.NullOr(Schema.String),
+  match_kind: Schema.Literals(["strong", "weak"])
+})
+
+/** The `find_guardian_by_mobile` (migration ...) row shape, decoded for the same reason as `PersonMatchRow`. */
+export const GuardianMatchRow = Schema.Struct({
+  person_id: Schema.String
+})
 
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
@@ -48,18 +66,15 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
   firstName: string,
   lastName: string,
   dateOfBirth: string
-): Effect.fn.Return<ReadonlyArray<PersonMatch>, SqlError, SqlClient> {
+): Effect.fn.Return<ReadonlyArray<PersonMatch>, Schema.SchemaError | SqlError, SqlClient> {
   const sql = yield* SqlClient
-  const rows = yield* sql<
-    {
-      person_id: string
-      first_name: string
-      last_name: string
-      date_of_birth: string
-      massar_code: string | null
-      match_kind: "strong" | "weak"
-    }
-  >`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
+  const query = SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: PersonMatchRow,
+    execute: () =>
+      sql`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
+  })
+  const rows = yield* query(undefined)
   return rows.map((r) => ({
     personId: r.person_id,
     firstName: r.first_name,
@@ -73,10 +88,15 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
 /** ADR-ZS-050: a guardian's mobile number is the key used to detect an existing account, across schools. */
 export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(function*(
   mobileNumber: string
-): Effect.fn.Return<{ readonly personId: string } | undefined, SqlError, SqlClient> {
+): Effect.fn.Return<{ readonly personId: string } | undefined, Schema.SchemaError | SqlError, SqlClient> {
   const sql = yield* SqlClient
-  const [row] = yield* sql<{ person_id: string }>`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
-  return row === undefined ? undefined : { personId: row.person_id }
+  const query = SqlSchema.findOneOption({
+    Request: Schema.Void,
+    Result: GuardianMatchRow,
+    execute: () => sql`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
+  })
+  const result = yield* query(undefined)
+  return Option.getOrUndefined(Option.map(result, (row) => ({ personId: row.person_id })))
 })
 
 /**

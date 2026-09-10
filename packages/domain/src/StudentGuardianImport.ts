@@ -2,6 +2,7 @@ import type { EvaluationServices } from "@qadi/core/Evaluate"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
+import type * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { insertEnrollment } from "./Enrollment.ts"
@@ -46,7 +47,7 @@ export type GuardianRowResult =
 /** Analyze-only, read-only — no DB writes, same contract as #8's `analyzeClassImport`. */
 export const analyzeGuardianRows = Effect.fn("StudentGuardianImport.analyzeGuardianRows")(function*(
   rows: ReadonlyArray<GuardianImportRow>
-): Effect.fn.Return<ReadonlyArray<GuardianRowResult>, SqlError, SqlClient> {
+): Effect.fn.Return<ReadonlyArray<GuardianRowResult>, Schema.SchemaError | SqlError, SqlClient> {
   const results: Array<GuardianRowResult> = []
   for (const row of rows) {
     if (!isValidE164(row.mobileNumber)) {
@@ -137,7 +138,7 @@ export type StudentAnalysisResult =
 export const analyzeStudentRows = Effect.fn("StudentGuardianImport.analyzeStudentRows")(function*(
   schoolId: string,
   rows: ReadonlyArray<StudentImportRow>
-): Effect.fn.Return<ReadonlyArray<StudentAnalysisResult>, SqlError, SqlClient> {
+): Effect.fn.Return<ReadonlyArray<StudentAnalysisResult>, Schema.SchemaError | SqlError, SqlClient> {
   return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
@@ -203,7 +204,11 @@ export interface ImportBatchResult {
  */
 export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBatch")(function*(
   input: CommitImportBatchInput
-): Effect.fn.Return<ImportBatchResult, EnforcementError | SqlError, SqlClient | EvaluationServices> {
+): Effect.fn.Return<
+  ImportBatchResult,
+  EnforcementError | Schema.SchemaError | SqlError,
+  SqlClient | EvaluationServices
+> {
   return yield* authorized(
     SchoolId(input.schoolId),
     withSchool(
