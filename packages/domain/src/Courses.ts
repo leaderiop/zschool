@@ -3,10 +3,11 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError")<{
   readonly groupId: string
@@ -26,7 +27,7 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
   classId: string
 ): Effect.fn.Return<
   ReadonlyArray<string>,
-  EnforcementError | EntityNotFoundError | SqlError,
+  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
@@ -35,12 +36,13 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const cls = yield* requireOwnedRow<{ level_id: string; track_id: string | null }>(
+        const cls = yield* requireOwnedRow(
           sql,
           "classes",
           "class",
           classId,
           SchoolId(schoolId),
+          Schema.Struct({ level_id: Schema.String, track_id: Schema.NullOr(Schema.String) }),
           "level_id, track_id"
         )
 
@@ -83,7 +85,7 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
   groupId: string
 ): Effect.fn.Return<
   string,
-  EnforcementError | EntityNotFoundError | NoSubjectLinkedError | SqlError,
+  EnforcementError | EntityNotFoundError | NoSubjectLinkedError | Schema.SchemaError | SqlError,
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
@@ -92,12 +94,13 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const group = yield* requireOwnedRow<{ subject_level_config_id: string | null }>(
+        const group = yield* requireOwnedRow(
           sql,
           "groups",
           "group",
           groupId,
           SchoolId(schoolId),
+          Schema.Struct({ subject_level_config_id: Schema.NullOr(Schema.String) }),
           "subject_level_config_id"
         )
         if (group.subject_level_config_id === null) {
@@ -125,14 +128,18 @@ export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   schoolId: string,
   courseId: string,
   reason: string
-): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+): Effect.fn.Return<
+  void,
+  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
+  SqlClient | EvaluationServices
+> {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "courses", "course", courseId, SchoolId(schoolId))
+        yield* requireOwnedRow(sql, "courses", "course", courseId, SchoolId(schoolId), RowWithId)
         yield* sql`
           UPDATE courses SET is_active = false, deactivation_reason = ${reason}
           WHERE id = ${courseId} AND school_id = ${schoolId}

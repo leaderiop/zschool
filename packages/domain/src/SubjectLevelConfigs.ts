@@ -3,10 +3,11 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { LevelId, SchoolId, TrackId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
@@ -50,14 +51,18 @@ export interface UpdateSubjectLevelConfigCommand {
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
 export const createSubject = (
   command: CreateSubjectCommand
-): Effect.Effect<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
+): Effect.Effect<
+  string,
+  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
+  SqlClient | EvaluationServices
+> =>
   authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, SchoolId(command.schoolId))
+        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, SchoolId(command.schoolId), RowWithId)
 
         const [row] = yield* sql<{ id: string }>`
           INSERT INTO subjects (school_id, academic_year_id, section_id, code, name)
@@ -80,7 +85,7 @@ export const configureSubjectLevel = (
   command: ConfigureSubjectLevelCommand
 ): Effect.Effect<
   string,
-  EnforcementError | EntityNotFoundError | DuplicateConfigError | SqlError,
+  EnforcementError | EntityNotFoundError | DuplicateConfigError | Schema.SchemaError | SqlError,
   SqlClient | EvaluationServices
 > =>
   authorized(
@@ -89,8 +94,8 @@ export const configureSubjectLevel = (
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, SchoolId(command.schoolId))
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId))
+        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
         if (command.trackId !== undefined) {
           yield* requireTrackBelongsToLevel(
             sql,

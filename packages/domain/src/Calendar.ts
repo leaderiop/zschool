@@ -3,6 +3,7 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
@@ -13,6 +14,8 @@ export class PeriodOverlapError extends Data.TaggedError("PeriodOverlapError")<{
   readonly periodId: string
   readonly conflictingPeriodId: string
 }> {}
+
+const EvaluationPeriodRow = Schema.Struct({ id: Schema.String, academic_year_id: Schema.String })
 
 export interface SetEvaluationPeriodDatesCommand {
   readonly schoolId: string
@@ -43,7 +46,7 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
   command: SetEvaluationPeriodDatesCommand
 ): Effect.fn.Return<
   void,
-  EnforcementError | EntityNotFoundError | PeriodOverlapError | SqlError,
+  EnforcementError | EntityNotFoundError | PeriodOverlapError | Schema.SchemaError | SqlError,
   SqlClient | EvaluationServices
 > {
   return yield* authorized(
@@ -56,12 +59,13 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
         // one, for the overlap search — a stale/mismatched `academicYearId`
         // alongside a valid `periodId` must not search the wrong year and
         // find zero conflicts.
-        const period = yield* requireOwnedRow<{ id: string; academic_year_id: string }>(
+        const period = yield* requireOwnedRow(
           sql,
           "evaluation_periods",
           "evaluation_period",
           command.periodId,
           SchoolId(command.schoolId),
+          EvaluationPeriodRow,
           "id, academic_year_id"
         )
 
@@ -89,7 +93,11 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
 /** BEH-ZS-054: a dated sub-period (exam, mock exam, standardized test) within an evaluation period. */
 export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
   command: AddSubPeriodCommand
-): Effect.fn.Return<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+): Effect.fn.Return<
+  string,
+  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
+  SqlClient | EvaluationServices
+> {
   return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
@@ -99,12 +107,13 @@ export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
         // Insert the period's OWN academic_year_id, never the caller-supplied
         // one — a mismatched command.academicYearId must not create a row
         // whose evaluation_period_id and academic_year_id disagree.
-        const period = yield* requireOwnedRow<{ id: string; academic_year_id: string }>(
+        const period = yield* requireOwnedRow(
           sql,
           "evaluation_periods",
           "evaluation_period",
           command.evaluationPeriodId,
           SchoolId(command.schoolId),
+          EvaluationPeriodRow,
           "id, academic_year_id"
         )
 
@@ -136,11 +145,11 @@ export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
  * check and transaction inside the one it's already in.
  */
 export const seedCalendarEvents = Effect.fn("Calendar.seedCalendarEvents")(function*(
-  sql: SqlClient,
   schoolId: string,
   academicYearId: string,
   academicYearLabel: string
-): Effect.fn.Return<void, SqlError> {
+): Effect.fn.Return<void, SqlError, SqlClient> {
+  const sql = yield* SqlClient
   const rows: Array<Record<string, unknown>> = []
 
   for (const holiday of fixedHolidayDatesForYear(academicYearLabel)) {
@@ -207,10 +216,7 @@ export const preloadNationalCalendar = Effect.fn("Calendar.preloadNationalCalend
     SchoolId(schoolId),
     withSchool(
       schoolId,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-        yield* seedCalendarEvents(sql, schoolId, academicYearId, academicYearLabel)
-      })
+      seedCalendarEvents(schoolId, academicYearId, academicYearLabel)
     )
   )
 })

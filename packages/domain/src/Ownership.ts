@@ -3,6 +3,7 @@ import * as Qadi from "@qadi/core/Qadi"
 import type { EnforcementError } from "@qadi/core/Qadi"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
@@ -41,24 +42,37 @@ export class EntityNotFoundError extends Data.TaggedError("EntityNotFoundError")
   readonly entityId: string
 }> {}
 
-export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<
-  A extends Record<string, unknown> = { id: string }
->(
+/** The default row shape `requireOwnedRow` decodes when a caller only needs the existence check, not any particular column. */
+export const RowWithId = Schema.Struct({ id: Schema.String })
+
+/**
+ * Decodes a query result against `schema` instead of trusting a
+ * compile-time-only cast — a future column rename/type change surfaces as a
+ * clear `Schema.SchemaError` instead of silently producing a missing or
+ * wrong field. Standalone so it's unit-testable without a `SqlClient`.
+ */
+export const decodeOwnedRow = <A>(
+  schema: Schema.ConstraintDecoder<A>,
+  row: unknown
+): Effect.Effect<A, Schema.SchemaError> => Schema.decodeUnknownEffect(schema)(row)
+
+export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<A>(
   sql: SqlClient,
   table: string,
   entityType: string,
   entityId: string,
   schoolId: SchoolId,
+  resultSchema: Schema.ConstraintDecoder<A>,
   columns = "id"
-): Effect.fn.Return<A, EntityNotFoundError | SqlError> {
-  const rows = yield* sql<A>`
+): Effect.fn.Return<A, EntityNotFoundError | Schema.SchemaError | SqlError> {
+  const rows = yield* sql`
     SELECT ${sql.literal(columns)} FROM ${sql(table)} WHERE id = ${entityId} AND school_id = ${schoolId}
   `
   const [row] = rows
   if (row === undefined) {
     return yield* Effect.fail(new EntityNotFoundError({ entityType, entityId }))
   }
-  return row
+  return yield* decodeOwnedRow(resultSchema, row)
 })
 
 /** A track belongs to a specific level, not just to the school — checked separately since a track and a level can each independently belong to the right school while the track still belongs to a *different* level (e.g. a 1BAC track passed alongside a 2BAC levelId). */

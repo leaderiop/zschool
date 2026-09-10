@@ -3,10 +3,11 @@ import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import type * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class DuplicateActiveEnrollmentError extends Data.TaggedError("DuplicateActiveEnrollmentError")<{
   readonly studentPersonId: string
@@ -122,7 +123,7 @@ export const createEnrollment = (
   command: CreateEnrollmentCommand
 ): Effect.Effect<
   EnrollmentResult,
-  EnforcementError | EntityNotFoundError | DuplicateActiveEnrollmentError | SqlError,
+  EnforcementError | EntityNotFoundError | DuplicateActiveEnrollmentError | Schema.SchemaError | SqlError,
   SqlClient | EvaluationServices
 > =>
   authorized(
@@ -131,7 +132,7 @@ export const createEnrollment = (
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId))
+        yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId), RowWithId)
         return yield* insertEnrollment(command)
       }).pipe(Effect.withSpan("Enrollment.createEnrollment"))
     )
