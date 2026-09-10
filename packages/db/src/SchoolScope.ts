@@ -19,4 +19,4 @@ export const withSchool = <A, E, R>(
     return yield* sql.withTransaction(
       Effect.andThen(sql`SELECT set_config('app.current_school_id', ${schoolId}, true)`, effect)
     )
-  })
+  }).pipe(Effect.withSpan("SchoolScope.withSchool"))

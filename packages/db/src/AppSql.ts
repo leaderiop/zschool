@@ -17,7 +17,7 @@ const EXPECTED_APP_ROLE = "zschool_service"
  * cheaper than debugging that trail again. Overridable via
  * `APP_EXPECTED_ROLE` for a deliberate future role change.
  */
-const assertExpectedAppRole: Effect.Effect<void, Error, SqlClient> = Effect.gen(function*() {
+const assertExpectedAppRole = Effect.fn("AppSql.assertExpectedAppRole")(function*() {
   const expected = yield* Config.String("APP_EXPECTED_ROLE").pipe(Config.withDefault(EXPECTED_APP_ROLE))
   const sql = yield* SqlClient
   const [row] = yield* sql<{ current_user: string }>`SELECT current_user`
@@ -65,5 +65,5 @@ const assertExpectedAppRole: Effect.Effect<void, Error, SqlClient> = Effect.gen(
  * is simply that nothing points `APP_DATABASE_URL` at it anymore.
  */
 export const AppSqlLive = pgLayer("APP_DATABASE_URL").pipe(
-  Layer.tap((context) => Effect.provide(assertExpectedAppRole, context))
+  Layer.tap((context) => Effect.provide(assertExpectedAppRole(), context))
 )
