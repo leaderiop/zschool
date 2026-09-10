@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect"
 import * as Option from "effect/Option"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
@@ -66,7 +65,7 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
   firstName: string,
   lastName: string,
   dateOfBirth: string
-): Effect.fn.Return<ReadonlyArray<PersonMatch>, Schema.SchemaError | SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const query = SqlSchema.findAll({
     Request: Schema.Void,
@@ -88,7 +87,7 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
 /** ADR-ZS-050: a guardian's mobile number is the key used to detect an existing account, across schools. */
 export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(function*(
   mobileNumber: string
-): Effect.fn.Return<{ readonly personId: string } | undefined, Schema.SchemaError | SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const query = SqlSchema.findOneOption({
     Request: Schema.Void,
@@ -115,7 +114,7 @@ export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(functio
  */
 export const createPerson = Effect.fn("Identity.createPerson")(function*(
   input: NewPersonInput
-): Effect.fn.Return<string, SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const id = randomUUID()
   yield* sql`
@@ -143,7 +142,7 @@ export const createPerson = Effect.fn("Identity.createPerson")(function*(
  */
 export const attachStudentProfile = Effect.fn("Identity.attachStudentProfile")(function*(
   personId: string
-): Effect.fn.Return<void, SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   // A caught error still leaves the *transaction* aborted in Postgres —
   // catching it in Effect doesn't undo that at the connection level.
@@ -159,7 +158,7 @@ export const attachStudentProfile = Effect.fn("Identity.attachStudentProfile")(f
 export const attachGuardianProfile = Effect.fn("Identity.attachGuardianProfile")(function*(
   personId: string,
   mobileNumber: string
-): Effect.fn.Return<void, InvalidMobileNumberError | SqlError, SqlClient> {
+) {
   if (!isValidE164(mobileNumber)) {
     return yield* Effect.fail(new InvalidMobileNumberError({ mobileNumber }))
   }
@@ -188,7 +187,7 @@ export const recordGuardianRelationship = Effect.fn("Identity.recordGuardianRela
   guardianPersonId: GuardianPersonId,
   studentPersonId: StudentPersonId,
   qualities: GuardianQualities
-): Effect.fn.Return<void, SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   yield* sql.withTransaction(sql`
     INSERT INTO parent_student_relationships

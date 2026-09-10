@@ -1,11 +1,9 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { isSqlError, type SqlError } from "effect/unstable/sql/SqlError"
+import { isSqlError } from "effect/unstable/sql/SqlError"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   attachGuardianProfile,
@@ -66,29 +64,28 @@ export const decodeGuardianImportRow = (row: GuardianImportRow): Result.Result<G
   Schema.decodeResult(GuardianImportRowSchema)(row)
 
 /** Each row's matching lookups are independent and read-only — bounded concurrency (matching `ClassImportAnalysis.ts`'s precedent) caps how many connections one large import batch can hold from the pool at once. `Effect.forEach` preserves input order regardless of concurrency. */
-const analyzeGuardianRow = (
+const analyzeGuardianRow = Effect.fn("StudentGuardianImport.analyzeGuardianRow")(function*(
   row: GuardianImportRow
-): Effect.Effect<GuardianRowResult, Schema.SchemaError | SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const decoded = decodeGuardianImportRow(row)
-    if (Result.isFailure(decoded)) {
-      return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
-    }
-    const phoneMatch = yield* findGuardianMatch(row.mobileNumber)
-    if (phoneMatch !== undefined) {
-      return { rowId: row.rowId, status: "phone_match_proposed", personId: phoneMatch.personId } as const
-    }
-    const nameMatches = yield* findPersonMatches(undefined, row.firstName, row.lastName, row.dateOfBirth)
-    const weak = nameMatches.find((m) => m.matchKind === "weak")
-    return weak === undefined
-      ? { rowId: row.rowId, status: "creatable" as const }
-      : { rowId: row.rowId, status: "weak_match_alert" as const, personId: weak.personId }
-  })
+) {
+  const decoded = decodeGuardianImportRow(row)
+  if (Result.isFailure(decoded)) {
+    return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
+  }
+  const phoneMatch = yield* findGuardianMatch(row.mobileNumber)
+  if (phoneMatch !== undefined) {
+    return { rowId: row.rowId, status: "phone_match_proposed", personId: phoneMatch.personId } as const
+  }
+  const nameMatches = yield* findPersonMatches(undefined, row.firstName, row.lastName, row.dateOfBirth)
+  const weak = nameMatches.find((m) => m.matchKind === "weak")
+  return weak === undefined
+    ? { rowId: row.rowId, status: "creatable" as const }
+    : { rowId: row.rowId, status: "weak_match_alert" as const, personId: weak.personId }
+})
 
 /** Analyze-only, read-only — no DB writes, same contract as #8's `analyzeClassImport`. */
 export const analyzeGuardianRows = Effect.fn("StudentGuardianImport.analyzeGuardianRows")(function*(
   rows: ReadonlyArray<GuardianImportRow>
-): Effect.fn.Return<ReadonlyArray<GuardianRowResult>, Schema.SchemaError | SqlError, SqlClient> {
+) {
   return yield* Effect.forEach(rows, analyzeGuardianRow, { concurrency: 5 })
 })
 
@@ -149,17 +146,13 @@ export type StudentRowResult =
   | { readonly rowId: string; readonly status: "awaiting_confirmation"; readonly proposedPersonId: string }
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
-interface ResolvedClass {
-  readonly id: string
-}
-
 const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
   sql: SqlClient,
   schoolId: string,
   levelCode: string,
   trackCode: string | undefined,
   classLabel: string
-): Effect.fn.Return<ResolvedClass | undefined, SqlError> {
+) {
   const [level] = yield* sql<
     { id: string }
   >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
@@ -189,44 +182,43 @@ export type StudentAnalysisResult =
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
 /** Same reasoning as `analyzeGuardianRow` above. */
-const analyzeStudentRow = (
+const analyzeStudentRow = Effect.fn("StudentGuardianImport.analyzeStudentRow")(function*(
   sql: SqlClient,
   schoolId: string,
   row: StudentImportRow
-): Effect.Effect<StudentAnalysisResult, Schema.SchemaError | SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const decoded = decodeStudentImportRow(row)
-    if (Result.isFailure(decoded)) {
-      return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
+) {
+  const decoded = decodeStudentImportRow(row)
+  if (Result.isFailure(decoded)) {
+    return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
+  }
+  const resolved = yield* resolveClass(sql, schoolId, row.levelCode, row.trackCode, row.classLabel)
+  if (resolved === undefined) {
+    return {
+      rowId: row.rowId,
+      status: "error",
+      reason: `No class "${row.classLabel}" under level ${row.levelCode}`
+    } as const
+  }
+  const matches = yield* findPersonMatches(row.massarCode, row.firstName, row.lastName, row.dateOfBirth)
+  const strong = matches.find((m) => m.matchKind === "strong")
+  if (strong !== undefined) {
+    return {
+      rowId: row.rowId,
+      status: "strong_match_awaiting_confirmation" as const,
+      personId: strong.personId
     }
-    const resolved = yield* resolveClass(sql, schoolId, row.levelCode, row.trackCode, row.classLabel)
-    if (resolved === undefined) {
-      return {
-        rowId: row.rowId,
-        status: "error",
-        reason: `No class "${row.classLabel}" under level ${row.levelCode}`
-      } as const
-    }
-    const matches = yield* findPersonMatches(row.massarCode, row.firstName, row.lastName, row.dateOfBirth)
-    const strong = matches.find((m) => m.matchKind === "strong")
-    if (strong !== undefined) {
-      return {
-        rowId: row.rowId,
-        status: "strong_match_awaiting_confirmation" as const,
-        personId: strong.personId
-      }
-    }
-    const weak = matches.find((m) => m.matchKind === "weak")
-    return weak === undefined
-      ? { rowId: row.rowId, status: "creatable" as const }
-      : { rowId: row.rowId, status: "weak_match_alert" as const, personId: weak.personId }
-  })
+  }
+  const weak = matches.find((m) => m.matchKind === "weak")
+  return weak === undefined
+    ? { rowId: row.rowId, status: "creatable" as const }
+    : { rowId: row.rowId, status: "weak_match_alert" as const, personId: weak.personId }
+})
 
 /** Analyze-only, read-only. `schoolId` is only used to resolve the target class — `persons` matching is platform-wide by design (ADR-ZS-108). */
 export const analyzeStudentRows = Effect.fn("StudentGuardianImport.analyzeStudentRows")(function*(
   schoolId: string,
   rows: ReadonlyArray<StudentImportRow>
-): Effect.fn.Return<ReadonlyArray<StudentAnalysisResult>, Schema.SchemaError | SqlError, SqlClient> {
+) {
   return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
@@ -284,11 +276,7 @@ const mapCommitOutcome = <A, B>(
  */
 export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBatch")(function*(
   input: CommitImportBatchInput
-): Effect.fn.Return<
-  ImportBatchResult,
-  EnforcementError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(input.schoolId),
     withSchool(

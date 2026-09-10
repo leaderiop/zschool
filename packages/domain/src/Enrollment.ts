@@ -1,11 +1,7 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
-import type * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
@@ -67,7 +63,7 @@ export const computeEnrollmentStatus = (input: {
  */
 export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(function*(
   command: CreateEnrollmentCommand
-): Effect.fn.Return<EnrollmentResult, DuplicateActiveEnrollmentError | EntityNotFoundError | SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const [{ today }] = yield* sql<{ today: string }>`SELECT CURRENT_DATE::text AS today`
   const status = computeEnrollmentStatus({
@@ -119,14 +115,10 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
   return { id: result.success[0].id, status }
 })
 
-export const createEnrollment = (
+export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(function*(
   command: CreateEnrollmentCommand
-): Effect.Effect<
-  EnrollmentResult,
-  EnforcementError | EntityNotFoundError | DuplicateActiveEnrollmentError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -134,20 +126,22 @@ export const createEnrollment = (
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId), RowWithId)
         return yield* insertEnrollment(command)
-      }).pipe(Effect.withSpan("Enrollment.createEnrollment"))
+      })
     )
   )
+})
 
 /** Whether `classId` has any enrollment at all — replaces `AcademicTree.ts`'s `hasActiveEnrollments` stub now that `Enrollment` exists (that function's own doc comment named this as the moment to do so). */
-export const hasEnrollments = (
+export const hasEnrollments = Effect.fn("Enrollment.hasEnrollments")(function*(
   schoolId: string,
   classId: string
-): Effect.Effect<boolean, SqlError, SqlClient> =>
-  withSchool(
+) {
+  return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
       const rows = yield* sql`SELECT 1 FROM enrollments WHERE class_id = ${classId} AND school_id = ${schoolId} LIMIT 1`
       return rows.length > 0
-    }).pipe(Effect.withSpan("Enrollment.hasEnrollments"))
+    })
   )
+})

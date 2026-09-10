@@ -1,11 +1,8 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
 import * as Qadi from "@qadi/core/Qadi"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 import type { LevelId, SchoolId, TrackId } from "./Ids.ts"
 
@@ -13,7 +10,7 @@ import type { LevelId, SchoolId, TrackId } from "./Ids.ts"
 export const authorized = Effect.fn("Ownership.authorized")(function*<A, E, R>(
   schoolId: SchoolId,
   effect: Effect.Effect<A, E, R>
-): Effect.fn.Return<A, E | EnforcementError, R | EvaluationServices> {
+) {
   yield* Qadi.assert(canManageAcademicStructure, {
     resource: { school_id: schoolId },
     action: "manage-academic-structure"
@@ -64,7 +61,7 @@ export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<
   schoolId: SchoolId,
   resultSchema: Schema.ConstraintDecoder<A>,
   columns = "id"
-): Effect.fn.Return<A, EntityNotFoundError | Schema.SchemaError | SqlError> {
+) {
   const rows = yield* sql`
     SELECT ${sql.literal(columns)} FROM ${sql(table)} WHERE id = ${entityId} AND school_id = ${schoolId}
   `
@@ -81,7 +78,7 @@ export const requireTrackBelongsToLevel = Effect.fn("Ownership.requireTrackBelon
   trackId: TrackId,
   levelId: LevelId,
   schoolId: SchoolId
-): Effect.fn.Return<void, EntityNotFoundError | SqlError> {
+) {
   const rows = yield* sql`
     SELECT id FROM tracks WHERE id = ${trackId} AND level_id = ${levelId} AND school_id = ${schoolId}
   `

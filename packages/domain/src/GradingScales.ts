@@ -1,13 +1,9 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
@@ -72,7 +68,7 @@ const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputat
   schoolId: string,
   academicYearId: string,
   levelIdByCode: ReadonlyMap<string, string>
-): Effect.fn.Return<void, SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const rows = defaultComputationRules
     .filter((rule) => levelIdByCode.has(rule.levelCode))
@@ -94,7 +90,7 @@ const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputat
 /** BEH-ZS-055: edits a section's grading scale — scoped to this year's own snapshot (ADR-ZS-105), never a prior closed year's. */
 const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
-): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+) {
   return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
@@ -143,11 +139,7 @@ const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(functio
  */
 const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
-): Effect.fn.Return<
-  string,
-  EnforcementError | EntityNotFoundError | InvalidWeightingError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(

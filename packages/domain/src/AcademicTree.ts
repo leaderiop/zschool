@@ -1,12 +1,9 @@
 import { CurrentSubject } from "@qadi/core/CurrentSubject"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { hasEnrollments } from "./Enrollment.ts"
 import { LevelId, SchoolId, TrackId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
@@ -43,14 +40,10 @@ export interface CreateGroupCommand {
  * is scoped by `withSchool`'s RLS session GUC, same pattern as
  * `InstantiateNationalTemplate.ts`.
  */
-export const createClass = (
+export const createClass = Effect.fn("AcademicTree.createClass")(function*(
   command: CreateClassCommand
-): Effect.Effect<
-  string,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -75,18 +68,15 @@ export const createClass = (
           RETURNING id
         `
         return row.id
-      }).pipe(Effect.withSpan("AcademicTree.createClass"))
+      })
     )
   )
+})
 
-export const createGroup = (
+export const createGroup = Effect.fn("AcademicTree.createGroup")(function*(
   command: CreateGroupCommand
-): Effect.Effect<
-  string,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -103,16 +93,17 @@ export const createGroup = (
           RETURNING id
         `
         return row.id
-      }).pipe(Effect.withSpan("AcademicTree.createGroup"))
+      })
     )
   )
+})
 
 /** A level's capacity is the sum of its classes' capacities (BEH-ZS-052) — never stored, always computed. */
-export const levelCapacity = (
+export const levelCapacity = Effect.fn("AcademicTree.levelCapacity")(function*(
   schoolId: string,
   levelId: string
-): Effect.Effect<number, SqlError, SqlClient> =>
-  withSchool(
+) {
+  return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
@@ -122,8 +113,9 @@ export const levelCapacity = (
         WHERE level_id = ${levelId} AND school_id = ${schoolId} AND is_active
       `
       return row.total === null ? 0 : Number(row.total)
-    }).pipe(Effect.withSpan("AcademicTree.levelCapacity"))
+    })
   )
+})
 
 const auditLog = Effect.fn("AcademicTree.auditLog")(function*(
   schoolId: string,
@@ -148,53 +140,44 @@ const renameEntity = (
   table: "cycles" | "levels" | "tracks",
   entityType: "cycle" | "level" | "track"
 ) =>
-(
-  schoolId: string,
-  entityId: string,
-  newName: string
-): Effect.Effect<
-  void,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
-    SchoolId(schoolId),
-    withSchool(
-      schoolId,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-        const before = yield* requireOwnedRow(
-          sql,
-          table,
-          entityType,
-          entityId,
-          SchoolId(schoolId),
-          Schema.Struct({ name: Schema.String }),
-          "name"
-        )
-        yield* sql`UPDATE ${sql(table)} SET name = ${newName} WHERE id = ${entityId} AND school_id = ${schoolId}`
-        yield* auditLog(schoolId, entityType, entityId, "renamed", { name: before.name }, { name: newName })
-      }).pipe(
-        Effect.withSpan(`AcademicTree.rename${entityType[0].toUpperCase()}${entityType.slice(1)}`)
+  Effect.fn(`AcademicTree.rename${entityType[0].toUpperCase()}${entityType.slice(1)}`)(function*(
+    schoolId: string,
+    entityId: string,
+    newName: string
+  ) {
+    return yield* authorized(
+      SchoolId(schoolId),
+      withSchool(
+        schoolId,
+        Effect.gen(function*() {
+          const sql = yield* SqlClient
+          const before = yield* requireOwnedRow(
+            sql,
+            table,
+            entityType,
+            entityId,
+            SchoolId(schoolId),
+            Schema.Struct({ name: Schema.String }),
+            "name"
+          )
+          yield* sql`UPDATE ${sql(table)} SET name = ${newName} WHERE id = ${entityId} AND school_id = ${schoolId}`
+          yield* auditLog(schoolId, entityType, entityId, "renamed", { name: before.name }, { name: newName })
+        })
       )
     )
-  )
+  })
 
 /** Renaming never breaks a link created from the renamed entity — every downstream row references it by id, never by name (same guarantee as ADR-ZS-105's per-year snapshots). */
 export const renameCycle = renameEntity("cycles", "cycle")
 export const renameLevel = renameEntity("levels", "level")
 export const renameTrack = renameEntity("tracks", "track")
 
-export const renameClass = (
+export const renameClass = Effect.fn("AcademicTree.renameClass")(function*(
   schoolId: string,
   classId: string,
   newLabel: string
-): Effect.Effect<
-  void,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(schoolId),
     withSchool(
       schoolId,
@@ -211,19 +194,16 @@ export const renameClass = (
         )
         yield* sql`UPDATE classes SET label = ${newLabel} WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "renamed", { label: before.label }, { label: newLabel })
-      }).pipe(Effect.withSpan("AcademicTree.renameClass"))
+      })
     )
   )
+})
 
-export const deactivateClass = (
+export const deactivateClass = Effect.fn("AcademicTree.deactivateClass")(function*(
   schoolId: string,
   classId: string
-): Effect.Effect<
-  void,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(schoolId),
     withSchool(
       schoolId,
@@ -232,9 +212,10 @@ export const deactivateClass = (
         yield* requireOwnedRow(sql, "classes", "class", classId, SchoolId(schoolId), RowWithId)
         yield* sql`UPDATE classes SET is_active = false WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deactivated", { is_active: true }, { is_active: false })
-      }).pipe(Effect.withSpan("AcademicTree.deactivateClass"))
+      })
     )
   )
+})
 
 /**
  * Deleting a class with enrollments must be refused, offering deactivation
@@ -243,15 +224,11 @@ export const deactivateClass = (
  * A class's own `Group`s are not a blocker — `groups.class_id` cascades on
  * delete (migration 0003).
  */
-export const deleteClass = (
+export const deleteClass = Effect.fn("AcademicTree.deleteClass")(function*(
   schoolId: string,
   classId: string
-): Effect.Effect<
-  void,
-  EnforcementError | EntityNotFoundError | EnrollmentsExistError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(schoolId),
     withSchool(
       schoolId,
@@ -265,6 +242,7 @@ export const deleteClass = (
         }
         yield* sql`DELETE FROM classes WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deleted", null, null)
-      }).pipe(Effect.withSpan("AcademicTree.deleteClass"))
+      })
     )
   )
+})

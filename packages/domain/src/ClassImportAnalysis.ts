@@ -1,11 +1,8 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
 import { authorized } from "./Ownership.ts"
 
@@ -56,7 +53,7 @@ export type ClassImportRowResult =
 export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImport")(function*(
   schoolId: string,
   rows: ReadonlyArray<ClassImportRow>
-): Effect.fn.Return<ReadonlyArray<ClassImportRowResult>, EnforcementError | SqlError, SqlClient | EvaluationServices> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
@@ -64,46 +61,47 @@ export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImp
       Effect.gen(function*() {
         const sql = yield* SqlClient
 
-        const analyzeRow = (row: ClassImportRow): Effect.Effect<ClassImportRowResult, SqlError> =>
-          Effect.gen(function*() {
-            const decoded = decodeClassImportRow(row)
-            if (Result.isFailure(decoded)) {
-              return { row, status: "error", reason: decoded.failure.message } as const
-            }
+        const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
+          row: ClassImportRow
+        ) {
+          const decoded = decodeClassImportRow(row)
+          if (Result.isFailure(decoded)) {
+            return { row, status: "error", reason: decoded.failure.message } as const
+          }
 
-            const [level] = yield* sql<{ id: string }>`
-              SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
+          const [level] = yield* sql<{ id: string }>`
+            SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
+          `
+          if (level === undefined) {
+            return { row, status: "error", reason: `Unknown level code: ${row.levelCode}` } as const
+          }
+
+          if (row.trackCode !== undefined) {
+            const [track] = yield* sql<{ id: string }>`
+              SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
             `
-            if (level === undefined) {
-              return { row, status: "error", reason: `Unknown level code: ${row.levelCode}` } as const
-            }
-
-            if (row.trackCode !== undefined) {
-              const [track] = yield* sql<{ id: string }>`
-                SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
-              `
-              if (track === undefined) {
-                return {
-                  row,
-                  status: "error",
-                  reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
-                } as const
-              }
-            }
-
-            const existing = yield* sql`
-              SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
-            `
-            if (existing.length > 0) {
+            if (track === undefined) {
               return {
                 row,
-                status: "duplicate",
-                reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+                status: "error",
+                reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
               } as const
             }
+          }
 
-            return { row, status: "creatable" } as const
-          })
+          const existing = yield* sql`
+            SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
+          `
+          if (existing.length > 0) {
+            return {
+              row,
+              status: "duplicate",
+              reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+            } as const
+          }
+
+          return { row, status: "creatable" } as const
+        })
 
         // Each row's lookups are independent and read-only — bounded
         // concurrency (rather than unbounded) caps how many connections a

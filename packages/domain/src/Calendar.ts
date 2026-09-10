@@ -1,11 +1,8 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
@@ -44,11 +41,7 @@ export interface AddSubPeriodCommand {
  */
 export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodDates")(function*(
   command: SetEvaluationPeriodDatesCommand
-): Effect.fn.Return<
-  void,
-  EnforcementError | EntityNotFoundError | PeriodOverlapError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
@@ -93,11 +86,7 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
 /** BEH-ZS-054: a dated sub-period (exam, mock exam, standardized test) within an evaluation period. */
 export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
   command: AddSubPeriodCommand
-): Effect.fn.Return<
-  string,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
@@ -148,7 +137,7 @@ export const seedCalendarEvents = Effect.fn("Calendar.seedCalendarEvents")(funct
   schoolId: string,
   academicYearId: string,
   academicYearLabel: string
-): Effect.fn.Return<void, SqlError, SqlClient> {
+) {
   const sql = yield* SqlClient
   const rows: Array<Record<string, unknown>> = []
 
@@ -211,7 +200,7 @@ export const preloadNationalCalendar = Effect.fn("Calendar.preloadNationalCalend
   schoolId: string,
   academicYearId: string,
   academicYearLabel: string
-): Effect.fn.Return<void, EnforcementError | SqlError, SqlClient | EvaluationServices> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
@@ -226,7 +215,7 @@ export const confirmMovableHoliday = Effect.fn("Calendar.confirmMovableHoliday")
   schoolId: string,
   eventId: string,
   confirmedDate: string
-): Effect.fn.Return<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(

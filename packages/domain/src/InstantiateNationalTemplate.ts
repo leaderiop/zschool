@@ -1,6 +1,4 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
 import * as Qadi from "@qadi/core/Qadi"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
@@ -71,11 +69,7 @@ const insertBatch = <A extends Record<string, unknown>>(
  * of milliseconds and tens of seconds.
  */
 export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplate.instantiateNationalTemplate")(
-  function*(command: InstantiateNationalTemplateCommand): Effect.fn.Return<
-    InstantiateNationalTemplateResult,
-    UnauthorizedCycleError | EnforcementError | SqlError,
-    SqlClient | EvaluationServices | GradingScales
-  > {
+  function*(command: InstantiateNationalTemplateCommand) {
     yield* Qadi.assert(canManageAcademicStructure, {
       resource: { school_id: command.schoolId },
       action: "instantiate-template"

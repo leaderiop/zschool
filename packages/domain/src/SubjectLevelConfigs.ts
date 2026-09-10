@@ -1,11 +1,7 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
-import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { LevelId, SchoolId, TrackId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
 
@@ -49,14 +45,10 @@ export interface UpdateSubjectLevelConfigCommand {
 }
 
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
-export const createSubject = (
+export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(function*(
   command: CreateSubjectCommand
-): Effect.Effect<
-  string,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -70,9 +62,10 @@ export const createSubject = (
           RETURNING id
         `
         return row.id
-      }).pipe(Effect.withSpan("SubjectLevelConfigs.createSubject"))
+      })
     )
   )
+})
 
 /**
  * BEH-ZS-053 / REQ-ZS-055: configures one subject for one (level, track)
@@ -81,14 +74,10 @@ export const createSubject = (
  * is refused rather than silently overwriting the first (that's what
  * `updateSubjectLevelConfig` is for).
  */
-export const configureSubjectLevel = (
+export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSubjectLevel")(function*(
   command: ConfigureSubjectLevelCommand
-): Effect.Effect<
-  string,
-  EnforcementError | EntityNotFoundError | DuplicateConfigError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -126,15 +115,16 @@ export const configureSubjectLevel = (
             ))
         )
         return row.id
-      }).pipe(Effect.withSpan("SubjectLevelConfigs.configureSubjectLevel"))
+      })
     )
   )
+})
 
 /** Edits an existing (level, track) configuration — scoped to this year's own snapshot (ADR-ZS-105): the `academic_year_id` match means a prior year's closed configuration is never reachable through this call. */
-export const updateSubjectLevelConfig = (
+export const updateSubjectLevelConfig = Effect.fn("SubjectLevelConfigs.updateSubjectLevelConfig")(function*(
   command: UpdateSubjectLevelConfigCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
+) {
+  return yield* authorized(
     SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
@@ -168,6 +158,7 @@ export const updateSubjectLevelConfig = (
             WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
           `
         }
-      }).pipe(Effect.withSpan("SubjectLevelConfigs.updateSubjectLevelConfig"))
+      })
     )
   )
+})

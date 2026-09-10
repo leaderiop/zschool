@@ -1,13 +1,10 @@
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import type { EnforcementError } from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import { SchoolId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
+import { authorized, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError")<{
   readonly groupId: string
@@ -25,11 +22,7 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
   schoolId: string,
   academicYearId: string,
   classId: string
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
@@ -83,11 +76,7 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
   schoolId: string,
   academicYearId: string,
   groupId: string
-): Effect.fn.Return<
-  string,
-  EnforcementError | EntityNotFoundError | NoSubjectLinkedError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
@@ -128,11 +117,7 @@ export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   schoolId: string,
   courseId: string,
   reason: string
-): Effect.fn.Return<
-  void,
-  EnforcementError | EntityNotFoundError | Schema.SchemaError | SqlError,
-  SqlClient | EvaluationServices
-> {
+) {
   return yield* authorized(
     SchoolId(schoolId),
     withSchool(
