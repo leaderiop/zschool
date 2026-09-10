@@ -16,13 +16,18 @@ const EXPECTED_APP_ROLE = "zschool_service"
  * here, immediately, with the actual vs. expected role in the message, is
  * cheaper than debugging that trail again. Overridable via
  * `APP_EXPECTED_ROLE` for a deliberate future role change.
+ *
+ * A defect (`Effect.die`), not a checked error: nothing is meant to recover
+ * from the app connecting as the wrong role — every existing consumer
+ * (`features/support/layers/db.ts`, `RlsPolicy.test.ts`) already collapses
+ * this to a defect via `Layer.orDie`/`Effect.orDie` anyway.
  */
 const assertExpectedAppRole = Effect.fn("AppSql.assertExpectedAppRole")(function*() {
   const expected = yield* Config.String("APP_EXPECTED_ROLE").pipe(Config.withDefault(EXPECTED_APP_ROLE))
   const sql = yield* SqlClient
   const [row] = yield* sql<{ current_user: string }>`SELECT current_user`
   if (row.current_user !== expected) {
-    return yield* Effect.fail(
+    return yield* Effect.die(
       new Error(
         `APP_DATABASE_URL connects as "${row.current_user}", expected "${expected}". `
           + `Check .env.local's APP_DATABASE_URL (see AppSql.ts for why the role matters — `
