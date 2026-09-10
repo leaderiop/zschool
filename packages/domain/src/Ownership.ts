@@ -8,17 +8,16 @@ import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 
 /** Every academic-structure write goes through this same `@qadi` policy — a director may only act on their own school. Shared so a change to how failures surface doesn't need editing in every domain module. */
-export const authorized = <A, E, R>(
+export const authorized = Effect.fn("Ownership.authorized")(function*<A, E, R>(
   schoolId: string,
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E | EnforcementError, R | EvaluationServices> =>
-  Effect.gen(function*() {
-    yield* Qadi.assert(canManageAcademicStructure, {
-      resource: { school_id: schoolId },
-      action: "manage-academic-structure"
-    })
-    return yield* effect
+): Effect.fn.Return<A, E | EnforcementError, R | EvaluationServices> {
+  yield* Qadi.assert(canManageAcademicStructure, {
+    resource: { school_id: schoolId },
+    action: "manage-academic-structure"
   })
+  return yield* effect
+})
 
 /**
  * The target entity a command names either doesn't exist, or doesn't belong
@@ -41,37 +40,37 @@ export class EntityNotFoundError extends Data.TaggedError("EntityNotFoundError")
   readonly entityId: string
 }> {}
 
-export const requireOwnedRow = <A extends Record<string, unknown> = { id: string }>(
+export const requireOwnedRow = Effect.fn("Ownership.requireOwnedRow")(function*<
+  A extends Record<string, unknown> = { id: string }
+>(
   sql: SqlClient,
   table: string,
   entityType: string,
   entityId: string,
   schoolId: string,
   columns = "id"
-): Effect.Effect<A, EntityNotFoundError | SqlError> =>
-  Effect.gen(function*() {
-    const rows = yield* sql<A>`
-      SELECT ${sql.literal(columns)} FROM ${sql(table)} WHERE id = ${entityId} AND school_id = ${schoolId}
-    `
-    const [row] = rows
-    if (row === undefined) {
-      return yield* Effect.fail(new EntityNotFoundError({ entityType, entityId }))
-    }
-    return row
-  })
+): Effect.fn.Return<A, EntityNotFoundError | SqlError> {
+  const rows = yield* sql<A>`
+    SELECT ${sql.literal(columns)} FROM ${sql(table)} WHERE id = ${entityId} AND school_id = ${schoolId}
+  `
+  const [row] = rows
+  if (row === undefined) {
+    return yield* Effect.fail(new EntityNotFoundError({ entityType, entityId }))
+  }
+  return row
+})
 
 /** A track belongs to a specific level, not just to the school — checked separately since a track and a level can each independently belong to the right school while the track still belongs to a *different* level (e.g. a 1BAC track passed alongside a 2BAC levelId). */
-export const requireTrackBelongsToLevel = (
+export const requireTrackBelongsToLevel = Effect.fn("Ownership.requireTrackBelongsToLevel")(function*(
   sql: SqlClient,
   trackId: string,
   levelId: string,
   schoolId: string
-): Effect.Effect<void, EntityNotFoundError | SqlError> =>
-  Effect.gen(function*() {
-    const rows = yield* sql`
-      SELECT id FROM tracks WHERE id = ${trackId} AND level_id = ${levelId} AND school_id = ${schoolId}
-    `
-    if (rows.length === 0) {
-      return yield* Effect.fail(new EntityNotFoundError({ entityType: "track", entityId: trackId }))
-    }
-  })
+): Effect.fn.Return<void, EntityNotFoundError | SqlError> {
+  const rows = yield* sql`
+    SELECT id FROM tracks WHERE id = ${trackId} AND level_id = ${levelId} AND school_id = ${schoolId}
+  `
+  if (rows.length === 0) {
+    return yield* Effect.fail(new EntityNotFoundError({ entityType: "track", entityId: trackId }))
+  }
+})

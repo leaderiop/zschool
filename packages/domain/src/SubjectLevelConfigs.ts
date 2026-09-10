@@ -64,7 +64,7 @@ export const createSubject = (
           RETURNING id
         `
         return row.id
-      })
+      }).pipe(Effect.withSpan("SubjectLevelConfigs.createSubject"))
     )
   )
 
@@ -115,7 +115,7 @@ export const configureSubjectLevel = (
             ))
         )
         return row.id
-      })
+      }).pipe(Effect.withSpan("SubjectLevelConfigs.configureSubjectLevel"))
     )
   )
 
@@ -157,6 +157,6 @@ export const updateSubjectLevelConfig = (
             WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
           `
         }
-      })
+      }).pipe(Effect.withSpan("SubjectLevelConfigs.updateSubjectLevelConfig"))
     )
   )

@@ -64,7 +64,7 @@ export const createClass = (
           RETURNING id
         `
         return row.id
-      })
+      }).pipe(Effect.withSpan("AcademicTree.createClass"))
     )
   )
 
@@ -88,7 +88,7 @@ export const createGroup = (
           RETURNING id
         `
         return row.id
-      })
+      }).pipe(Effect.withSpan("AcademicTree.createGroup"))
     )
   )
 
@@ -107,28 +107,27 @@ export const levelCapacity = (
         WHERE level_id = ${levelId} AND school_id = ${schoolId} AND is_active
       `
       return row.total === null ? 0 : Number(row.total)
-    })
+    }).pipe(Effect.withSpan("AcademicTree.levelCapacity"))
   )
 
-const auditLog = (
+const auditLog = Effect.fn("AcademicTree.auditLog")(function*(
   schoolId: string,
   entityType: "cycle" | "level" | "track" | "class",
   entityId: string,
   action: "renamed" | "deactivated" | "reactivated" | "deleted",
   oldValue: unknown,
   newValue: unknown
-) =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const subject = yield* CurrentSubject
-    yield* sql`
-      INSERT INTO structure_audit_log (school_id, actor_subject_id, entity_type, entity_id, action, old_value, new_value)
-      VALUES (
-        ${schoolId}, ${subject.id}, ${entityType}, ${entityId}, ${action},
-        ${JSON.stringify(oldValue)}::jsonb, ${JSON.stringify(newValue)}::jsonb
-      )
-    `
-  })
+) {
+  const sql = yield* SqlClient
+  const subject = yield* CurrentSubject
+  yield* sql`
+    INSERT INTO structure_audit_log (school_id, actor_subject_id, entity_type, entity_id, action, old_value, new_value)
+    VALUES (
+      ${schoolId}, ${subject.id}, ${entityType}, ${entityId}, ${action},
+      ${JSON.stringify(oldValue)}::jsonb, ${JSON.stringify(newValue)}::jsonb
+    )
+  `
+})
 
 const renameEntity = (
   table: "cycles" | "levels" | "tracks",
@@ -148,7 +147,9 @@ const renameEntity = (
         const before = yield* requireOwnedRow<{ name: string }>(sql, table, entityType, entityId, schoolId, "name")
         yield* sql`UPDATE ${sql(table)} SET name = ${newName} WHERE id = ${entityId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, entityType, entityId, "renamed", { name: before.name }, { name: newName })
-      })
+      }).pipe(
+        Effect.withSpan(`AcademicTree.rename${entityType[0].toUpperCase()}${entityType.slice(1)}`)
+      )
     )
   )
 
@@ -171,7 +172,7 @@ export const renameClass = (
         const before = yield* requireOwnedRow<{ label: string }>(sql, "classes", "class", classId, schoolId, "label")
         yield* sql`UPDATE classes SET label = ${newLabel} WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "renamed", { label: before.label }, { label: newLabel })
-      })
+      }).pipe(Effect.withSpan("AcademicTree.renameClass"))
     )
   )
 
@@ -188,7 +189,7 @@ export const deactivateClass = (
         yield* requireOwnedRow(sql, "classes", "class", classId, schoolId)
         yield* sql`UPDATE classes SET is_active = false WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deactivated", { is_active: true }, { is_active: false })
-      })
+      }).pipe(Effect.withSpan("AcademicTree.deactivateClass"))
     )
   )
 
@@ -221,6 +222,6 @@ export const deleteClass = (
         }
         yield* sql`DELETE FROM classes WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deleted", null, null)
-      })
+      }).pipe(Effect.withSpan("AcademicTree.deleteClass"))
     )
   )
