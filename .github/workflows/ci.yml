@@ -14,6 +14,16 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # `secrets` isn't a recognized named-value inside a step's `if:` —
+    # GitHub rejects the whole workflow file at parse time if you try
+    # (confirmed: every run since this pattern was introduced failed
+    # instantly with zero jobs, "Unrecognized named-value: 'secrets'").
+    # Exposing these as job-level env vars makes them readable from `env.*`
+    # in a step's `if:`, which is allowed; GitHub's log redaction still
+    # applies regardless of which context carries the secret's value.
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,10 +58,7 @@ jobs:
       # reproduce, so it alone still needs a real Neon branch and stays
       # gated on DATABASE_URL/APP_DATABASE_URL being configured as repo
       # secrets (see env.example).
-      - if: ${{ secrets.DATABASE_URL != '' && secrets.APP_DATABASE_URL != '' }}
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
+      - if: ${{ env.DATABASE_URL != '' && env.APP_DATABASE_URL != '' }}
         run: |
           pnpm --filter @zschool/db run migrate
           pnpm --filter @zschool/db run test:rls
