@@ -46,3 +46,12 @@ export type SubjectLevelConfigId = typeof SubjectLevelConfigId.Type
 
 export const CourseId = Schema.String.pipe(Schema.brand("CourseId"))
 export type CourseId = typeof CourseId.Type
+
+export const CalendarEventId = Schema.String.pipe(Schema.brand("CalendarEventId"))
+export type CalendarEventId = typeof CalendarEventId.Type
+
+export const EvaluationPeriodId = Schema.String.pipe(Schema.brand("EvaluationPeriodId"))
+export type EvaluationPeriodId = typeof EvaluationPeriodId.Type
+
+export const EvaluationSubPeriodId = Schema.String.pipe(Schema.brand("EvaluationSubPeriodId"))
+export type EvaluationSubPeriodId = typeof EvaluationSubPeriodId.Type
