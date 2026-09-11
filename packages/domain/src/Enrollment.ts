@@ -1,14 +1,16 @@
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
-export class DuplicateActiveEnrollmentError extends Data.TaggedError("DuplicateActiveEnrollmentError")<{
-  readonly studentPersonId: string
-  readonly academicYearLabel: string
-}> {}
+export class DuplicateActiveEnrollmentError
+  extends Schema.TaggedError<DuplicateActiveEnrollmentError>()("DuplicateActiveEnrollmentError", {
+    studentPersonId: Schema.String,
+    academicYearLabel: Schema.String
+  })
+{}
 
 export interface CreateEnrollmentCommand {
   readonly schoolId: string
@@ -95,36 +97,33 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
   // Postgres's own "transaction is aborted" state on a plain caught
   // error — this keeps the surrounding transaction usable for whatever
   // the caller (e.g. the next student row in an import batch) does next.
-  const result = yield* Effect.result(sql.withTransaction(sql<{ id: string }>`
+  const [row] = yield* sql.withTransaction(sql<{ id: string }>`
       INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
       VALUES (${command.schoolId}, ${command.academicYearId}, ${label}, ${command.studentPersonId}, ${command.classId}, ${status}, ${command.effectiveDate})
       RETURNING id
-    `))
-
-  if (result._tag === "Failure") {
-    return yield* Effect.fail(result.failure).pipe(
-      Effect.catchReason("SqlError", "UniqueViolation", () =>
-        Effect.fail(
-          new DuplicateActiveEnrollmentError({
-            studentPersonId: command.studentPersonId,
-            academicYearLabel: label
-          })
-        ))
-    )
-  }
-  return { id: result.success[0].id, status }
+    `).pipe(
+    Effect.catchReason("SqlError", "UniqueViolation", () =>
+      Effect.fail(
+        new DuplicateActiveEnrollmentError({
+          studentPersonId: command.studentPersonId,
+          academicYearLabel: label
+        })
+      ))
+  )
+  return { id: row.id, status }
 })
 
 export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(function*(
   command: CreateEnrollmentCommand
 ) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(command.schoolId)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "classes", "class", command.classId, schoolId, RowWithId)
         return yield* insertEnrollment(command)
       })
     )

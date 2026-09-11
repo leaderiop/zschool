@@ -1,6 +1,6 @@
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { LevelId, SchoolId, TrackId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
@@ -10,51 +10,57 @@ export { EntityNotFoundError }
 /** Available by default (BEH-ZS-053) — not an exhaustive/closed set: `teaching_language` is free text, so a school may configure another language beyond these four. */
 export const DEFAULT_TEACHING_LANGUAGES = ["Arabic", "French", "English", "Spanish"] as const
 
-export class DuplicateConfigError extends Data.TaggedError("DuplicateConfigError")<{
-  readonly subjectId: string
-  readonly levelId: string
-  readonly trackId: string | undefined
-}> {}
+export class DuplicateConfigError extends Schema.TaggedError<DuplicateConfigError>()("DuplicateConfigError", {
+  subjectId: Schema.String,
+  levelId: Schema.String,
+  trackId: Schema.UndefinedOr(Schema.String)
+}) {}
 
-export interface CreateSubjectCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly sectionId: string
-  readonly code: string
-  readonly name: string
-}
+/** `Schema.Class` instead of a plain interface (issue #34) — decoded once, at the start of the handler below. */
+export class CreateSubjectCommand extends Schema.Class<CreateSubjectCommand>("CreateSubjectCommand")({
+  schoolId: SchoolId,
+  academicYearId: Schema.String,
+  sectionId: Schema.String,
+  code: Schema.NonEmptyString,
+  name: Schema.NonEmptyString
+}) {}
 
-export interface ConfigureSubjectLevelCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly subjectId: string
-  readonly levelId: string
-  readonly trackId?: string
-  readonly coefficient: number
-  readonly teachingLanguage: string
-  readonly isMandatory: boolean
-}
+export class ConfigureSubjectLevelCommand
+  extends Schema.Class<ConfigureSubjectLevelCommand>("ConfigureSubjectLevelCommand")({
+    schoolId: SchoolId,
+    academicYearId: Schema.String,
+    subjectId: Schema.String,
+    levelId: Schema.String,
+    trackId: Schema.optional(Schema.String),
+    coefficient: Schema.Number,
+    teachingLanguage: Schema.NonEmptyString,
+    isMandatory: Schema.Boolean
+  })
+{}
 
-export interface UpdateSubjectLevelConfigCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly configId: string
-  readonly coefficient?: number
-  readonly teachingLanguage?: string
-  readonly isMandatory?: boolean
-}
+export class UpdateSubjectLevelConfigCommand
+  extends Schema.Class<UpdateSubjectLevelConfigCommand>("UpdateSubjectLevelConfigCommand")({
+    schoolId: SchoolId,
+    academicYearId: Schema.String,
+    configId: Schema.String,
+    coefficient: Schema.optional(Schema.Number),
+    teachingLanguage: Schema.optional(Schema.NonEmptyString),
+    isMandatory: Schema.optional(Schema.Boolean)
+  })
+{}
 
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
 export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(function*(
-  command: CreateSubjectCommand
+  rawCommand: (typeof CreateSubjectCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(CreateSubjectCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, command.schoolId, RowWithId)
 
         const [row] = yield* sql<{ id: string }>`
           INSERT INTO subjects (school_id, academic_year_id, section_id, code, name)
@@ -75,23 +81,21 @@ export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(func
  * `updateSubjectLevelConfig` is for).
  */
 export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSubjectLevel")(function*(
-  command: ConfigureSubjectLevelCommand
+  rawCommand: (typeof ConfigureSubjectLevelCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(ConfigureSubjectLevelCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, SchoolId(command.schoolId), RowWithId)
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, command.schoolId, RowWithId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId, RowWithId)
         if (command.trackId !== undefined) {
-          yield* requireTrackBelongsToLevel(
-            sql,
-            TrackId(command.trackId),
-            LevelId(command.levelId),
-            SchoolId(command.schoolId)
-          )
+          const trackId = yield* Schema.decodeEffect(TrackId)(command.trackId)
+          const levelId = yield* Schema.decodeEffect(LevelId)(command.levelId)
+          yield* requireTrackBelongsToLevel(sql, trackId, levelId, command.schoolId)
         }
 
         const insert = sql<{ id: string }>`
@@ -122,10 +126,11 @@ export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSub
 
 /** Edits an existing (level, track) configuration — scoped to this year's own snapshot (ADR-ZS-105): the `academic_year_id` match means a prior year's closed configuration is never reachable through this call. */
 export const updateSubjectLevelConfig = Effect.fn("SubjectLevelConfigs.updateSubjectLevelConfig")(function*(
-  command: UpdateSubjectLevelConfigCommand
+  rawCommand: (typeof UpdateSubjectLevelConfigCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(UpdateSubjectLevelConfigCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {

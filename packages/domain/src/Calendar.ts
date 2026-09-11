@@ -1,5 +1,4 @@
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
@@ -7,31 +6,34 @@ import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYe
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
-export class PeriodOverlapError extends Data.TaggedError("PeriodOverlapError")<{
-  readonly periodId: string
-  readonly conflictingPeriodId: string
-}> {}
+export class PeriodOverlapError extends Schema.TaggedError<PeriodOverlapError>()("PeriodOverlapError", {
+  periodId: Schema.String,
+  conflictingPeriodId: Schema.String
+}) {}
 
 const EvaluationPeriodRow = Schema.Struct({ id: Schema.String, academic_year_id: Schema.String })
 
-export interface SetEvaluationPeriodDatesCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly periodId: string
-  readonly startDate: string
-  readonly endDate: string
-}
+/** `Schema.Class` instead of a plain interface (issue #34) — decoded once, at the start of the handler below. */
+export class SetEvaluationPeriodDatesCommand
+  extends Schema.Class<SetEvaluationPeriodDatesCommand>("SetEvaluationPeriodDatesCommand")({
+    schoolId: SchoolId,
+    academicYearId: Schema.String,
+    periodId: Schema.String,
+    startDate: Schema.String,
+    endDate: Schema.String
+  })
+{}
 
-export interface AddSubPeriodCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly evaluationPeriodId: string
-  readonly code: string
-  readonly name: string
-  readonly subPeriodType: "exam" | "mock_exam" | "standardized_test"
-  readonly startDate: string
-  readonly endDate: string
-}
+export class AddSubPeriodCommand extends Schema.Class<AddSubPeriodCommand>("AddSubPeriodCommand")({
+  schoolId: SchoolId,
+  academicYearId: Schema.String,
+  evaluationPeriodId: Schema.String,
+  code: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  subPeriodType: Schema.Literals(["exam", "mock_exam", "standardized_test"]),
+  startDate: Schema.String,
+  endDate: Schema.String
+}) {}
 
 /**
  * BEH-ZS-054 / REQ-ZS-056: sets a period's dates, refusing an overlap with
@@ -40,10 +42,11 @@ export interface AddSubPeriodCommand {
  * dates.
  */
 export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodDates")(function*(
-  command: SetEvaluationPeriodDatesCommand
+  rawCommand: (typeof SetEvaluationPeriodDatesCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(SetEvaluationPeriodDatesCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -57,7 +60,7 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
           "evaluation_periods",
           "evaluation_period",
           command.periodId,
-          SchoolId(command.schoolId),
+          command.schoolId,
           EvaluationPeriodRow,
           "id, academic_year_id"
         )
@@ -85,10 +88,11 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
 
 /** BEH-ZS-054: a dated sub-period (exam, mock exam, standardized test) within an evaluation period. */
 export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
-  command: AddSubPeriodCommand
+  rawCommand: (typeof AddSubPeriodCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(AddSubPeriodCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -101,7 +105,7 @@ export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
           "evaluation_periods",
           "evaluation_period",
           command.evaluationPeriodId,
-          SchoolId(command.schoolId),
+          command.schoolId,
           EvaluationPeriodRow,
           "id, academic_year_id"
         )
@@ -201,8 +205,9 @@ export const preloadNationalCalendar = Effect.fn("Calendar.preloadNationalCalend
   academicYearId: string,
   academicYearLabel: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       seedCalendarEvents(schoolId, academicYearId, academicYearLabel)
@@ -216,8 +221,9 @@ export const confirmMovableHoliday = Effect.fn("Calendar.confirmMovableHoliday")
   eventId: string,
   confirmedDate: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {

@@ -1,13 +1,14 @@
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
 import { withSchool } from "@zschool/db"
-import { confirmMovableHoliday, instantiateNationalTemplate } from "@zschool/domain"
+import { confirmMovableHoliday } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { fileURLToPath } from "node:url"
+import { createInstantiatedSchool } from "../support/fixtures/school.ts"
 import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
@@ -33,16 +34,10 @@ class World extends Context.Service<World, {
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ And, Given, Then, When }) => {
   Given("a school instantiating the national template for school year {word}", function*(year) {
     const world = yield* World
-    const sql = yield* SqlClient
-    const [school] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES ('Calendar school') RETURNING id`
-    const result = yield* instantiateNationalTemplate({
-      schoolId: school.id,
-      academicYearLabel: year,
-      authorizedCycles: ["preschool", "primary", "middle", "upper_secondary"]
-    }).pipe(Effect.provide(asDirectorOf(school.id)), Effect.orDie)
+    const school = yield* createInstantiatedSchool({ name: "Calendar school", academicYearLabel: year })
 
-    yield* Ref.set(world.schoolId, school.id)
-    yield* Ref.set(world.academicYearId, result.academicYearId)
+    yield* Ref.set(world.schoolId, school.schoolId)
+    yield* Ref.set(world.academicYearId, school.academicYearId)
   })
 
   Then("the fixed national holidays are preloaded, confirmed, with their correct dates", function*() {

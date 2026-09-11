@@ -1,6 +1,5 @@
 import { CurrentSubject } from "@qadi/core/CurrentSubject"
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
@@ -10,29 +9,36 @@ import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsTo
 
 export { EntityNotFoundError }
 
-export class EnrollmentsExistError extends Data.TaggedError("EnrollmentsExistError")<{
-  readonly classId: string
-}> {}
+export class EnrollmentsExistError extends Schema.TaggedError<EnrollmentsExistError>()("EnrollmentsExistError", {
+  classId: Schema.String
+}) {}
 
-export interface CreateClassCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly levelId: string
-  readonly trackId?: string
-  readonly label: string
-  readonly capacity: number
-}
+/**
+ * `Schema.Class` instead of a plain interface (issue #34) — command payloads
+ * get the same untrusted-input validation the import-row schemas already
+ * get (a non-positive `capacity`, an empty `label`, now rejected here
+ * instead of reaching Postgres unchecked), rather than being trusted by
+ * shape alone. Decoded once, at the start of the handler below.
+ */
+export class CreateClassCommand extends Schema.Class<CreateClassCommand>("CreateClassCommand")({
+  schoolId: SchoolId,
+  academicYearId: Schema.String,
+  levelId: Schema.String,
+  trackId: Schema.optional(Schema.String),
+  label: Schema.NonEmptyString,
+  capacity: Schema.Int.check(Schema.isGreaterThan(0))
+}) {}
 
-export interface CreateGroupCommand {
-  readonly schoolId: string
-  readonly academicYearId: string
-  readonly classId: string
-  readonly code: string
-  readonly name: string
-  readonly groupType: "language" | "option" | "lab"
+export class CreateGroupCommand extends Schema.Class<CreateGroupCommand>("CreateGroupCommand")({
+  schoolId: SchoolId,
+  academicYearId: Schema.String,
+  classId: Schema.String,
+  code: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  groupType: Schema.Literals(["language", "option", "lab"]),
   /** Which subject this group is for — required before `Courses.ts`'s `generateCourseForGroup` can generate its course (migration 0006). */
-  readonly subjectLevelConfigId?: string
-}
+  subjectLevelConfigId: Schema.optional(Schema.String)
+}) {}
 
 /**
  * BEH-ZS-052 / REQ-ZS-054: `Class` under a `Level`/`Track`. Every write goes
@@ -41,22 +47,20 @@ export interface CreateGroupCommand {
  * `InstantiateNationalTemplate.ts`.
  */
 export const createClass = Effect.fn("AcademicTree.createClass")(function*(
-  command: CreateClassCommand
+  rawCommand: (typeof CreateClassCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(CreateClassCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId, RowWithId)
         if (command.trackId !== undefined) {
-          yield* requireTrackBelongsToLevel(
-            sql,
-            TrackId(command.trackId),
-            LevelId(command.levelId),
-            SchoolId(command.schoolId)
-          )
+          const trackId = yield* Schema.decodeEffect(TrackId)(command.trackId)
+          const levelId = yield* Schema.decodeEffect(LevelId)(command.levelId)
+          yield* requireTrackBelongsToLevel(sql, trackId, levelId, command.schoolId)
         }
 
         const [row] = yield* sql<{ id: string }>`
@@ -74,15 +78,16 @@ export const createClass = Effect.fn("AcademicTree.createClass")(function*(
 })
 
 export const createGroup = Effect.fn("AcademicTree.createGroup")(function*(
-  command: CreateGroupCommand
+  rawCommand: (typeof CreateGroupCommand)["Encoded"]
 ) {
+  const command = yield* Schema.decodeEffect(CreateGroupCommand)(rawCommand)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    command.schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "classes", "class", command.classId, command.schoolId, RowWithId)
 
         const [row] = yield* sql<{ id: string }>`
           INSERT INTO groups (school_id, academic_year_id, class_id, code, name, group_type, subject_level_config_id)
@@ -145,8 +150,9 @@ const renameEntity = (
     entityId: string,
     newName: string
   ) {
+    const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
     return yield* authorized(
-      SchoolId(schoolId),
+      validSchoolId,
       withSchool(
         schoolId,
         Effect.gen(function*() {
@@ -156,7 +162,7 @@ const renameEntity = (
             table,
             entityType,
             entityId,
-            SchoolId(schoolId),
+            validSchoolId,
             Schema.Struct({ name: Schema.String }),
             "name"
           )
@@ -177,8 +183,9 @@ export const renameClass = Effect.fn("AcademicTree.renameClass")(function*(
   classId: string,
   newLabel: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -188,7 +195,7 @@ export const renameClass = Effect.fn("AcademicTree.renameClass")(function*(
           "classes",
           "class",
           classId,
-          SchoolId(schoolId),
+          validSchoolId,
           Schema.Struct({ label: Schema.String }),
           "label"
         )
@@ -203,13 +210,14 @@ export const deactivateClass = Effect.fn("AcademicTree.deactivateClass")(functio
   schoolId: string,
   classId: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", classId, SchoolId(schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "classes", "class", classId, validSchoolId, RowWithId)
         yield* sql`UPDATE classes SET is_active = false WHERE id = ${classId} AND school_id = ${schoolId}`
         yield* auditLog(schoolId, "class", classId, "deactivated", { is_active: true }, { is_active: false })
       })
@@ -228,13 +236,14 @@ export const deleteClass = Effect.fn("AcademicTree.deleteClass")(function*(
   schoolId: string,
   classId: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", classId, SchoolId(schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "classes", "class", classId, validSchoolId, RowWithId)
 
         const occupied = yield* hasEnrollments(schoolId, classId)
         if (occupied) {

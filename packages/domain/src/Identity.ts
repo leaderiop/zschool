@@ -1,42 +1,55 @@
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
-import * as Option from "effect/Option"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
-export class InvalidMobileNumberError extends Data.TaggedError("InvalidMobileNumberError")<{
-  readonly mobileNumber: string
-}> {}
-
-export interface PersonMatch {
-  readonly personId: string
-  readonly firstName: string
-  readonly lastName: string
-  readonly dateOfBirth: string
-  readonly massarCode: string | null
-  readonly matchKind: "strong" | "weak"
-}
-
-/** The `find_person_matches` (migration 0008) row shape, decoded rather than trusted via a compile-time-only cast — a future column rename/type change is caught here instead of silently producing wrong fields. */
-export const PersonMatchRow = Schema.Struct({
-  person_id: Schema.String,
-  first_name: Schema.String,
-  last_name: Schema.String,
-  date_of_birth: Schema.String,
-  massar_code: Schema.NullOr(Schema.String),
-  match_kind: Schema.Literals(["strong", "weak"])
-})
-
-/** The `find_guardian_by_mobile` (migration ...) row shape, decoded for the same reason as `PersonMatchRow`. */
-export const GuardianMatchRow = Schema.Struct({
-  person_id: Schema.String
-})
+export class InvalidMobileNumberError extends Schema.TaggedError<InvalidMobileNumberError>()(
+  "InvalidMobileNumberError",
+  { mobileNumber: Schema.String }
+) {}
 
 export const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
-export const isValidE164 = (mobileNumber: string): boolean => E164_PATTERN.test(mobileNumber)
+/**
+ * The single source of truth for "is this a valid E.164 mobile number" — the
+ * import row schemas (`StudentGuardianImport.ts`) reference this schema
+ * directly instead of redeclaring the same `Schema.isPattern` check (issue
+ * #34), so the rule can't silently drift between the two.
+ */
+export const MobileNumber = Schema.String.check(Schema.isPattern(E164_PATTERN, { expected: "an E.164 mobile number" }))
+export const isValidE164 = Schema.is(MobileNumber)
+
+/**
+ * The `find_person_matches` (migration 0008) row shape, decoded (rather than
+ * trusted via a compile-time-only cast) directly into its camelCase
+ * application shape via `Schema.encodeKeys` — a future column rename/type
+ * change is caught here, and the snake_case-to-camelCase mapping lives in
+ * the schema itself instead of a hand-written `.map` after decode (issue
+ * #34).
+ */
+export const PersonMatch = Schema.Struct({
+  personId: Schema.String,
+  firstName: Schema.String,
+  lastName: Schema.String,
+  dateOfBirth: Schema.String,
+  massarCode: Schema.NullOr(Schema.String),
+  matchKind: Schema.Literals(["strong", "weak"])
+}).pipe(Schema.encodeKeys({
+  personId: "person_id",
+  firstName: "first_name",
+  lastName: "last_name",
+  dateOfBirth: "date_of_birth",
+  massarCode: "massar_code",
+  matchKind: "match_kind"
+}))
+export type PersonMatch = typeof PersonMatch.Type
+
+/** The `find_guardian_by_mobile` row shape, decoded for the same reason as `PersonMatch`. */
+export const GuardianMatch = Schema.Struct({
+  personId: Schema.String
+}).pipe(Schema.encodeKeys({ personId: "person_id" }))
+export type GuardianMatch = typeof GuardianMatch.Type
 
 // `packages/domain` stays platform-agnostic (no `node:*` imports, no
 // `@types/node` anywhere in this monorepo) — the Web Crypto global that
@@ -69,33 +82,31 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
   const sql = yield* SqlClient
   const query = SqlSchema.findAll({
     Request: Schema.Void,
-    Result: PersonMatchRow,
+    Result: PersonMatch,
     execute: () =>
       sql`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
   })
-  const rows = yield* query(undefined)
-  return rows.map((r) => ({
-    personId: r.person_id,
-    firstName: r.first_name,
-    lastName: r.last_name,
-    dateOfBirth: r.date_of_birth,
-    massarCode: r.massar_code,
-    matchKind: r.match_kind
-  }))
+  return yield* query(undefined)
 })
 
-/** ADR-ZS-050: a guardian's mobile number is the key used to detect an existing account, across schools. */
+/**
+ * ADR-ZS-050: a guardian's mobile number is the key used to detect an
+ * existing account, across schools. Returns `Option` rather than collapsing
+ * to `undefined` here — the "may not exist yet" stays composable all the way
+ * to whichever caller actually needs a raw nullable (issue #34: `Option`
+ * kept through the caller boundary, converted only at the one call site in
+ * `StudentGuardianImport.ts`'s `commitImportBatch` that wants a `??` chain).
+ */
 export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(function*(
   mobileNumber: string
 ) {
   const sql = yield* SqlClient
   const query = SqlSchema.findOneOption({
     Request: Schema.Void,
-    Result: GuardianMatchRow,
+    Result: GuardianMatch,
     execute: () => sql`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
   })
-  const result = yield* query(undefined)
-  return Option.getOrUndefined(Option.map(result, (row) => ({ personId: row.person_id })))
+  return yield* query(undefined)
 })
 
 /**
@@ -168,14 +179,21 @@ export const attachGuardianProfile = Effect.fn("Identity.attachGuardianProfile")
   ).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
 })
 
-export interface GuardianQualities {
-  readonly relationshipType: "mother" | "father" | "guardian" | "other"
-  readonly isLegalGuardian: boolean
-  readonly isFinancialGuardian: boolean
-  readonly isCustodialGuardian: boolean
-  readonly isEmergencyContact: boolean
-  readonly isAuthorizedForPickup: boolean
-}
+/**
+ * The single source of truth for a guardian relationship's qualities (issue
+ * #34) — previously declared twice (an interface here, a structurally
+ * identical `GuardianQualitiesSchema` in `StudentGuardianImport.ts`), which
+ * meant a field added to one could silently fail to reach the other.
+ */
+export const GuardianQualitiesSchema = Schema.Struct({
+  relationshipType: Schema.Literals(["mother", "father", "guardian", "other"]),
+  isLegalGuardian: Schema.Boolean,
+  isFinancialGuardian: Schema.Boolean,
+  isCustodialGuardian: Schema.Boolean,
+  isEmergencyContact: Schema.Boolean,
+  isAuthorizedForPickup: Schema.Boolean
+})
+export type GuardianQualities = typeof GuardianQualitiesSchema.Type
 
 /**
  * INV-ZS-021/064. Idempotent on the (guardian, student) pair via a caught

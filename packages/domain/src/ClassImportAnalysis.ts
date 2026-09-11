@@ -4,6 +4,7 @@ import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { SchoolId } from "./Ids.ts"
+import { ImportRowError } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -48,69 +49,94 @@ export const decodeClassImportRow = (row: ClassImportRow): Result.Result<ClassIm
 export type ClassImportRowResult =
   | { readonly row: ClassImportRow; readonly status: "creatable" }
   | { readonly row: ClassImportRow; readonly status: "duplicate"; readonly reason: string }
-  | { readonly row: ClassImportRow; readonly status: "error"; readonly reason: string }
+  | { readonly row: ClassImportRow; readonly status: "error"; readonly error: ImportRowError }
+
+/**
+ * Requests `SqlClient` from context instead of receiving it as a parameter
+ * (issue #34's DI correction — see the same fix in
+ * `StudentGuardianImport.ts`'s `resolveClass`/`analyzeStudentRow`), and is
+ * hoisted to module scope rather than redeclared inside
+ * `analyzeClassImport`'s body on every call. `schoolId` stays a plain
+ * parameter throughout — it's ordinary data, not a service.
+ *
+ * The three sequential lookups run inside `Effect.result` (matching
+ * `StudentGuardianImport.ts`'s row analyzers) so a transient `SqlError` on
+ * one row surfaces as that row's own error instead of aborting the whole
+ * `Effect.forEach` batch.
+ */
+const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
+  schoolId: string,
+  row: ClassImportRow
+) {
+  const decoded = decodeClassImportRow(row)
+  if (Result.isFailure(decoded)) {
+    return { row, status: "error", error: new ImportRowError({ reason: decoded.failure.message }) } as const
+  }
+
+  const sql = yield* SqlClient
+  const outcome = yield* Effect.result(Effect.gen(function*() {
+    const [level] = yield* sql<{ id: string }>`
+      SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
+    `
+    if (level === undefined) {
+      return { _tag: "error" as const, reason: `Unknown level code: ${row.levelCode}` }
+    }
+
+    if (row.trackCode !== undefined) {
+      const [track] = yield* sql<{ id: string }>`
+        SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
+      `
+      if (track === undefined) {
+        return {
+          _tag: "error" as const,
+          reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
+        }
+      }
+    }
+
+    const existing = yield* sql`
+      SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
+    `
+    if (existing.length > 0) {
+      return {
+        _tag: "duplicate" as const,
+        reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+      }
+    }
+
+    return { _tag: "creatable" as const }
+  }))
+
+  if (Result.isFailure(outcome)) {
+    return { row, status: "error", error: new ImportRowError({ reason: "SqlError", cause: outcome.failure }) } as const
+  }
+
+  switch (outcome.success._tag) {
+    case "error":
+      return { row, status: "error", error: new ImportRowError({ reason: outcome.success.reason }) } as const
+    case "duplicate":
+      return { row, status: "duplicate", reason: outcome.success.reason } as const
+    case "creatable":
+      return { row, status: "creatable" } as const
+  }
+})
 
 export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImport")(function*(
   schoolId: string,
   rows: ReadonlyArray<ClassImportRow>
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-
-        const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
-          row: ClassImportRow
-        ) {
-          const decoded = decodeClassImportRow(row)
-          if (Result.isFailure(decoded)) {
-            return { row, status: "error", reason: decoded.failure.message } as const
-          }
-
-          const [level] = yield* sql<{ id: string }>`
-            SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
-          `
-          if (level === undefined) {
-            return { row, status: "error", reason: `Unknown level code: ${row.levelCode}` } as const
-          }
-
-          if (row.trackCode !== undefined) {
-            const [track] = yield* sql<{ id: string }>`
-              SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
-            `
-            if (track === undefined) {
-              return {
-                row,
-                status: "error",
-                reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
-              } as const
-            }
-          }
-
-          const existing = yield* sql`
-            SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
-          `
-          if (existing.length > 0) {
-            return {
-              row,
-              status: "duplicate",
-              reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
-            } as const
-          }
-
-          return { row, status: "creatable" } as const
-        })
-
-        // Each row's lookups are independent and read-only — bounded
-        // concurrency (rather than unbounded) caps how many queries are in
-        // flight at once on this transaction's single connection (every row
-        // here shares the one connection `withSchool` opened above, pipelined
-        // rather than spread across the pool). `Effect.forEach` preserves
-        // input order in the returned array regardless of concurrency.
-        return yield* Effect.forEach(rows, analyzeRow, { concurrency: 5 })
-      })
+      // Each row's lookups are independent and read-only — bounded
+      // concurrency (rather than unbounded) caps how many queries are in
+      // flight at once on this transaction's single connection (every row
+      // here shares the one connection `withSchool` opened above, pipelined
+      // rather than spread across the pool). `Effect.forEach` preserves
+      // input order in the returned array regardless of concurrency.
+      Effect.forEach(rows, (row) => analyzeRow(schoolId, row), { concurrency: 5 })
     )
   )
 })

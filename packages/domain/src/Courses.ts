@@ -1,14 +1,13 @@
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { SchoolId } from "./Ids.ts"
 import { authorized, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
-export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError")<{
-  readonly groupId: string
-}> {}
+export class NoSubjectLinkedError extends Schema.TaggedError<NoSubjectLinkedError>()("NoSubjectLinkedError", {
+  groupId: Schema.String
+}) {}
 
 /**
  * BEH-ZS-058: generates one `Course` per mandatory `SubjectLevelConfig` at
@@ -23,8 +22,9 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
   academicYearId: string,
   classId: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -34,7 +34,7 @@ export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClas
           "classes",
           "class",
           classId,
-          SchoolId(schoolId),
+          validSchoolId,
           Schema.Struct({ level_id: Schema.String, track_id: Schema.NullOr(Schema.String) }),
           "level_id, track_id"
         )
@@ -77,8 +77,9 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
   academicYearId: string,
   groupId: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -88,7 +89,7 @@ export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup"
           "groups",
           "group",
           groupId,
-          SchoolId(schoolId),
+          validSchoolId,
           Schema.Struct({ subject_level_config_id: Schema.NullOr(Schema.String) }),
           "subject_level_config_id"
         )
@@ -118,13 +119,14 @@ export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   courseId: string,
   reason: string
 ) {
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
   return yield* authorized(
-    SchoolId(schoolId),
+    validSchoolId,
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "courses", "course", courseId, SchoolId(schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "courses", "course", courseId, validSchoolId, RowWithId)
         yield* sql`
           UPDATE courses SET is_active = false, deactivation_reason = ${reason}
           WHERE id = ${courseId} AND school_id = ${schoolId}

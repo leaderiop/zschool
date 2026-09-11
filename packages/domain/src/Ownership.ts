@@ -1,5 +1,4 @@
 import * as Qadi from "@qadi/core/Qadi"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
@@ -34,10 +33,10 @@ export const authorized = Effect.fn("Ownership.authorized")(function*<A, E, R>(
  * slower, differently-erroring path for "wrong school" versus "doesn't
  * exist" would itself leak that distinction).
  */
-export class EntityNotFoundError extends Data.TaggedError("EntityNotFoundError")<{
-  readonly entityType: string
-  readonly entityId: string
-}> {}
+export class EntityNotFoundError extends Schema.TaggedError<EntityNotFoundError>()("EntityNotFoundError", {
+  entityType: Schema.String,
+  entityId: Schema.String
+}) {}
 
 /** The default row shape `requireOwnedRow` decodes when a caller only needs the existence check, not any particular column. */
 export const RowWithId = Schema.Struct({ id: Schema.String })

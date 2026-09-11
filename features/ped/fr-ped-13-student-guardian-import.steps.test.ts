@@ -488,7 +488,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const result = yield* Ref.get(world.commitResult)
     assert.strictEqual(result!.studentResults[0].status, "error")
     if (result!.studentResults[0].status !== "error") throw new Error("unreachable")
-    assert.strictEqual(result!.studentResults[0].reason, "DuplicateActiveEnrollmentError")
+    assert.strictEqual(result!.studentResults[0].error.reason, "DuplicateActiveEnrollmentError")
 
     const activeCount = yield* ownerCount((sql) =>
       sql`
@@ -522,7 +522,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const [row] = analysis!
     assert.strictEqual(row.status, "error")
     if (row.status !== "error") throw new Error("unreachable")
-    assert.include(row.reason, "mobileNumber")
+    assert.include(row.error.reason, "mobileNumber")
   })
 
   Given("a student import row missing a required first name", function*() {
@@ -552,6 +552,6 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const [row] = analysis!
     assert.strictEqual(row.status, "error")
     if (row.status !== "error") throw new Error("unreachable")
-    assert.include(row.reason, "firstName")
+    assert.include(row.error.reason, "firstName")
   })
 })

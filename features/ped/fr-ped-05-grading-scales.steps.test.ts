@@ -1,13 +1,14 @@
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
 import { withSchool } from "@zschool/db"
-import { GradingScales, instantiateNationalTemplate, InvalidWeightingError } from "@zschool/domain"
+import { GradingScales, InvalidWeightingError } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { fileURLToPath } from "node:url"
+import { createInstantiatedSchool } from "../support/fixtures/school.ts"
 import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
@@ -40,21 +41,16 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
   Given("year 2026-2027 instantiated on the national template", function*() {
     const world = yield* World
     const sql = yield* SqlClient
-    const [school] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES ('Grading school') RETURNING id`
-    const result = yield* instantiateNationalTemplate({
-      schoolId: school.id,
-      academicYearLabel: "2026-2027",
-      authorizedCycles: ["preschool", "primary", "middle", "upper_secondary"]
-    }).pipe(Effect.provide(asDirectorOf(school.id)), Effect.orDie)
+    const school = yield* createInstantiatedSchool({ name: "Grading school" })
 
     const [level6AP] = yield* withSchool(
-      school.id,
-      sql<{ id: string }>`SELECT id FROM levels WHERE school_id = ${school.id} AND code = '6AP'`
+      school.schoolId,
+      sql<{ id: string }>`SELECT id FROM levels WHERE school_id = ${school.schoolId} AND code = '6AP'`
     ).pipe(Effect.orDie)
 
-    yield* Ref.set(world.schoolId, school.id)
-    yield* Ref.set(world.academicYearId, result.academicYearId)
-    yield* Ref.set(world.sectionId, result.sectionId)
+    yield* Ref.set(world.schoolId, school.schoolId)
+    yield* Ref.set(world.academicYearId, school.academicYearId)
+    yield* Ref.set(world.sectionId, school.sectionId)
     yield* Ref.set(world.level6APId, level6AP.id)
   })
 

@@ -1,5 +1,7 @@
-import { withSchool } from "@zschool/db"
+import { APP_POOL_MAX_CONNECTIONS, withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
+import * as Match from "effect/Match"
+import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
@@ -9,13 +11,15 @@ import {
   attachGuardianProfile,
   attachStudentProfile,
   createPerson,
-  E164_PATTERN,
   findGuardianMatch,
   findPersonMatches,
   type GuardianQualities,
+  GuardianQualitiesSchema,
+  MobileNumber,
   recordGuardianRelationship
 } from "./Identity.ts"
 import { GuardianPersonId, SchoolId, StudentPersonId } from "./Ids.ts"
+import { ImportRowError } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -26,6 +30,18 @@ import { authorized } from "./Ownership.ts"
  * only resolves a student row's target class by (level, track, label), it
  * never creates one.
  */
+
+/**
+ * Two different meanings used to share the bare literal `5` (issue #34):
+ * pipelining depth on ONE connection (`withSchool` scopes the student
+ * matching path to a single connection, not the pool) versus real pool
+ * connections held (`analyzeGuardianRows` is platform-wide, unscoped to one
+ * connection). Naming them separately keeps the two rationales from
+ * silently drifting back into each other the way a past comment already did
+ * once.
+ */
+const IMPORT_ROW_PIPELINE_DEPTH = 5
+const GUARDIAN_ANALYZE_POOL_CONCURRENCY = Math.floor(APP_POOL_MAX_CONNECTIONS / 2)
 
 export interface GuardianImportRow {
   readonly rowId: string
@@ -41,21 +57,22 @@ export type GuardianRowResult =
   | { readonly rowId: string; readonly status: "creatable" }
   | { readonly rowId: string; readonly status: "phone_match_proposed"; readonly personId: string }
   | { readonly rowId: string; readonly status: "weak_match_alert"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "error"; readonly reason: string }
+  | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
 
 /**
  * Validates the shape of a guardian row before any matching runs — non-empty
- * name/DOB, a mobile number in the same E.164 shape `isValidE164` enforces
- * elsewhere. Kept as a standalone, DB-free function (same pattern as
- * `ClassImportAnalysis.ts`'s `decodeClassImportRow`) so this boundary is
- * unit-testable without a `SqlClient`.
+ * name/DOB, a mobile number in the same E.164 shape `Identity.ts`'s
+ * `MobileNumber` schema enforces everywhere else (issue #34: one shared
+ * schema, not two that can drift). Kept as a standalone, DB-free function
+ * (same pattern as `ClassImportAnalysis.ts`'s `decodeClassImportRow`) so
+ * this boundary is unit-testable without a `SqlClient`.
  */
 const GuardianImportRowSchema = Schema.Struct({
   rowId: Schema.NonEmptyString,
   firstName: Schema.NonEmptyString,
   lastName: Schema.NonEmptyString,
   dateOfBirth: Schema.NonEmptyString,
-  mobileNumber: Schema.String.check(Schema.isPattern(E164_PATTERN, { expected: "an E.164 mobile number" })),
+  mobileNumber: MobileNumber,
   confirmedMatchPersonId: Schema.optional(Schema.String)
 })
 
@@ -75,8 +92,12 @@ const failureReason = (failure: { readonly _tag: string }): string =>
 const mapRowOutcome = <A, B>(
   unit: Result.Result<A, { readonly _tag: string }>,
   onSuccess: (success: A) => B,
-  onFailure: (reason: string) => B
-): B => Result.match(unit, { onFailure: (failure) => onFailure(failureReason(failure)), onSuccess })
+  onFailure: (error: ImportRowError) => B
+): B =>
+  Result.match(unit, {
+    onFailure: (failure) => onFailure(new ImportRowError({ reason: failureReason(failure), cause: failure })),
+    onSuccess
+  })
 
 /**
  * Each row's matching lookups are independent and read-only — bounded
@@ -94,13 +115,17 @@ const analyzeGuardianRow = Effect.fn("StudentGuardianImport.analyzeGuardianRow")
 ) {
   const decoded = decodeGuardianImportRow(row)
   if (Result.isFailure(decoded)) {
-    return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
+    return {
+      rowId: row.rowId,
+      status: "error",
+      error: new ImportRowError({ reason: decoded.failure.message })
+    } as const
   }
 
   const matched = yield* Effect.result(Effect.gen(function*() {
     const phoneMatch = yield* findGuardianMatch(row.mobileNumber)
-    if (phoneMatch !== undefined) {
-      return { _tag: "phoneMatch" as const, personId: phoneMatch.personId }
+    if (Option.isSome(phoneMatch)) {
+      return { _tag: "phoneMatch" as const, personId: phoneMatch.value.personId }
     }
     const nameMatches = yield* findPersonMatches(undefined, row.firstName, row.lastName, row.dateOfBirth)
     const weak = nameMatches.find((m) => m.matchKind === "weak")
@@ -111,17 +136,21 @@ const analyzeGuardianRow = Effect.fn("StudentGuardianImport.analyzeGuardianRow")
 
   return mapRowOutcome(
     matched,
-    (outcome): GuardianRowResult => {
-      switch (outcome._tag) {
-        case "phoneMatch":
-          return { rowId: row.rowId, status: "phone_match_proposed", personId: outcome.personId }
-        case "weakMatch":
-          return { rowId: row.rowId, status: "weak_match_alert", personId: outcome.personId }
-        case "creatable":
-          return { rowId: row.rowId, status: "creatable" }
-      }
-    },
-    (reason): GuardianRowResult => ({ rowId: row.rowId, status: "error", reason })
+    (outcome): GuardianRowResult =>
+      Match.valueTags(outcome, {
+        phoneMatch: (m: { readonly personId: string }): GuardianRowResult => ({
+          rowId: row.rowId,
+          status: "phone_match_proposed",
+          personId: m.personId
+        }),
+        weakMatch: (m: { readonly personId: string }): GuardianRowResult => ({
+          rowId: row.rowId,
+          status: "weak_match_alert",
+          personId: m.personId
+        }),
+        creatable: (): GuardianRowResult => ({ rowId: row.rowId, status: "creatable" })
+      }),
+    (error): GuardianRowResult => ({ rowId: row.rowId, status: "error", error })
   )
 })
 
@@ -129,7 +158,7 @@ const analyzeGuardianRow = Effect.fn("StudentGuardianImport.analyzeGuardianRow")
 export const analyzeGuardianRows = Effect.fn("StudentGuardianImport.analyzeGuardianRows")(function*(
   rows: ReadonlyArray<GuardianImportRow>
 ) {
-  return yield* Effect.forEach(rows, analyzeGuardianRow, { concurrency: 5 })
+  return yield* Effect.forEach(rows, analyzeGuardianRow, { concurrency: GUARDIAN_ANALYZE_POOL_CONCURRENCY })
 })
 
 export interface StudentImportRow {
@@ -147,15 +176,6 @@ export interface StudentImportRow {
   readonly confirmedMatchPersonId?: string
 }
 
-const GuardianQualitiesSchema = Schema.Struct({
-  relationshipType: Schema.Literals(["mother", "father", "guardian", "other"]),
-  isLegalGuardian: Schema.Boolean,
-  isFinancialGuardian: Schema.Boolean,
-  isCustodialGuardian: Schema.Boolean,
-  isEmergencyContact: Schema.Boolean,
-  isAuthorizedForPickup: Schema.Boolean
-})
-
 /** Same reasoning as `GuardianImportRowSchema` above, for a student row's own required fields plus its embedded guardian entries. */
 const StudentImportRowSchema = Schema.Struct({
   rowId: Schema.NonEmptyString,
@@ -169,7 +189,7 @@ const StudentImportRowSchema = Schema.Struct({
   effectiveDate: Schema.NonEmptyString,
   guardians: Schema.Array(
     Schema.Struct({
-      mobileNumber: Schema.String.check(Schema.isPattern(E164_PATTERN, { expected: "an E.164 mobile number" })),
+      mobileNumber: MobileNumber,
       qualities: GuardianQualitiesSchema
     })
   ),
@@ -187,15 +207,22 @@ export type StudentRowResult =
     readonly enrollmentId: string
   }
   | { readonly rowId: string; readonly status: "awaiting_confirmation"; readonly proposedPersonId: string }
-  | { readonly rowId: string; readonly status: "error"; readonly reason: string }
+  | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
 
+/**
+ * Requests `SqlClient` from context instead of receiving it as a parameter
+ * (issue #34's DI correction) — this and `analyzeStudentRow` below were the
+ * codebase's own anti-pattern example: `Identity.ts`'s functions three lines
+ * away in the same import already did this correctly. `schoolId` stays a
+ * plain parameter — it's data, not a service.
+ */
 const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
-  sql: SqlClient,
   schoolId: string,
   levelCode: string,
   trackCode: string | undefined,
   classLabel: string
 ) {
+  const sql = yield* SqlClient
   const [level] = yield* sql<
     { id: string }
   >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
@@ -222,27 +249,31 @@ export type StudentAnalysisResult =
   | { readonly rowId: string; readonly status: "creatable" }
   | { readonly rowId: string; readonly status: "strong_match_awaiting_confirmation"; readonly personId: string }
   | { readonly rowId: string; readonly status: "weak_match_alert"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "error"; readonly reason: string }
+  | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
 
 /**
- * Same decode-isolation reasoning as `analyzeGuardianRow` above. Unlike that
- * one, every row here shares the single connection `withSchool` opens below
- * (school-scoped matching, not platform-wide) — the concurrency bound caps
- * how many queries are in flight on that one connection at once, not how
- * many pool connections are held.
+ * Same DI correction as `resolveClass` above, and the same decode-isolation
+ * reasoning as `analyzeGuardianRow`. Unlike that one, every row here shares
+ * the single connection `withSchool` opens in `analyzeStudentRows` below
+ * (school-scoped matching, not platform-wide) — `IMPORT_ROW_PIPELINE_DEPTH`
+ * caps how many queries are in flight on that one connection at once, not
+ * how many pool connections are held.
  */
 const analyzeStudentRow = Effect.fn("StudentGuardianImport.analyzeStudentRow")(function*(
-  sql: SqlClient,
   schoolId: string,
   row: StudentImportRow
 ) {
   const decoded = decodeStudentImportRow(row)
   if (Result.isFailure(decoded)) {
-    return { rowId: row.rowId, status: "error", reason: decoded.failure.message } as const
+    return {
+      rowId: row.rowId,
+      status: "error",
+      error: new ImportRowError({ reason: decoded.failure.message })
+    } as const
   }
 
   const matched = yield* Effect.result(Effect.gen(function*() {
-    const resolved = yield* resolveClass(sql, schoolId, row.levelCode, row.trackCode, row.classLabel)
+    const resolved = yield* resolveClass(schoolId, row.levelCode, row.trackCode, row.classLabel)
     if (resolved === undefined) {
       return { _tag: "noClass" as const }
     }
@@ -259,23 +290,26 @@ const analyzeStudentRow = Effect.fn("StudentGuardianImport.analyzeStudentRow")(f
 
   return mapRowOutcome(
     matched,
-    (outcome): StudentAnalysisResult => {
-      switch (outcome._tag) {
-        case "noClass":
-          return {
-            rowId: row.rowId,
-            status: "error",
-            reason: `No class "${row.classLabel}" under level ${row.levelCode}`
-          }
-        case "strongMatch":
-          return { rowId: row.rowId, status: "strong_match_awaiting_confirmation", personId: outcome.personId }
-        case "weakMatch":
-          return { rowId: row.rowId, status: "weak_match_alert", personId: outcome.personId }
-        case "creatable":
-          return { rowId: row.rowId, status: "creatable" }
-      }
-    },
-    (reason): StudentAnalysisResult => ({ rowId: row.rowId, status: "error", reason })
+    (outcome): StudentAnalysisResult =>
+      Match.valueTags(outcome, {
+        noClass: (): StudentAnalysisResult => ({
+          rowId: row.rowId,
+          status: "error",
+          error: new ImportRowError({ reason: `No class "${row.classLabel}" under level ${row.levelCode}` })
+        }),
+        strongMatch: (m: { readonly personId: string }): StudentAnalysisResult => ({
+          rowId: row.rowId,
+          status: "strong_match_awaiting_confirmation",
+          personId: m.personId
+        }),
+        weakMatch: (m: { readonly personId: string }): StudentAnalysisResult => ({
+          rowId: row.rowId,
+          status: "weak_match_alert",
+          personId: m.personId
+        }),
+        creatable: (): StudentAnalysisResult => ({ rowId: row.rowId, status: "creatable" })
+      }),
+    (error): StudentAnalysisResult => ({ rowId: row.rowId, status: "error", error })
   )
 })
 
@@ -286,10 +320,7 @@ export const analyzeStudentRows = Effect.fn("StudentGuardianImport.analyzeStuden
 ) {
   return yield* withSchool(
     schoolId,
-    Effect.gen(function*() {
-      const sql = yield* SqlClient
-      return yield* Effect.forEach(rows, (row) => analyzeStudentRow(sql, schoolId, row), { concurrency: 5 })
-    })
+    Effect.forEach(rows, (row) => analyzeStudentRow(schoolId, row), { concurrency: IMPORT_ROW_PIPELINE_DEPTH })
   )
 })
 
@@ -302,7 +333,7 @@ export interface CommitImportBatchInput {
 
 export type GuardianCommitResult =
   | { readonly status: "committed"; readonly personId: string }
-  | { readonly status: "error"; readonly reason: string }
+  | { readonly status: "error"; readonly error: ImportRowError }
 
 export interface ImportBatchResult {
   readonly guardianResults: ReadonlyMap<string, GuardianCommitResult>
@@ -328,8 +359,9 @@ export interface ImportBatchResult {
 export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBatch")(function*(
   input: CommitImportBatchInput
 ) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(input.schoolId)
   return yield* authorized(
-    SchoolId(input.schoolId),
+    schoolId,
     withSchool(
       input.schoolId,
       Effect.gen(function*() {
@@ -355,17 +387,21 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
         for (const g of uniqueGuardianRows.values()) {
           const decodedGuardian = decodeGuardianImportRow(g)
           if (Result.isFailure(decodedGuardian)) {
-            guardianResults.set(g.mobileNumber, { status: "error", reason: decodedGuardian.failure.message })
+            guardianResults.set(g.mobileNumber, {
+              status: "error",
+              error: new ImportRowError({ reason: decodedGuardian.failure.message })
+            })
             continue
           }
 
           const unit = yield* Effect.result(sql.withTransaction(Effect.gen(function*() {
             const phoneMatch = yield* findGuardianMatch(g.mobileNumber)
-            const personId = g.confirmedMatchPersonId ?? phoneMatch?.personId ?? (yield* createPerson({
-              firstName: g.firstName,
-              lastName: g.lastName,
-              dateOfBirth: g.dateOfBirth
-            }))
+            const personId = g.confirmedMatchPersonId ?? Option.getOrUndefined(phoneMatch)?.personId
+              ?? (yield* createPerson({
+                firstName: g.firstName,
+                lastName: g.lastName,
+                dateOfBirth: g.dateOfBirth
+              }))
             yield* attachGuardianProfile(personId, g.mobileNumber)
             return personId
           })))
@@ -375,7 +411,7 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
             mapRowOutcome(
               unit,
               (personId): GuardianCommitResult => ({ status: "committed", personId }),
-              (reason): GuardianCommitResult => ({ status: "error", reason })
+              (error): GuardianCommitResult => ({ status: "error", error })
             )
           )
         }
@@ -391,12 +427,16 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
         for (const s of input.studentRows) {
           const decodedStudent = decodeStudentImportRow(s)
           if (Result.isFailure(decodedStudent)) {
-            studentResults.push({ rowId: s.rowId, status: "error", reason: decodedStudent.failure.message })
+            studentResults.push({
+              rowId: s.rowId,
+              status: "error",
+              error: new ImportRowError({ reason: decodedStudent.failure.message })
+            })
             continue
           }
 
           const unit = yield* Effect.result(sql.withTransaction(Effect.gen(function*() {
-            const resolved = yield* resolveClass(sql, input.schoolId, s.levelCode, s.trackCode, s.classLabel)
+            const resolved = yield* resolveClass(input.schoolId, s.levelCode, s.trackCode, s.classLabel)
             if (resolved === undefined) {
               return { _tag: "noClass" as const }
             }
@@ -421,8 +461,8 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
               const guardian = guardianResults.get(g.mobileNumber)
               if (guardian === undefined || guardian.status === "error") continue
               yield* recordGuardianRelationship(
-                GuardianPersonId(guardian.personId),
-                StudentPersonId(studentPersonId),
+                GuardianPersonId.make(guardian.personId),
+                StudentPersonId.make(studentPersonId),
                 g.qualities
               )
               hasLegalGuardian ||= g.qualities.isLegalGuardian
@@ -444,30 +484,31 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
           studentResults.push(
             mapRowOutcome(
               unit,
-              (outcome): StudentRowResult => {
-                switch (outcome._tag) {
-                  case "noClass":
-                    return {
-                      rowId: s.rowId,
-                      status: "error",
-                      reason: `No class "${s.classLabel}" under level ${s.levelCode}`
+              (outcome): StudentRowResult =>
+                Match.valueTags(outcome, {
+                  noClass: (): StudentRowResult => ({
+                    rowId: s.rowId,
+                    status: "error",
+                    error: new ImportRowError({ reason: `No class "${s.classLabel}" under level ${s.levelCode}` })
+                  }),
+                  awaitingConfirmation: (o: { readonly proposedPersonId: string }): StudentRowResult => ({
+                    rowId: s.rowId,
+                    status: "awaiting_confirmation",
+                    proposedPersonId: o.proposedPersonId
+                  }),
+                  written: (
+                    o: {
+                      readonly studentPersonId: string
+                      readonly enrollment: { readonly status: "pre_enrolled" | "active"; readonly id: string }
                     }
-                  case "awaitingConfirmation":
-                    return {
-                      rowId: s.rowId,
-                      status: "awaiting_confirmation",
-                      proposedPersonId: outcome.proposedPersonId
-                    }
-                  case "written":
-                    return {
-                      rowId: s.rowId,
-                      status: outcome.enrollment.status,
-                      studentPersonId: outcome.studentPersonId,
-                      enrollmentId: outcome.enrollment.id
-                    }
-                }
-              },
-              (reason): StudentRowResult => ({ rowId: s.rowId, status: "error", reason })
+                  ): StudentRowResult => ({
+                    rowId: s.rowId,
+                    status: o.enrollment.status,
+                    studentPersonId: o.studentPersonId,
+                    enrollmentId: o.enrollment.id
+                  })
+                }),
+              (error): StudentRowResult => ({ rowId: s.rowId, status: "error", error })
             )
           )
         }

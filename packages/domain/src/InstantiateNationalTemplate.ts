@@ -1,7 +1,7 @@
 import * as Qadi from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
@@ -16,10 +16,13 @@ import {
   subjectsForLevel
 } from "./NationalTemplate.ts"
 
-export class UnauthorizedCycleError extends Data.TaggedError("UnauthorizedCycleError")<{
-  readonly requestedCycles: ReadonlyArray<CycleCode>
-  readonly authorizedCycles: ReadonlyArray<CycleCode>
-}> {}
+/** Mirrors `NationalTemplate.ts`'s `CycleCode` union as a runtime schema, so `UnauthorizedCycleError`'s fields are validated, not just cast. */
+const CycleCodeSchema = Schema.Literals(["preschool", "primary", "middle", "upper_secondary"])
+
+export class UnauthorizedCycleError extends Schema.TaggedError<UnauthorizedCycleError>()("UnauthorizedCycleError", {
+  requestedCycles: Schema.Array(CycleCodeSchema),
+  authorizedCycles: Schema.Array(CycleCodeSchema)
+}) {}
 
 export interface InstantiateNationalTemplateCommand {
   readonly schoolId: string

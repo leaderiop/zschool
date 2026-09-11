@@ -1,8 +1,8 @@
 import { withSchool } from "@zschool/db"
 import * as Context from "effect/Context"
-import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { SchoolId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
@@ -39,10 +39,10 @@ export const defaultComputationRules: ReadonlyArray<
   }
 ]
 
-export class InvalidWeightingError extends Data.TaggedError("InvalidWeightingError")<{
-  readonly levelId: string
-  readonly total: number
-}> {}
+export class InvalidWeightingError extends Schema.TaggedError<InvalidWeightingError>()("InvalidWeightingError", {
+  levelId: Schema.String,
+  total: Schema.Finite
+}) {}
 
 export interface UpdateGradingScaleCommand {
   readonly schoolId: string
@@ -91,8 +91,9 @@ const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputat
 const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
 ) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(command.schoolId)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -140,8 +141,9 @@ const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(functio
 const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
 ) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(command.schoolId)
   return yield* authorized(
-    SchoolId(command.schoolId),
+    schoolId,
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -151,7 +153,7 @@ const setComputationRule = Effect.fn("GradingScales.setComputationRule")(functio
         }
 
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, schoolId, RowWithId)
 
         yield* sql`
           UPDATE computation_rules SET is_current = false
