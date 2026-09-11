@@ -23,6 +23,7 @@ features/
 ## Tagging convention
 
 Every `Feature:` block carries at least:
+
 - `@REQ-ZS-NNN` — the acceptance-scenario ID minted for that Feature block.
   Allocated per Feature block, not per requirement (a block that demonstrably
   covers more than one requirement gets tagged with every one of them).
@@ -43,4 +44,4 @@ the gap can't silently rot): as of Phase 0 of the migration, this tree
 contains **no scenario content yet** — extraction happens module by module in
 Phase 2 (behaviors), Phase 3 (journeys), and Phase 4 (cross-cutting). Once
 populated, see `support/README.md` for what's still deliberately absent from
-the *runtime* side (step definitions, a test runner, CI wiring).
+the _runtime_ side (step definitions, a test runner, CI wiring).

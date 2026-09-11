@@ -1,14 +1,14 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import { withSchool } from "@zschool/db"
+import { confirmMovableHoliday, instantiateNationalTemplate } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import { confirmMovableHoliday, instantiateNationalTemplate } from "@zschool/domain"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -29,12 +29,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
-
-const dateOnly = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ And, Given, Then, When }) => {
   Given("a school instantiating the national template for school year {word}", function*(year) {
@@ -58,7 +52,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     const rows = yield* withSchool(
       schoolId!,
-      sql<{ code: string; start_date: Date; confirmation_status: string }>`
+      sql<{ code: string; start_date: string; confirmation_status: string }>`
         SELECT code, start_date, confirmation_status FROM calendar_events
         WHERE school_id = ${schoolId} AND event_type = 'holiday' AND is_movable = false
         ORDER BY code
@@ -68,9 +62,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     assert.strictEqual(rows.length, 9)
     assert.isTrue(rows.every((r) => r.confirmation_status === "confirmed"))
     const newYear = rows.find((r) => r.code === "NEW_YEAR")
-    assert.strictEqual(newYear && dateOnly(newYear.start_date), "2027-01-01")
+    assert.strictEqual(newYear && newYear.start_date, "2027-01-01")
     const independenceDay = rows.find((r) => r.code === "INDEPENDENCE_DAY")
-    assert.strictEqual(independenceDay && dateOnly(independenceDay.start_date), "2026-11-18")
+    assert.strictEqual(independenceDay && independenceDay.start_date, "2026-11-18")
   })
 
   And("the published school breaks are preloaded, confirmed, with their documented dates", function*() {
@@ -80,7 +74,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     const rows = yield* withSchool(
       schoolId!,
-      sql<{ code: string; start_date: Date; end_date: Date }>`
+      sql<{ code: string; start_date: string; end_date: string }>`
         SELECT code, start_date, end_date FROM calendar_events
         WHERE school_id = ${schoolId} AND event_type = 'break'
         ORDER BY code
@@ -89,8 +83,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     assert.strictEqual(rows.length, 5)
     const midYear = rows.find((r) => r.code === "MID_YEAR_BREAK")
-    assert.strictEqual(midYear && dateOnly(midYear.start_date), "2027-01-24")
-    assert.strictEqual(midYear && dateOnly(midYear.end_date), "2027-01-31")
+    assert.strictEqual(midYear && midYear.start_date, "2027-01-24")
+    assert.strictEqual(midYear && midYear.end_date, "2027-01-31")
   })
 
   And("the movable religious holidays are preloaded {string} with no date yet", function*(status) {
@@ -100,7 +94,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     const rows = yield* withSchool(
       schoolId!,
-      sql<{ code: string; start_date: Date | null; confirmation_status: string }>`
+      sql<{ code: string; start_date: string | null; confirmation_status: string }>`
         SELECT code, start_date, confirmation_status FROM calendar_events
         WHERE school_id = ${schoolId} AND is_movable = true
         ORDER BY code
@@ -132,13 +126,13 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     const [row] = yield* withSchool(
       schoolId!,
-      sql<{ start_date: Date; confirmation_status: string }>`
+      sql<{ start_date: string; confirmation_status: string }>`
         SELECT start_date, confirmation_status FROM calendar_events
         WHERE school_id = ${schoolId} AND code = 'EID_AL_FITR'
       `
     ).pipe(Effect.orDie)
 
     assert.strictEqual(row.confirmation_status, "confirmed")
-    assert.strictEqual(dateOnly(row.start_date), "2027-03-21")
+    assert.strictEqual(row.start_date, "2027-03-21")
   })
 })

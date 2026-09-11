@@ -1,11 +1,10 @@
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { SchoolId } from "./Ids.ts"
+import { authorized, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError")<{
   readonly groupId: string
@@ -19,23 +18,24 @@ export class NoSubjectLinkedError extends Data.TaggedError("NoSubjectLinkedError
  * only ever adds courses for newly-mandatory subjects, never touches or
  * removes an existing one.
  */
-export const generateCoursesForClass = (
+export const generateCoursesForClass = Effect.fn("Courses.generateCoursesForClass")(function*(
   schoolId: string,
   academicYearId: string,
   classId: string
-): Effect.Effect<ReadonlyArray<string>, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const cls = yield* requireOwnedRow<{ level_id: string; track_id: string | null }>(
+        const cls = yield* requireOwnedRow(
           sql,
           "classes",
           "class",
           classId,
-          schoolId,
+          SchoolId(schoolId),
+          Schema.Struct({ level_id: Schema.String, track_id: Schema.NullOr(Schema.String) }),
           "level_id, track_id"
         )
 
@@ -69,25 +69,27 @@ export const generateCoursesForClass = (
       })
     )
   )
+})
 
 /** BEH-ZS-058: a language/option/lab group's course, once the group is linked to a subject configuration (`groups.subject_level_config_id`, migration 0006). */
-export const generateCourseForGroup = (
+export const generateCourseForGroup = Effect.fn("Courses.generateCourseForGroup")(function*(
   schoolId: string,
   academicYearId: string,
   groupId: string
-): Effect.Effect<string, EnforcementError | EntityNotFoundError | NoSubjectLinkedError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const group = yield* requireOwnedRow<{ subject_level_config_id: string | null }>(
+        const group = yield* requireOwnedRow(
           sql,
           "groups",
           "group",
           groupId,
-          schoolId,
+          SchoolId(schoolId),
+          Schema.Struct({ subject_level_config_id: Schema.NullOr(Schema.String) }),
           "subject_level_config_id"
         )
         if (group.subject_level_config_id === null) {
@@ -108,20 +110,21 @@ export const generateCourseForGroup = (
       })
     )
   )
+})
 
 /** A director deactivates a generated course when a configured subject isn't actually taught in that class/group. */
-export const deactivateCourse = (
+export const deactivateCourse = Effect.fn("Courses.deactivateCourse")(function*(
   schoolId: string,
   courseId: string,
   reason: string
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "courses", "course", courseId, schoolId)
+        yield* requireOwnedRow(sql, "courses", "course", courseId, SchoolId(schoolId), RowWithId)
         yield* sql`
           UPDATE courses SET is_active = false, deactivation_reason = ${reason}
           WHERE id = ${courseId} AND school_id = ${schoolId}
@@ -129,3 +132,4 @@ export const deactivateCourse = (
       })
     )
   )
+})

@@ -36,7 +36,7 @@ export default Effect.gen(function*() {
     SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'zschool_service') AS exists
   `
   if (!role.exists) {
-    const password = yield* Config.string("APP_ROLE_PASSWORD")
+    const password = yield* Config.String("APP_ROLE_PASSWORD")
     // CREATE ROLE is a utility statement, not an optimizable one — Postgres
     // does not accept bind parameters here, so the password (a
     // caller-generated, alphanumeric-only secret; never user input) is

@@ -1,14 +1,6 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
-import * as Context from "effect/Context"
-import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as Ref from "effect/Ref"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import type { EnforcementError } from "@qadi/core/Qadi"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { withSchool } from "@zschool/db"
 import {
   addSubPeriod,
@@ -17,6 +9,15 @@ import {
   PeriodOverlapError,
   setEvaluationPeriodDates
 } from "@zschool/domain"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Ref from "effect/Ref"
+import type { SchemaError } from "effect/Schema"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
+import type { SqlError } from "effect/unstable/sql/SqlError"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -27,7 +28,9 @@ class World extends Context.Service<World, {
   readonly schoolId: Ref.Ref<string | undefined>
   readonly academicYearId: Ref.Ref<string | undefined>
   readonly semester1Id: Ref.Ref<string | undefined>
-  readonly error: Ref.Ref<PeriodOverlapError | EntityNotFoundError | EnforcementError | SqlError | undefined>
+  readonly error: Ref.Ref<
+    PeriodOverlapError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+  >
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -36,17 +39,15 @@ class World extends Context.Service<World, {
         schoolId: yield* Ref.make<string | undefined>(undefined),
         academicYearId: yield* Ref.make<string | undefined>(undefined),
         semester1Id: yield* Ref.make<string | undefined>(undefined),
-        error: yield* Ref.make<PeriodOverlapError | EntityNotFoundError | EnforcementError | SqlError | undefined>(undefined)
+        error: yield* Ref.make<
+          PeriodOverlapError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+        >(
+          undefined
+        )
       })
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
-
-const dateOnly = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ And, Given, Then, When }) => {
   Given("a school instantiating the national template for school year {word}", function*(year) {
@@ -90,12 +91,12 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const semester1Id = yield* Ref.get(world.semester1Id)
     const [row] = yield* withSchool(
       schoolId!,
-      sql<{ start_date: Date; end_date: Date }>`
+      sql<{ start_date: string; end_date: string }>`
         SELECT start_date, end_date FROM evaluation_periods WHERE id = ${semester1Id}
       `
     ).pipe(Effect.orDie)
-    assert.strictEqual(dateOnly(row.start_date), "2026-09-07")
-    assert.strictEqual(dateOnly(row.end_date), "2027-01-24")
+    assert.strictEqual(row.start_date, "2026-09-07")
+    assert.strictEqual(row.end_date, "2027-01-24")
   })
 
   And("semester 1 already dated September 7, 2026 to January 24, 2027", function*() {
@@ -149,12 +150,12 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const semester1Id = yield* Ref.get(world.semester1Id)
     const [row] = yield* withSchool(
       schoolId!,
-      sql<{ start_date: Date; end_date: Date }>`
+      sql<{ start_date: string; end_date: string }>`
         SELECT start_date, end_date FROM evaluation_periods WHERE id = ${semester1Id}
       `
     ).pipe(Effect.orDie)
-    assert.strictEqual(dateOnly(row.start_date), "2026-09-07")
-    assert.strictEqual(dateOnly(row.end_date), "2027-01-24")
+    assert.strictEqual(row.start_date, "2026-09-07")
+    assert.strictEqual(row.end_date, "2027-01-24")
   })
 
   When("the director adds a mock exam sub-period from December 15, 2026 to December 18, 2026", function*() {

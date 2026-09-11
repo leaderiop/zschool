@@ -30,3 +30,13 @@ Feature: Student and guardian import
     Given a student already actively enrolled for this academic year label at another school
     When this school commits an active-eligible enrollment for the same underlying person and year
     Then that row errors instead of creating a second active enrollment
+
+  Scenario: An invalid guardian phone number is rejected with a specific reason
+    Given a guardian import row with an invalid phone number
+    When the guardian rows are analyzed
+    Then the row is rejected with a reason naming the phone number field
+
+  Scenario: A missing required student field is rejected with a specific reason
+    Given a student import row missing a required first name
+    When the student rows are analyzed
+    Then the row is rejected with a reason naming the first name field

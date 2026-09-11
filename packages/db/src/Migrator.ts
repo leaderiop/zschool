@@ -1,8 +1,8 @@
-import { fileURLToPath } from "node:url"
-import * as Layer from "effect/Layer"
-import { PgMigrator } from "@effect/sql-pg"
-import * as Migrator from "effect/unstable/sql/Migrator"
 import { NodeServices } from "@effect/platform-node"
+import { PgMigrator } from "@effect/sql-pg"
+import * as Layer from "effect/Layer"
+import * as Migrator from "effect/unstable/sql/Migrator"
+import { fileURLToPath } from "node:url"
 
 const migrationsDirectory = fileURLToPath(new URL("./migrations", import.meta.url))
 

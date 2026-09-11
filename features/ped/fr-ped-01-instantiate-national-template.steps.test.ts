@@ -1,21 +1,21 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
+import {
+  type CycleCode,
+  instantiateNationalTemplate,
+  type InstantiateNationalTemplateResult,
+  UnauthorizedCycleError
+} from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import {
-  type CycleCode,
-  instantiateNationalTemplate,
-  UnauthorizedCycleError,
-  type InstantiateNationalTemplateResult
-} from "@zschool/domain"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -51,9 +51,6 @@ const createSchool = (name: string) =>
     const [row] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES (${name}) RETURNING id`
     return row.id
   })
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 const runInstantiation = (schoolId: string, academicYearLabel: string, authorizedCycles: ReadonlyArray<CycleCode>) =>
   instantiateNationalTemplate({ schoolId, academicYearLabel, authorizedCycles }).pipe(
@@ -244,15 +241,17 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     }
   )
 
-  And("a track's subject coefficients are configured independently of every other track at the same level", function*() {
-    const world = yield* World
-    const sql = yield* SqlClient
-    const schoolId = yield* Ref.get(world.schoolId)
+  And(
+    "a track's subject coefficients are configured independently of every other track at the same level",
+    function*() {
+      const world = yield* World
+      const sql = yield* SqlClient
+      const schoolId = yield* Ref.get(world.schoolId)
 
-    yield* withSchool(
-      schoolId!,
-      Effect.gen(function*() {
-        const [mathA, mathB] = yield* sql<{ coefficient: string }>`
+      yield* withSchool(
+        schoolId!,
+        Effect.gen(function*() {
+          const [mathA, mathB] = yield* sql<{ coefficient: string }>`
           SELECT slc.coefficient
           FROM subject_level_configs slc
           JOIN subjects s ON s.id = slc.subject_id
@@ -262,12 +261,13 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
             AND t.code IN ('math_sciences_a', 'math_sciences_b')
           ORDER BY t.code
         `
-        assert.isDefined(mathA)
-        assert.isDefined(mathB)
-        assert.notStrictEqual(Number(mathA.coefficient), Number(mathB.coefficient))
-      })
-    )
-  })
+          assert.isDefined(mathA)
+          assert.isDefined(mathB)
+          assert.notStrictEqual(Number(mathA.coefficient), Number(mathB.coefficient))
+        })
+      )
+    }
+  )
 
   Given("a school instantiating the national template for school year {word}", function*(year) {
     const world = yield* World
@@ -408,45 +408,48 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     assert.strictEqual(b._tag, "Success")
   })
 
-  Then("each school's academic years, sections, cycles, levels, and subjects carry only that school's school_id", function*() {
-    const world = yield* World
-    const sql = yield* SqlClient
-    const schoolId = yield* Ref.get(world.schoolId)
-    const otherSchoolId = yield* Ref.get(world.otherSchoolId)
+  Then(
+    "each school's academic years, sections, cycles, levels, and subjects carry only that school's school_id",
+    function*() {
+      const world = yield* World
+      const sql = yield* SqlClient
+      const schoolId = yield* Ref.get(world.schoolId)
+      const otherSchoolId = yield* Ref.get(world.otherSchoolId)
 
-    // Explicit `WHERE school_id = ...`, run under each school's own
-    // `withSchool` scope — since migration 0007, `zschool_service` does not
-    // carry `BYPASSRLS` (see `packages/db/src/AppSql.ts`), so the
-    // `tenant_isolation` policy is a real, independent second layer here:
-    // reading `sections` from OUTSIDE any `withSchool` scope would now be
-    // RLS-filtered to nothing rather than freely returning every school's
-    // rows, which is exactly the isolation this assertion is checking for.
-    const sections = yield* withSchool(
-      schoolId!,
-      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${schoolId}`
-    )
-    assert.isAbove(sections.length, 0)
-    assert.isTrue(sections.every((row) => row.school_id === schoolId))
+      // Explicit `WHERE school_id = ...`, run under each school's own
+      // `withSchool` scope — since migration 0007, `zschool_service` does not
+      // carry `BYPASSRLS` (see `packages/db/src/AppSql.ts`), so the
+      // `tenant_isolation` policy is a real, independent second layer here:
+      // reading `sections` from OUTSIDE any `withSchool` scope would now be
+      // RLS-filtered to nothing rather than freely returning every school's
+      // rows, which is exactly the isolation this assertion is checking for.
+      const sections = yield* withSchool(
+        schoolId!,
+        sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${schoolId}`
+      )
+      assert.isAbove(sections.length, 0)
+      assert.isTrue(sections.every((row) => row.school_id === schoolId))
 
-    const otherSections = yield* withSchool(
-      otherSchoolId!,
-      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
-    )
-    assert.isAbove(otherSections.length, 0)
-    assert.isTrue(otherSections.every((row) => row.school_id === otherSchoolId))
+      const otherSections = yield* withSchool(
+        otherSchoolId!,
+        sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
+      )
+      assert.isAbove(otherSections.length, 0)
+      assert.isTrue(otherSections.every((row) => row.school_id === otherSchoolId))
 
-    // The actual RLS-blocking proof: scoped to `schoolId`, a query for the
-    // OTHER school's own rows (by their real id, no `WHERE school_id`
-    // mismatch involved) must come back empty — the two same-school checks
-    // above would pass identically even if `tenant_isolation` were broken.
-    const crossTenantRead = yield* withSchool(
-      schoolId!,
-      sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
-    )
-    assert.strictEqual(crossTenantRead.length, 0)
+      // The actual RLS-blocking proof: scoped to `schoolId`, a query for the
+      // OTHER school's own rows (by their real id, no `WHERE school_id`
+      // mismatch involved) must come back empty — the two same-school checks
+      // above would pass identically even if `tenant_isolation` were broken.
+      const crossTenantRead = yield* withSchool(
+        schoolId!,
+        sql<{ school_id: string }>`SELECT school_id FROM sections WHERE school_id = ${otherSchoolId}`
+      )
+      assert.strictEqual(crossTenantRead.length, 0)
 
-    assert.notStrictEqual(schoolId, otherSchoolId)
-  })
+      assert.notStrictEqual(schoolId, otherSchoolId)
+    }
+  )
 
   And(
     "every tenant-scoped table created by the migration has a tenant_isolation row-level-security policy keyed on school_id",

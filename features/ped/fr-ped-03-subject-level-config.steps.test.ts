@@ -1,14 +1,6 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
-import * as Context from "effect/Context"
-import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as Ref from "effect/Ref"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
 import type { EnforcementError } from "@qadi/core/Qadi"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
 import { withSchool } from "@zschool/db"
 import {
   configureSubjectLevel,
@@ -18,6 +10,15 @@ import {
   instantiateNationalTemplate,
   updateSubjectLevelConfig
 } from "@zschool/domain"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Ref from "effect/Ref"
+import type { SchemaError } from "effect/Schema"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
+import type { SqlError } from "effect/unstable/sql/SqlError"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -29,7 +30,9 @@ class World extends Context.Service<World, {
   readonly academicYearId: Ref.Ref<string | undefined>
   readonly sectionId: Ref.Ref<string | undefined>
   readonly otherAcademicYearId: Ref.Ref<string | undefined>
-  readonly error: Ref.Ref<DuplicateConfigError | EntityNotFoundError | EnforcementError | SqlError | undefined>
+  readonly error: Ref.Ref<
+    DuplicateConfigError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+  >
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -39,14 +42,15 @@ class World extends Context.Service<World, {
         academicYearId: yield* Ref.make<string | undefined>(undefined),
         sectionId: yield* Ref.make<string | undefined>(undefined),
         otherAcademicYearId: yield* Ref.make<string | undefined>(undefined),
-        error: yield* Ref.make<DuplicateConfigError | EntityNotFoundError | EnforcementError | SqlError | undefined>(undefined)
+        error: yield* Ref.make<
+          DuplicateConfigError | EntityNotFoundError | SchemaError | EnforcementError | SqlError | undefined
+        >(
+          undefined
+        )
       })
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 const instantiate = (schoolId: string, academicYearLabel: string) =>
   instantiateNationalTemplate({
@@ -64,7 +68,9 @@ const findId = (
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
-      const [row] = yield* sql<{ id: string }>`SELECT id FROM ${sql(table)} WHERE school_id = ${schoolId} AND code = ${code}`
+      const [row] = yield* sql<{ id: string }>`SELECT id FROM ${
+        sql(table)
+      } WHERE school_id = ${schoolId} AND code = ${code}`
       return row.id
     })
   ).pipe(Effect.orDie)
@@ -114,39 +120,44 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
   Given("a school instantiating the national template for school year {word}", function*(year) {
     const world = yield* World
     const sql = yield* SqlClient
-    const [school] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES ('Subject config school') RETURNING id`
+    const [school] = yield* sql<
+      { id: string }
+    >`INSERT INTO schools (name) VALUES ('Subject config school') RETURNING id`
     const result = yield* instantiate(school.id, year)
     yield* Ref.set(world.schoolId, school.id)
     yield* Ref.set(world.academicYearId, result.academicYearId)
     yield* Ref.set(world.sectionId, result.sectionId)
   })
 
-  When("the director changes Mathematics' coefficient for \\(2nd Bac, Mathematical Sciences A) to {int}", function*(newCoefficient) {
-    const world = yield* World
-    const schoolId = yield* Ref.get(world.schoolId)
-    const academicYearId = yield* Ref.get(world.academicYearId)
+  When(
+    "the director changes Mathematics' coefficient for \\(2nd Bac, Mathematical Sciences A) to {int}",
+    function*(newCoefficient) {
+      const world = yield* World
+      const schoolId = yield* Ref.get(world.schoolId)
+      const academicYearId = yield* Ref.get(world.academicYearId)
 
-    const levelId = yield* findId(schoolId!, "levels", "2BAC")
-    const trackId = yield* findTrackId(schoolId!, levelId, "math_sciences_a")
-    const [config] = yield* withSchool(
-      schoolId!,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-        return yield* sql<{ id: string }>`
+      const levelId = yield* findId(schoolId!, "levels", "2BAC")
+      const trackId = yield* findTrackId(schoolId!, levelId, "math_sciences_a")
+      const [config] = yield* withSchool(
+        schoolId!,
+        Effect.gen(function*() {
+          const sql = yield* SqlClient
+          return yield* sql<{ id: string }>`
           SELECT slc.id FROM subject_level_configs slc
           JOIN subjects s ON s.id = slc.subject_id
           WHERE slc.level_id = ${levelId} AND slc.track_id = ${trackId} AND s.code = 'MATH'
         `
-      })
-    ).pipe(Effect.orDie)
+        })
+      ).pipe(Effect.orDie)
 
-    yield* updateSubjectLevelConfig({
-      schoolId: schoolId!,
-      academicYearId: academicYearId!,
-      configId: config.id,
-      coefficient: newCoefficient
-    }).pipe(Effect.provide(asDirectorOf(schoolId!)))
-  })
+      yield* updateSubjectLevelConfig({
+        schoolId: schoolId!,
+        academicYearId: academicYearId!,
+        configId: config.id,
+        coefficient: newCoefficient
+      }).pipe(Effect.provide(asDirectorOf(schoolId!)))
+    }
+  )
 
   Then("the configuration for \\(2nd Bac, Mathematical Sciences A) reflects the new coefficient", function*() {
     const world = yield* World
@@ -164,29 +175,32 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     assert.strictEqual(coefficient, 4)
   })
 
-  When("the director attempts to create a second configuration for Mathematics at \\(2nd Bac, Mathematical Sciences A)", function*() {
-    const world = yield* World
-    const schoolId = yield* Ref.get(world.schoolId)
-    const academicYearId = yield* Ref.get(world.academicYearId)
-    const subjectId = yield* findId(schoolId!, "subjects", "MATH")
-    const levelId = yield* findId(schoolId!, "levels", "2BAC")
-    const trackId = yield* findTrackId(schoolId!, levelId, "math_sciences_a")
+  When(
+    "the director attempts to create a second configuration for Mathematics at \\(2nd Bac, Mathematical Sciences A)",
+    function*() {
+      const world = yield* World
+      const schoolId = yield* Ref.get(world.schoolId)
+      const academicYearId = yield* Ref.get(world.academicYearId)
+      const subjectId = yield* findId(schoolId!, "subjects", "MATH")
+      const levelId = yield* findId(schoolId!, "levels", "2BAC")
+      const trackId = yield* findTrackId(schoolId!, levelId, "math_sciences_a")
 
-    const outcome = yield* configureSubjectLevel({
-      schoolId: schoolId!,
-      academicYearId: academicYearId!,
-      subjectId,
-      levelId,
-      trackId,
-      coefficient: 99,
-      teachingLanguage: "French",
-      isMandatory: true
-    }).pipe(Effect.provide(asDirectorOf(schoolId!)), Effect.result)
+      const outcome = yield* configureSubjectLevel({
+        schoolId: schoolId!,
+        academicYearId: academicYearId!,
+        subjectId,
+        levelId,
+        trackId,
+        coefficient: 99,
+        teachingLanguage: "French",
+        isMandatory: true
+      }).pipe(Effect.provide(asDirectorOf(schoolId!)), Effect.result)
 
-    if (outcome._tag === "Failure") {
-      yield* Ref.set(world.error, outcome.failure)
+      if (outcome._tag === "Failure") {
+        yield* Ref.set(world.error, outcome.failure)
+      }
     }
-  })
+  )
 
   Then("the creation is refused with an explicit error", function*() {
     const world = yield* World

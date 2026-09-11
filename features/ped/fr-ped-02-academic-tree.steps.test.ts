@@ -1,24 +1,24 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import type { EnforcementError } from "@qadi/core/Qadi"
+import { withSchool } from "@zschool/db"
+import {
+  createClass,
+  createGroup,
+  deleteClass,
+  EnrollmentsExistError,
+  instantiateNationalTemplate,
+  levelCapacity,
+  renameLevel
+} from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import {
-  EnrollmentsExistError,
-  createClass,
-  createGroup,
-  deleteClass,
-  instantiateNationalTemplate,
-  levelCapacity,
-  renameLevel
-} from "@zschool/domain"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -45,9 +45,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 /** Creates a school and instantiates the national template, returning the school and academic year ids plus the id of the level matching `levelCode`. */
 const givenLevel = (levelCode: string) =>
@@ -87,7 +84,13 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const schoolId = yield* Ref.get(world.schoolId)
     const academicYearId = yield* Ref.get(world.academicYearId)
     const levelId = yield* Ref.get(world.levelId)
-    const classId = yield* createClass({ schoolId: schoolId!, academicYearId: academicYearId!, levelId: levelId!, label, capacity }).pipe(
+    const classId = yield* createClass({
+      schoolId: schoolId!,
+      academicYearId: academicYearId!,
+      levelId: levelId!,
+      label,
+      capacity
+    }).pipe(
       Effect.provide(asDirectorOf(schoolId!))
     )
     yield* Ref.set(world.classId, classId)
@@ -122,7 +125,13 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const schoolId = yield* Ref.get(world.schoolId)
     const academicYearId = yield* Ref.get(world.academicYearId)
     const levelId = yield* Ref.get(world.levelId)
-    const classId = yield* createClass({ schoolId: schoolId!, academicYearId: academicYearId!, levelId: levelId!, label, capacity }).pipe(
+    const classId = yield* createClass({
+      schoolId: schoolId!,
+      academicYearId: academicYearId!,
+      levelId: levelId!,
+      label,
+      capacity
+    }).pipe(
       Effect.provide(asDirectorOf(schoolId!))
     )
     yield* Ref.set(world.classId, classId)
@@ -197,7 +206,13 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const schoolId = yield* Ref.get(world.schoolId)
     const academicYearId = yield* Ref.get(world.academicYearId)
     const levelId = yield* Ref.get(world.levelId)
-    const classId = yield* createClass({ schoolId: schoolId!, academicYearId: academicYearId!, levelId: levelId!, label, capacity: 30 }).pipe(
+    const classId = yield* createClass({
+      schoolId: schoolId!,
+      academicYearId: academicYearId!,
+      levelId: levelId!,
+      label,
+      capacity: 30
+    }).pipe(
       Effect.provide(asDirectorOf(schoolId!))
     )
     yield* Ref.set(world.classId, classId)

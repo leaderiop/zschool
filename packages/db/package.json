@@ -14,11 +14,12 @@
     "migrate": "dotenv -e ../../.env -c -- tsx src/runMigrations.ts"
   },
   "dependencies": {
-    "effect": "4.0.0-rc.112",
-    "@effect/sql-pg": "4.0.0-rc.112",
-    "@effect/platform-node": "4.0.0-rc.112"
+    "effect": "4.0.0-rc.113",
+    "@effect/sql-pg": "4.0.0-rc.113",
+    "@effect/platform-node": "4.0.0-rc.113"
   },
   "devDependencies": {
+    "@effect/vitest": "4.0.0-rc.113",
     "tsx": "^4.20.6"
   }
 }

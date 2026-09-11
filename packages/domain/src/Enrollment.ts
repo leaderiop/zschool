@@ -1,11 +1,9 @@
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { SchoolId } from "./Ids.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class DuplicateActiveEnrollmentError extends Data.TaggedError("DuplicateActiveEnrollmentError")<{
   readonly studentPersonId: string
@@ -63,86 +61,82 @@ export const computeEnrollmentStatus = (input: {
  * 0008) — a unique-violation on that index surfaces here as
  * `DuplicateActiveEnrollmentError`, not a raw `SqlError`.
  */
-export const insertEnrollment = (
+export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(function*(
   command: CreateEnrollmentCommand
-): Effect.Effect<EnrollmentResult, DuplicateActiveEnrollmentError | EntityNotFoundError | SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const [{ today }] = yield* sql<{ today: string }>`SELECT CURRENT_DATE::text AS today`
-    const status = computeEnrollmentStatus({
-      effectiveDate: command.effectiveDate,
-      today,
-      hasLegalGuardian: command.hasLegalGuardian,
-      hasFinancialGuardian: command.hasFinancialGuardian
-    })
+) {
+  const sql = yield* SqlClient
+  const [{ today }] = yield* sql<{ today: string }>`SELECT CURRENT_DATE::text AS today`
+  const status = computeEnrollmentStatus({
+    effectiveDate: command.effectiveDate,
+    today,
+    hasLegalGuardian: command.hasLegalGuardian,
+    hasFinancialGuardian: command.hasFinancialGuardian
+  })
 
-    // academic_year_label is denormalized onto enrollments — see migration
-    // 0008's comment on why the uniqueness check can't key on
-    // academic_year_id (a per-school row) and still be platform-wide. Also
-    // doubles as the only check that academicYearId actually belongs to
-    // schoolId — neither this function nor its callers otherwise verify
-    // that, and a bare `const [{ label }] = rows` on an empty result would
-    // crash with a raw destructuring TypeError instead of a typed error.
-    const [academicYear] = yield* sql<{ label: string }>`
+  // academic_year_label is denormalized onto enrollments — see migration
+  // 0008's comment on why the uniqueness check can't key on
+  // academic_year_id (a per-school row) and still be platform-wide. Also
+  // doubles as the only check that academicYearId actually belongs to
+  // schoolId — neither this function nor its callers otherwise verify
+  // that, and a bare `const [{ label }] = rows` on an empty result would
+  // crash with a raw destructuring TypeError instead of a typed error.
+  const [academicYear] = yield* sql<{ label: string }>`
       SELECT label FROM academic_years WHERE id = ${command.academicYearId} AND school_id = ${command.schoolId}
     `
-    if (academicYear === undefined) {
-      return yield* Effect.fail(
-        new EntityNotFoundError({ entityType: "academic_year", entityId: command.academicYearId })
-      )
-    }
-    const { label } = academicYear
+  if (academicYear === undefined) {
+    return yield* Effect.fail(
+      new EntityNotFoundError({ entityType: "academic_year", entityId: command.academicYearId })
+    )
+  }
+  const { label } = academicYear
 
-    // A savepoint (via withTransaction, nested inside the caller's own
-    // transaction): catching the unique-violation below doesn't undo
-    // Postgres's own "transaction is aborted" state on a plain caught
-    // error — this keeps the surrounding transaction usable for whatever
-    // the caller (e.g. the next student row in an import batch) does next.
-    const result = yield* Effect.result(sql.withTransaction(sql<{ id: string }>`
+  // A savepoint (via withTransaction, nested inside the caller's own
+  // transaction): catching the unique-violation below doesn't undo
+  // Postgres's own "transaction is aborted" state on a plain caught
+  // error — this keeps the surrounding transaction usable for whatever
+  // the caller (e.g. the next student row in an import batch) does next.
+  const result = yield* Effect.result(sql.withTransaction(sql<{ id: string }>`
       INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
       VALUES (${command.schoolId}, ${command.academicYearId}, ${label}, ${command.studentPersonId}, ${command.classId}, ${status}, ${command.effectiveDate})
       RETURNING id
     `))
 
-    if (result._tag === "Failure") {
-      return yield* Effect.fail(result.failure).pipe(
-        Effect.catchReason("SqlError", "UniqueViolation", () =>
-          Effect.fail(
-            new DuplicateActiveEnrollmentError({
-              studentPersonId: command.studentPersonId,
-              academicYearLabel: label
-            })
-          ))
-      )
-    }
-    return { id: result.success[0].id, status }
-  })
+  if (result._tag === "Failure") {
+    return yield* Effect.fail(result.failure).pipe(
+      Effect.catchReason("SqlError", "UniqueViolation", () =>
+        Effect.fail(
+          new DuplicateActiveEnrollmentError({
+            studentPersonId: command.studentPersonId,
+            academicYearLabel: label
+          })
+        ))
+    )
+  }
+  return { id: result.success[0].id, status }
+})
 
-export const createEnrollment = (
+export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(function*(
   command: CreateEnrollmentCommand
-): Effect.Effect<
-  EnrollmentResult,
-  EnforcementError | EntityNotFoundError | DuplicateActiveEnrollmentError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "classes", "class", command.classId, command.schoolId)
+        yield* requireOwnedRow(sql, "classes", "class", command.classId, SchoolId(command.schoolId), RowWithId)
         return yield* insertEnrollment(command)
       })
     )
   )
+})
 
 /** Whether `classId` has any enrollment at all — replaces `AcademicTree.ts`'s `hasActiveEnrollments` stub now that `Enrollment` exists (that function's own doc comment named this as the moment to do so). */
-export const hasEnrollments = (
+export const hasEnrollments = Effect.fn("Enrollment.hasEnrollments")(function*(
   schoolId: string,
   classId: string
-): Effect.Effect<boolean, SqlError, SqlClient> =>
-  withSchool(
+) {
+  return yield* withSchool(
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
@@ -150,3 +144,4 @@ export const hasEnrollments = (
       return rows.length > 0
     })
   )
+})

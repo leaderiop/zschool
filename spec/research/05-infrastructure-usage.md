@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-RES-05                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective — Reference                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Research Reference                                             |
+> | Property       | Value                                                                                                                                                                                                                 |
+> | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-RES-05                                                                                                                                                                                                        |
+> | Revision       | 1.0                                                                                                                                                                                                                   |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                            |
+> | Status         | Effective — Reference                                                                                                                                                                                                 |
+> | Author         | ZSchool Product                                                                                                                                                                                                       |
+> | Classification | Research Reference                                                                                                                                                                                                    |
 > | Change History | 1.0 (2026-09-09): Relocated from `prd/research/05-infrastructure-usage.md` (v0.3) during the qadi-style spec migration; `DEC-` citations retargeted to `ADR-ZS-` per `spec/process/id-migration-map.md` (CCR-ZS-001). |
 
 # Web Research — Infrastructure, Hosting, Digital Usage (09/09/2026)
@@ -24,7 +24,7 @@ Synthesis of research passes: OracleCloudMorocco, DigitalUsage.
 - OCI Casablanca pricing: no dedicated rate card published; standard OCI order-of-magnitude figures (compute ~USD 0.01-0.02/hour; Object Storage ~USD 0.0255/GB/month; OKE free outside of node costs) — indicative only.
 - Spec/NFR takeaway: data residency in Morocco is achievable from V1 on af-casablanca-1; **disaster recovery is mandatory** (a single availability zone): replicate/back up to Settat (once the second Oracle region opens), Atlas Cloud Benguérir, or OVH Rabat; verify the catalogue service by service (managed databases, OKE, Object Storage) at launch time; intra-Morocco latency is low, a European fallback (~35-60 ms RTT) should be avoided for student data.
 
-*Note: `spec/decisions/091-eu-hosting-deviation-from-morocco-baseline.md` records a subsequent, escalated deviation from this Morocco-first hosting baseline — see that ADR for the current status.*
+_Note: `spec/decisions/091-eu-hosting-deviation-from-morocco-baseline.md` records a subsequent, escalated deviation from this Morocco-first hosting baseline — see that ADR for the current status._
 
 ## 2. Digital usage (H-11)
 

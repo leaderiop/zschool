@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-OVW                                                    |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective                                                       |
-> | Author         | ZSchool Product                                                |
-> | Classification | Product Overview                                                |
+> | Property       | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Document ID    | ZSCHOOL-OVW                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+> | Revision       | 1.0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+> | Status         | Effective                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+> | Classification | Product Overview                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 > | Change History | 1.0 (2026-09-09): Carried forward from `spec/appendices/00-project-baseline.md` §0–§5 (the historical `PROJECT.md`) during the qadi-style spec migration, Phase 8. §5 (actors/personas) is condensed here to an orientation list — full persona needs live in `urs.md`. No `RG-`/`DEC-`/`ARB-` citations appear in this content; the `H-`/`G-`/`Q-`/`C-` citations that do appear are historical-review markers, kept unrenumbered per convention (see `appendices/01-review-history.md`). |
 
 # ZSchool — Overview
@@ -69,12 +69,12 @@ teachers access it for free.
 
 ### 2.2 Structure of the national education system
 
-| Cycle | Duration | Levels (national nomenclature) | Common private-sector name | End-of-cycle certification |
-|---|---|---|---|---|
-| Preschool | 2-3 years | Small, middle, upper section | Kindergarten (PS, MS, GS) | — |
-| Primary | 6 years | 1AP to 6AP | CP, CE1, CE2, CM1, CM2, 6ème | Primary studies certificate |
-| Middle school | 3 years | 1AC, 2AC, 3AC | 5ème, 4ème, 3ème | Middle school certificate |
-| Upper secondary | 3 years | Common core (TC), 1st Bac, 2nd Bac | Seconde, Première, Terminale | Baccalaureate |
+| Cycle           | Duration  | Levels (national nomenclature)     | Common private-sector name   | End-of-cycle certification  |
+| --------------- | --------- | ---------------------------------- | ---------------------------- | --------------------------- |
+| Preschool       | 2-3 years | Small, middle, upper section       | Kindergarten (PS, MS, GS)    | —                           |
+| Primary         | 6 years   | 1AP to 6AP                         | CP, CE1, CE2, CM1, CM2, 6ème | Primary studies certificate |
+| Middle school   | 3 years   | 1AC, 2AC, 3AC                      | 5ème, 4ème, 3ème             | Middle school certificate   |
+| Upper secondary | 3 years   | Common core (TC), 1st Bac, 2nd Bac | Seconde, Première, Terminale | Baccalaureate               |
 
 Each certifying exam's final grade combines continuous assessment and
 external exams under weightings set by the ministry. Grade repetition
@@ -177,14 +177,14 @@ preserved across schools, access controlled by context.
 
 ### 3.2 Value proposition by actor
 
-| Actor | Value |
-|---|---|
-| School leadership | A single platform for academic structure, student life, grades, finance, and communication; less re-entry; better collections; immediate reporting; easier compliance. |
-| Front office, cashier, student life | Fast daily tools (enrollment, collection, roll call, certificates) on computer and mobile. |
-| Teacher | Roll call and grades in a few taps from a phone; a single profile even while working at several schools; a preserved career record. |
-| Parent | A single account for every child and every school; real-time information (absences, grades, payments, announcements); documents on hand. |
-| Student | Timetable, grades, homework, documents; a preserved record; an academic passport down the line. |
-| ZSchool | A network effect: the more schools there are, the more valuable the global identity becomes (transfers, teachers, multi-school parents). |
+| Actor                               | Value                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| School leadership                   | A single platform for academic structure, student life, grades, finance, and communication; less re-entry; better collections; immediate reporting; easier compliance. |
+| Front office, cashier, student life | Fast daily tools (enrollment, collection, roll call, certificates) on computer and mobile.                                                                             |
+| Teacher                             | Roll call and grades in a few taps from a phone; a single profile even while working at several schools; a preserved career record.                                    |
+| Parent                              | A single account for every child and every school; real-time information (absences, grades, payments, announcements); documents on hand.                               |
+| Student                             | Timetable, grades, homework, documents; a preserved record; an academic passport down the line.                                                                        |
+| ZSchool                             | A network effect: the more schools there are, the more valuable the global identity becomes (transfers, teachers, multi-school parents).                               |
 
 ### 3.3 Differentiation
 
@@ -228,15 +228,15 @@ member) — the account is single, profiles are multiple. Full detail:
 
 ## 5. Actors and personas
 
-| Actor | Type | Description |
-|---|---|---|
-| Student | Global identity | A person enrolled in school. A minor in the vast majority of cases. |
-| Parent / guardian | Global identity | Father, mother, legal guardian, custodial parent, financial guardian, authorized contact. |
-| Teacher | Global identity | A person teaching one or several subjects at one or several schools, permanent or part-time. |
-| Staff | Global identity | Leadership, front office, accounting, head of student affairs, supervisors, school nurse, transport, library, IT. |
-| School | Tenant | An entity authorized to provide education, with its cycles, sites, and data. |
-| School group (organization) | Parent tenant | Groups several schools or sites under common governance. |
-| ZSchool (operator) | Platform | The ZSchool team: provisioning, support, SaaS billing, monitoring, compliance. |
+| Actor                       | Type            | Description                                                                                                       |
+| --------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Student                     | Global identity | A person enrolled in school. A minor in the vast majority of cases.                                               |
+| Parent / guardian           | Global identity | Father, mother, legal guardian, custodial parent, financial guardian, authorized contact.                         |
+| Teacher                     | Global identity | A person teaching one or several subjects at one or several schools, permanent or part-time.                      |
+| Staff                       | Global identity | Leadership, front office, accounting, head of student affairs, supervisors, school nurse, transport, library, IT. |
+| School                      | Tenant          | An entity authorized to provide education, with its cycles, sites, and data.                                      |
+| School group (organization) | Parent tenant   | Groups several schools or sites under common governance.                                                          |
+| ZSchool (operator)          | Platform        | The ZSchool team: provisioning, support, SaaS billing, monitoring, compliance.                                    |
 
 The eight named personas (Si Abdellah, Fatima, Rachid, Khadija, Ahmed,
 Naïma, Youssef, Salma) that anchor every journey in `spec/journeys/` are

@@ -2,14 +2,14 @@
 
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-APP-00                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Superseded — historical reference only                        |
-> | Author         | ZSchool Product                                                |
-> | Classification | Appendix — Historical Baseline                                 |
+> | Property       | Value                                                                                                                                                                                                                                                                                     |
+> | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-APP-00                                                                                                                                                                                                                                                                            |
+> | Revision       | 1.0                                                                                                                                                                                                                                                                                       |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                                                                |
+> | Status         | Superseded — historical reference only                                                                                                                                                                                                                                                    |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                                                           |
+> | Classification | Appendix — Historical Baseline                                                                                                                                                                                                                                                            |
 > | Change History | 1.0 (2026-09-09): Relocated unchanged from `PROJECT.md` at the repo root during the qadi-style spec migration (CCR-ZS-002). This is the frozen v1.2 English-edition baseline exactly as it existed before migration — content, headings, and every RG/DEC/H/G/C/Q ID below are untouched. |
 
 **This is a historical artifact, not a normative document.** It is the frozen
@@ -31,14 +31,14 @@ rules that apply to live requirements).
 
 **A SaaS platform for managing private schools — Morocco edition**
 
-| Field | Value |
-|---|---|
-| Document version | 1.2 (English edition) |
-| Date | 9 September 2026 |
-| Status | Consolidated description, open questions resolved, hypotheses verified through desk research — ready for PRD drafting |
-| Next document | PRD (Product Requirements Document) |
+| Field              | Value                                                                                                                                                                                                                                                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document version   | 1.2 (English edition)                                                                                                                                                                                                                                                                                       |
+| Date               | 9 September 2026                                                                                                                                                                                                                                                                                            |
+| Status             | Consolidated description, open questions resolved, hypotheses verified through desk research — ready for PRD drafting                                                                                                                                                                                       |
+| Next document      | PRD (Product Requirements Document)                                                                                                                                                                                                                                                                         |
 | Reference language | English (this is the authorized English edition of the French original, produced at the product owner's explicit instruction on 09/09/2026; every RG, DEC, H, G, C, Q, and figure is unchanged in substance — only the prose language changed). Arabic and French terminology is kept in the glossary, §17. |
-| Translation note | Authorized English edition of the frozen French baseline (v1.1), produced at the product owner's explicit instruction (2026-09-09). Substance — every RG, DEC, H, G, C, Q, and figure — is unchanged; only the prose language changed. |
+| Translation note   | Authorized English edition of the frozen French baseline (v1.1), produced at the product owner's explicit instruction (2026-09-09). Substance — every RG, DEC, H, G, C, Q, and figure — is unchanged; only the prose language changed.                                                                      |
 
 ---
 
@@ -48,14 +48,14 @@ This document consolidates ZSchool's initial description, places it in the Moroc
 
 Conventions used:
 
-| Prefix | Meaning |
-|---|---|
-| **RG-xx** | Business rule: behavior the system must respect. |
+| Prefix     | Meaning                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| **RG-xx**  | Business rule: behavior the system must respect.                                                     |
 | **DEC-xx** | A decision recorded in this document (changeable only by an explicit decision of the project owner). |
-| **Q-xx** | Open question: must be answered before or during the PRD. |
-| **H-xx** | Hypothesis to validate: a plausible claim about the market or regulation, to be confirmed. |
-| **C-xx** | A contradiction found in the initial description. |
-| **G-xx** | A gap found in the initial description. |
+| **Q-xx**   | Open question: must be answered before or during the PRD.                                            |
+| **H-xx**   | Hypothesis to validate: a plausible claim about the market or regulation, to be confirmed.           |
+| **C-xx**   | A contradiction found in the initial description.                                                    |
+| **G-xx**   | A gap found in the initial description.                                                              |
 
 Chapter 13 recaps every contradiction and gap along with its resolution. Chapters 14 through 16 list the decisions, questions, and hypotheses.
 
@@ -93,23 +93,23 @@ This chapter is absent from the initial description. Yet it drives most of the p
 
 ### 2.2 Structure of the national education system
 
-| Cycle | Duration | Levels (national nomenclature) | Common private-sector name | End-of-cycle certification |
-|---|---|---|---|---|
-| Preschool | 2 to 3 years | Small, middle, upper section | Kindergarten (PS, MS, GS) | — |
-| Primary | 6 years | 1AP to 6AP (1st to 6th primary year) | CP, CE1, CE2, CM1, CM2, 6ème | Primary studies certificate (a standardized provincial exam at 6AP) |
-| Middle school | 3 years | 1AC, 2AC, 3AC (1st to 3rd middle-school year) | 5ème, 4ème, 3ème | Middle school certificate (a regional exam at 3AC) |
-| Upper secondary | 3 years | Common core (TC), 1st Bac, 2nd Bac | Seconde, Première, Terminale | Baccalaureate (a regional exam in 1st Bac, a national exam in 2nd Bac) |
+| Cycle           | Duration     | Levels (national nomenclature)                | Common private-sector name   | End-of-cycle certification                                             |
+| --------------- | ------------ | --------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------- |
+| Preschool       | 2 to 3 years | Small, middle, upper section                  | Kindergarten (PS, MS, GS)    | —                                                                      |
+| Primary         | 6 years      | 1AP to 6AP (1st to 6th primary year)          | CP, CE1, CE2, CM1, CM2, 6ème | Primary studies certificate (a standardized provincial exam at 6AP)    |
+| Middle school   | 3 years      | 1AC, 2AC, 3AC (1st to 3rd middle-school year) | 5ème, 4ème, 3ème             | Middle school certificate (a regional exam at 3AC)                     |
+| Upper secondary | 3 years      | Common core (TC), 1st Bac, 2nd Bac            | Seconde, Première, Terminale | Baccalaureate (a regional exam in 1st Bac, a national exam in 2nd Bac) |
 
 Structuring points:
 
 - Upper-secondary school is organized into **tracks** (Mathematical Sciences A/B, Physical Sciences, Life and Earth Sciences, Humanities, Social Sciences, Economics, Accounting/Management Sciences, Sciences and Technologies, etc.) and **options** (International Baccalaureate French Option, English Option, Spanish Option). Private schools mostly offer science tracks and the International Baccalaureate French Option.
 - Each certifying exam's final grade combines continuous assessment and external exams under weightings set by the ministry (H-02, confirmed):
 
-| Exam | Continuous assessment | Local or standardized exam | Regional exam | National exam |
-|---|---|---|---|---|
-| 6AP (primary studies certificate) | 50% (S1 + S2) | 25% (school) | 25% (provincial) | — |
-| 3AC (middle-school certificate) | 30% (15% S1 + 15% S2) | 30% (school, end of S1) | 40% (AREF, end of S2) | — |
-| Baccalaureate | 25% (S1 + S2 average of 2nd Bac) | — | 25% (end of 1st Bac) | 50% (end of 2nd Bac) |
+| Exam                              | Continuous assessment            | Local or standardized exam | Regional exam         | National exam        |
+| --------------------------------- | -------------------------------- | -------------------------- | --------------------- | -------------------- |
+| 6AP (primary studies certificate) | 50% (S1 + S2)                    | 25% (school)               | 25% (provincial)      | —                    |
+| 3AC (middle-school certificate)   | 30% (15% S1 + 15% S2)            | 30% (school, end of S1)    | 40% (AREF, end of S2) | —                    |
+| Baccalaureate                     | 25% (S1 + S2 average of 2nd Bac) | —                          | 25% (end of 1st Bac)  | 50% (end of 2nd Bac) |
 
 Baccalaureate honors: highest honors from 16, high honors from 14, honors from 12, pass from 10; a remedial session for averages between 8 and 9.99. The 2021 ministerial memoranda that had changed these weightings were suspended in November 2022.
 
@@ -120,12 +120,12 @@ Baccalaureate honors: highest honors from 16, high honors from 14, honors from 1
 
 The same school may offer several systems, and a school group may run both a Moroccan section and an international section.
 
-| System | Curriculum | Level nomenclature | Assessment | Particulars |
-|---|---|---|---|---|
-| Moroccan national | Ministry of National Education | 1AP…2nd Bac | Out of 20, 2 semesters, ministerial weightings | Massar mandatory, certifying exams |
-| French mission | French national education (AEFE, OSUI, accredited) | PS…Terminale | Out of 20, 3 trimesters, a school record book | Often run on Pronote or EcoleDirecte |
-| Bilingual / private "enhanced national curriculum" | National plus French/English enhancement | National nomenclature, French labels | Out of 20, semesters or trimesters as chosen | The most common case |
-| International (British, American, IB) | Cambridge, Common Core, IB | Year 1…Year 13, Grade K…12 | Letters, percentages, GPA | A minority, specific requirements |
+| System                                             | Curriculum                                         | Level nomenclature                   | Assessment                                     | Particulars                          |
+| -------------------------------------------------- | -------------------------------------------------- | ------------------------------------ | ---------------------------------------------- | ------------------------------------ |
+| Moroccan national                                  | Ministry of National Education                     | 1AP…2nd Bac                          | Out of 20, 2 semesters, ministerial weightings | Massar mandatory, certifying exams   |
+| French mission                                     | French national education (AEFE, OSUI, accredited) | PS…Terminale                         | Out of 20, 3 trimesters, a school record book  | Often run on Pronote or EcoleDirecte |
+| Bilingual / private "enhanced national curriculum" | National plus French/English enhancement           | National nomenclature, French labels | Out of 20, semesters or trimesters as chosen   | The most common case                 |
+| International (British, American, IB)              | Cambridge, Common Core, IB                         | Year 1…Year 13, Grade K…12           | Letters, percentages, GPA                      | A minority, specific requirements    |
 
 **Product consequence**: the academic structure (cycles, levels, tracks, assessment periods, grading scales, weightings) must be **configurable per school and per section**, from templates provided by ZSchool. The Moroccan national system is the default model.
 
@@ -159,17 +159,17 @@ The same school may offer several systems, and a school group may run both a Mor
 
 ### 2.7 Regulatory framework
 
-| Text | Scope for ZSchool |
-|---|---|
-| Law 06.00 (status of private school education) and **Law 59.21** (published in the Official Gazette in March 2026, which carries over and tightens its provisions) | Opening authorization, authorized cycles, at least 80% permanent teachers (Art. 13), an annual individual AREF authorization for external teachers (an 8-hour weekly cap), a teacher file filed with AREF (Order 1538.03), AREF academic and administrative oversight. Law 59.21 requires a **written contract with parents**, full fee transparency (registration, insurance, tuition, catering, boarding, transport), a ban on mid-year increases and forced purchases, a ban on refusing re-enrollment to a student in good standing, mediation committees at AREF, and fines. The full text is still to be read in the Official Gazette (H-14). |
-| Framework Law 51.17 (2019) on the education system | System reform, languages of instruction, preschool. |
-| Law 09.08 on the protection of individuals with regard to the processing of personal data, CNDP | **Still in force, no overhaul adopted**: the revision drafted by the CNDP in 2026 has not yet reached Parliament (H-05). An ordinary student and parent file: prior declaration (form F211). Health data, national ID numbers, biometrics, file interconnection: prior authorization (form F112, 2 to 4 months). No rule specific to minors: consent is given by the legal representative. **Any hosting abroad is a transfer**: free only to countries on the adequacy list (Deliberation 236-2015: the European Union, the United Kingdom, Switzerland, Canada, among others), otherwise an F118 authorization is required per data controller; the United States is not on that list. Rights of access, rectification, and objection. No obligation for a DPO or breach notification under current law. |
-| Law 05.20 (cybersecurity), decrees 2-21-406 and 2-24-921, DGSSI | The obligation to host sensitive data in Morocco and to use DGSSI-qualified cloud hosting applies **only** to government bodies, public institutions, critical infrastructure, and a few listed operators. A private school and a SaaS vendor are not subject to it, unless under contract with a public entity (the ministry, AREF) (H-06, not confirmed as an obligation, confirmed as a market expectation). |
-| Law 43.20 (trust services for electronic transactions) and decree 2-22-687 | Three signature levels: simple, advanced, **qualified** (a presumption of reliability, equivalent to a handwritten signature). Qualified providers accredited by DGSSI: Barid eSign (qualified signature, seal, and timestamp), AfricTRUST, DamaneSign. No level is mandated by the texts for report cards and certificates. |
-| Family Code (Moudawana) | The **father is the legal guardian by operation of law** (Art. 231 and 236); the mother becomes guardian only if the father dies, is absent, or is incapacitated, or by court order. On divorce, **custody** goes to the mother, then the father, then the maternal grandmother (Art. 171); the non-custodial parent keeps a right of visitation and a say in the child's upbringing. The ministry's position (May 2023): a custodial mother may obtain the child's administrative school documents; disputes are referred to the King's prosecutor. The reform approved in December 2024 (guardianship of the custodial mother for routine matters) **is not in force**. |
-| General Tax Code | Tuition fees billed **without VAT and with no right to deduct** (H-07, confirmed). Catering, transport, and school leisure activities provided by the school to its own students: exempt with no right to deduct (Art. 91-V-4°); the same services provided by a third party or a sister company are taxable (transport 14%, catering 10%). School supplies exempt since 2024. Accounting records kept for **10 years** (Art. 211). Mandatory invoice mentions: ICE, IF, RC, business license number. |
-| Electronic invoicing (CGI Art. 145-IX, the DGI's fatourati.gov.ma platform) | A "clearance" model: a structured invoice, signed with a qualified certificate, validated in real time by the DGI. The implementing decree was not published in the Official Gazette as of mid-2026; the first wave is announced for large businesses (revenue over MAD 200 million) during 2026, with SMEs and micro-businesses in 2027-2028 (H-08). Private schools will be covered in the later waves; ZSchool plans a UBL-format export and a qualified seal. |
-| Circulars and case law | Issuing the school-attendance certificate and the **certificate of departure may not be conditioned on any dispute, including a financial one** (the ministry's position, September 2020; interim court orders with a daily penalty in Salé, Rabat, and Casablanca in 2020). A ministerial note of 28 May 2021: school leaders issue these documents directly from Massar on the guardian's written request. Other circulars: the school calendar, authorizations for external teachers, school insurance, the ESISE census. |
+| Text                                                                                                                                                               | Scope for ZSchool                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Law 06.00 (status of private school education) and **Law 59.21** (published in the Official Gazette in March 2026, which carries over and tightens its provisions) | Opening authorization, authorized cycles, at least 80% permanent teachers (Art. 13), an annual individual AREF authorization for external teachers (an 8-hour weekly cap), a teacher file filed with AREF (Order 1538.03), AREF academic and administrative oversight. Law 59.21 requires a **written contract with parents**, full fee transparency (registration, insurance, tuition, catering, boarding, transport), a ban on mid-year increases and forced purchases, a ban on refusing re-enrollment to a student in good standing, mediation committees at AREF, and fines. The full text is still to be read in the Official Gazette (H-14).                                                                                                                                                        |
+| Framework Law 51.17 (2019) on the education system                                                                                                                 | System reform, languages of instruction, preschool.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Law 09.08 on the protection of individuals with regard to the processing of personal data, CNDP                                                                    | **Still in force, no overhaul adopted**: the revision drafted by the CNDP in 2026 has not yet reached Parliament (H-05). An ordinary student and parent file: prior declaration (form F211). Health data, national ID numbers, biometrics, file interconnection: prior authorization (form F112, 2 to 4 months). No rule specific to minors: consent is given by the legal representative. **Any hosting abroad is a transfer**: free only to countries on the adequacy list (Deliberation 236-2015: the European Union, the United Kingdom, Switzerland, Canada, among others), otherwise an F118 authorization is required per data controller; the United States is not on that list. Rights of access, rectification, and objection. No obligation for a DPO or breach notification under current law. |
+| Law 05.20 (cybersecurity), decrees 2-21-406 and 2-24-921, DGSSI                                                                                                    | The obligation to host sensitive data in Morocco and to use DGSSI-qualified cloud hosting applies **only** to government bodies, public institutions, critical infrastructure, and a few listed operators. A private school and a SaaS vendor are not subject to it, unless under contract with a public entity (the ministry, AREF) (H-06, not confirmed as an obligation, confirmed as a market expectation).                                                                                                                                                                                                                                                                                                                                                                                            |
+| Law 43.20 (trust services for electronic transactions) and decree 2-22-687                                                                                         | Three signature levels: simple, advanced, **qualified** (a presumption of reliability, equivalent to a handwritten signature). Qualified providers accredited by DGSSI: Barid eSign (qualified signature, seal, and timestamp), AfricTRUST, DamaneSign. No level is mandated by the texts for report cards and certificates.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Family Code (Moudawana)                                                                                                                                            | The **father is the legal guardian by operation of law** (Art. 231 and 236); the mother becomes guardian only if the father dies, is absent, or is incapacitated, or by court order. On divorce, **custody** goes to the mother, then the father, then the maternal grandmother (Art. 171); the non-custodial parent keeps a right of visitation and a say in the child's upbringing. The ministry's position (May 2023): a custodial mother may obtain the child's administrative school documents; disputes are referred to the King's prosecutor. The reform approved in December 2024 (guardianship of the custodial mother for routine matters) **is not in force**.                                                                                                                                  |
+| General Tax Code                                                                                                                                                   | Tuition fees billed **without VAT and with no right to deduct** (H-07, confirmed). Catering, transport, and school leisure activities provided by the school to its own students: exempt with no right to deduct (Art. 91-V-4°); the same services provided by a third party or a sister company are taxable (transport 14%, catering 10%). School supplies exempt since 2024. Accounting records kept for **10 years** (Art. 211). Mandatory invoice mentions: ICE, IF, RC, business license number.                                                                                                                                                                                                                                                                                                      |
+| Electronic invoicing (CGI Art. 145-IX, the DGI's fatourati.gov.ma platform)                                                                                        | A "clearance" model: a structured invoice, signed with a qualified certificate, validated in real time by the DGI. The implementing decree was not published in the Official Gazette as of mid-2026; the first wave is announced for large businesses (revenue over MAD 200 million) during 2026, with SMEs and micro-businesses in 2027-2028 (H-08). Private schools will be covered in the later waves; ZSchool plans a UBL-format export and a qualified seal.                                                                                                                                                                                                                                                                                                                                          |
+| Circulars and case law                                                                                                                                             | Issuing the school-attendance certificate and the **certificate of departure may not be conditioned on any dispute, including a financial one** (the ministry's position, September 2020; interim court orders with a daily penalty in Salé, Rabat, and Casablanca in 2020). A ministerial note of 28 May 2021: school leaders issue these documents directly from Massar on the guardian's written request. Other circulars: the school calendar, authorizations for external teachers, school insurance, the ESISE census.                                                                                                                                                                                                                                                                               |
 
 **Product consequence**: ZSchool is the **data processor** for each school's operational data (the school is the data controller) and the **data controller** for global identity and the academic passport. This dual role must be formalized (contracts, CNDP filings, information notices, collecting legal guardians' consent).
 
@@ -177,16 +177,16 @@ The same school may offer several systems, and a school group may run both a Mor
 
 Commonly charged fees:
 
-| Fee type | Frequency | Notes |
-|---|---|---|
-| Registration fee (new student) | One-time | Generally non-refundable |
-| Re-enrollment fee | Annual | Often in spring, with a deposit |
-| Tuition | Monthly (10 months), termly, or annual | Priced by level, frequent sibling discounts |
-| School insurance | Annual | Mandatory |
-| School transport | Monthly | Per route or zone |
-| Canteen / after-school care | Monthly or a flat fee | |
-| Extracurricular activities, trips | One-off | |
-| Supplies, books, uniform | Annual or one-off | Sometimes sold by the school |
+| Fee type                          | Frequency                              | Notes                                       |
+| --------------------------------- | -------------------------------------- | ------------------------------------------- |
+| Registration fee (new student)    | One-time                               | Generally non-refundable                    |
+| Re-enrollment fee                 | Annual                                 | Often in spring, with a deposit             |
+| Tuition                           | Monthly (10 months), termly, or annual | Priced by level, frequent sibling discounts |
+| School insurance                  | Annual                                 | Mandatory                                   |
+| School transport                  | Monthly                                | Per route or zone                           |
+| Canteen / after-school care       | Monthly or a flat fee                  |                                             |
+| Extracurricular activities, trips | One-off                                |                                             |
+| Supplies, books, uniform          | Annual or one-off                      | Sometimes sold by the school                |
 
 Payment methods (H-09, confirmed): cash with a cashier's receipt, cheque (often handed over at the start of the year for all monthly instalments), bank transfer, direct debit (a debit notice through the interbank system, reachable only by the school's own bank, with no API), bank card and online payment.
 
@@ -234,14 +234,14 @@ Build the digital infrastructure for the school journey in Morocco: a persistent
 
 ### 3.2 Value proposition by actor
 
-| Actor | Value |
-|---|---|
-| School leadership | A single platform for academic structure, student life, grades, finance, and communication; less re-entry; better collections; immediate reporting; easier compliance. |
-| Front office, cashier, student life | Fast daily tools (enrollment, collection, roll call, certificates) on computer and mobile. |
-| Teacher | Roll call and grades in a few taps from a phone; a single profile even while working at several schools; a preserved career record. |
-| Parent | A single account for every child and every school; real-time information (absences, grades, payments, announcements); documents on hand. |
-| Student | Timetable, grades, homework, documents; a preserved record; an academic passport down the line. |
-| ZSchool | A network effect: the more schools there are, the more valuable the global identity becomes (transfers, teachers, multi-school parents). |
+| Actor                               | Value                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| School leadership                   | A single platform for academic structure, student life, grades, finance, and communication; less re-entry; better collections; immediate reporting; easier compliance. |
+| Front office, cashier, student life | Fast daily tools (enrollment, collection, roll call, certificates) on computer and mobile.                                                                             |
+| Teacher                             | Roll call and grades in a few taps from a phone; a single profile even while working at several schools; a preserved career record.                                    |
+| Parent                              | A single account for every child and every school; real-time information (absences, grades, payments, announcements); documents on hand.                               |
+| Student                             | Timetable, grades, homework, documents; a preserved record; an academic passport down the line.                                                                        |
+| ZSchool                             | A network effect: the more schools there are, the more valuable the global identity becomes (transfers, teachers, multi-school parents).                               |
 
 ### 3.3 Differentiation
 
@@ -252,13 +252,13 @@ Build the digital infrastructure for the school journey in Morocco: a persistent
 
 **Competitive landscape (G-25, Q-01, resolved).** The market has roughly a dozen active Moroccan vendors and a few foreign solutions:
 
-| Segment | Actors | Finding |
-|---|---|---|
-| The ministry's system | Massar (Waliye, Moutamadris, Moudaris) | Mandatory and free, but with no billing, transport, canteen, or communication. Parent apps rated between 2 and 2.9 out of 5, not updated since 2022. |
-| The legacy vendor | Madariss Plus and eMadariss (Nexsoft, Rabat), claiming over 900 schools | A large installed base, a desktop-software legacy, a poorly rated mobile app. |
-| Recent Moroccan SaaS | Skoolly (MAD 4 to 6 per student per month), Minassa (MAD 249 to 1,050 per month depending on enrollment), Tayssir School, SchoolMA (MAD 300 to 800 per month), SchoolApp, E-Schools, DataSchool (the best-adopted parent app: 10,000 installs, 4.2 out of 5), SmartSchool, ALIFADA, E-Madrassati | All single-school, one parent account per school, file-based "Massar synchronization", uneven app quality. |
-| Adapted ERPs | Odoo's "Education Pack" through integrators, Galactis (pricing in euros) | Heavy to deploy, group-oriented. |
-| Schools on a French curriculum | Pronote (Descartes, Louis-Massignon, EFI high schools), EcoleDirecte | Student life with no billing and no Massar; EcoleDirecte's usage in Morocco is unverified. |
+| Segment                        | Actors                                                                                                                                                                                                                                                                                           | Finding                                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The ministry's system          | Massar (Waliye, Moutamadris, Moudaris)                                                                                                                                                                                                                                                           | Mandatory and free, but with no billing, transport, canteen, or communication. Parent apps rated between 2 and 2.9 out of 5, not updated since 2022. |
+| The legacy vendor              | Madariss Plus and eMadariss (Nexsoft, Rabat), claiming over 900 schools                                                                                                                                                                                                                          | A large installed base, a desktop-software legacy, a poorly rated mobile app.                                                                        |
+| Recent Moroccan SaaS           | Skoolly (MAD 4 to 6 per student per month), Minassa (MAD 249 to 1,050 per month depending on enrollment), Tayssir School, SchoolMA (MAD 300 to 800 per month), SchoolApp, E-Schools, DataSchool (the best-adopted parent app: 10,000 installs, 4.2 out of 5), SmartSchool, ALIFADA, E-Madrassati | All single-school, one parent account per school, file-based "Massar synchronization", uneven app quality.                                           |
+| Adapted ERPs                   | Odoo's "Education Pack" through integrators, Galactis (pricing in euros)                                                                                                                                                                                                                         | Heavy to deploy, group-oriented.                                                                                                                     |
+| Schools on a French curriculum | Pronote (Descartes, Louis-Massignon, EFI high schools), EcoleDirecte                                                                                                                                                                                                                             | Student life with no billing and no Massar; EcoleDirecte's usage in Morocco is unverified.                                                           |
 
 No player offers a multi-school global identity, a single cross-school parent account, or a portable teacher profile. Public Moroccan pricing sits between MAD 10 and 65 per student per year; comprehensive French offers sit around €15 per student per year. The weakness of existing parent apps, Massar included, is the clearest opening.
 
@@ -298,15 +298,15 @@ The same person may carry several profiles (a teacher is also a parent of studen
 
 ### 5.1 Actors
 
-| Actor | Type | Description |
-|---|---|---|
-| Student | Global identity | A person enrolled in school. A minor in the vast majority of cases. |
-| Parent / guardian | Global identity | Father, mother, legal guardian, custodial parent, financial guardian, authorized contact. |
-| Teacher | Global identity | A person teaching one or several subjects at one or several schools, permanent or part-time. |
-| Staff | Global identity | Leadership, front office, accounting, head of student affairs, supervisors, school nurse, transport, library, IT. |
-| School | Tenant | An entity authorized to provide education, with its cycles, sites, and data. |
-| School group (organization) | Parent tenant | Groups several schools or sites under common governance. |
-| ZSchool (operator) | Platform | The ZSchool team: provisioning, support, SaaS billing, monitoring, compliance. |
+| Actor                       | Type            | Description                                                                                                       |
+| --------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Student                     | Global identity | A person enrolled in school. A minor in the vast majority of cases.                                               |
+| Parent / guardian           | Global identity | Father, mother, legal guardian, custodial parent, financial guardian, authorized contact.                         |
+| Teacher                     | Global identity | A person teaching one or several subjects at one or several schools, permanent or part-time.                      |
+| Staff                       | Global identity | Leadership, front office, accounting, head of student affairs, supervisors, school nurse, transport, library, IT. |
+| School                      | Tenant          | An entity authorized to provide education, with its cycles, sites, and data.                                      |
+| School group (organization) | Parent tenant   | Groups several schools or sites under common governance.                                                          |
+| ZSchool (operator)          | Platform        | The ZSchool team: provisioning, support, SaaS billing, monitoring, compliance.                                    |
 
 ### 5.2 Personas
 
@@ -655,21 +655,21 @@ For each module: scope, Moroccan specifics, key rules. The breakdown by version 
 
 ### 8.1 Roles
 
-| Level | Role | Description |
-|---|---|---|
-| Platform | ZSchool super-administrator | Provisioning, global configuration, compliance. No access to academic data without a tracked support procedure. |
-| Platform | ZSchool support | Temporary, audited access to a tenant on a ticket. |
-| Organization | Group administrator | Consolidated views, managing the group's schools, subscription. |
-| School | Director / administrator | Every function within the tenant. |
-| School | Academic leadership | Structure, assignments, report cards, class councils. |
-| School | Front office | Enrollments, files, documents, communication. |
-| School | Accounting / cashier | Finance only. |
-| School | Head of student affairs / student life | Attendance, discipline, communication with parents. |
-| School | Teacher | Their own courses: roll call, grades, class journal, messages to their students' parents. |
-| School | Homeroom teacher | Teacher plus a summary view of their class. |
-| School | School nurse, transport, library | Dedicated modules. |
-| Person | Parent / guardian | Per their qualities and rights (6.4). |
-| Person | Student | Their own data, per their level and the school's policy. |
+| Level        | Role                                   | Description                                                                                                     |
+| ------------ | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Platform     | ZSchool super-administrator            | Provisioning, global configuration, compliance. No access to academic data without a tracked support procedure. |
+| Platform     | ZSchool support                        | Temporary, audited access to a tenant on a ticket.                                                              |
+| Organization | Group administrator                    | Consolidated views, managing the group's schools, subscription.                                                 |
+| School       | Director / administrator               | Every function within the tenant.                                                                               |
+| School       | Academic leadership                    | Structure, assignments, report cards, class councils.                                                           |
+| School       | Front office                           | Enrollments, files, documents, communication.                                                                   |
+| School       | Accounting / cashier                   | Finance only.                                                                                                   |
+| School       | Head of student affairs / student life | Attendance, discipline, communication with parents.                                                             |
+| School       | Teacher                                | Their own courses: roll call, grades, class journal, messages to their students' parents.                       |
+| School       | Homeroom teacher                       | Teacher plus a summary view of their class.                                                                     |
+| School       | School nurse, transport, library       | Dedicated modules.                                                                                              |
+| Person       | Parent / guardian                      | Per their qualities and rights (6.4).                                                                           |
+| Person       | Student                                | Their own data, per their level and the school's policy.                                                        |
 
 ### 8.2 Principles
 
@@ -680,16 +680,16 @@ For each module: scope, Moroccan specifics, key rules. The breakdown by version 
 
 ### 8.3 Summary matrix (an excerpt, to be detailed in the PRD)
 
-| Data | Student | Parent | Course teacher | Homeroom teacher | Student life | Front office | Accounting | Leadership |
-|---|---|---|---|---|---|---|---|---|
-| Timetable | R | R | R | R | R | R/W | — | R/W |
-| Attendance | R | R | W (their courses) | R | R/W | R | — | R/W |
-| Unpublished grades | — | — | W (their courses) | R | — | — | — | R/W |
-| Published report cards | R | R | R (their subjects) | R | R | R | — | R/W |
-| Discipline | R (partial) | R | R (their students) | R | R/W | — | — | R/W |
-| Identity file | R | R/W (partial) | — | R (partial) | R | R/W | R (partial) | R/W |
-| Finance | — | R (if entitled) | — | — | — | R | R/W | R/W |
-| Health | — | R/W | — | R (alerts) | R (alerts) | — | — | R (module) |
+| Data                   | Student     | Parent          | Course teacher     | Homeroom teacher | Student life | Front office | Accounting  | Leadership |
+| ---------------------- | ----------- | --------------- | ------------------ | ---------------- | ------------ | ------------ | ----------- | ---------- |
+| Timetable              | R           | R               | R                  | R                | R            | R/W          | —           | R/W        |
+| Attendance             | R           | R               | W (their courses)  | R                | R/W          | R            | —           | R/W        |
+| Unpublished grades     | —           | —               | W (their courses)  | R                | —            | —            | —           | R/W        |
+| Published report cards | R           | R               | R (their subjects) | R                | R            | R            | —           | R/W        |
+| Discipline             | R (partial) | R               | R (their students) | R                | R/W          | —            | —           | R/W        |
+| Identity file          | R           | R/W (partial)   | —                  | R (partial)      | R            | R/W          | R (partial) | R/W        |
+| Finance                | —           | R (if entitled) | —                  | —                | —            | R            | R/W         | R/W        |
+| Health                 | —           | R/W             | —                  | R (alerts)       | R (alerts)   | —            | —           | R (module) |
 
 R = read, W = write.
 
@@ -713,21 +713,21 @@ R = read, W = write.
 
 ## 10. Non-functional requirements (**G-21**, resolved)
 
-| Domain | Requirement |
-|---|---|
-| Languages | FR and AR in V1 with full RTL; EN in V2; bilingual user content (names, labels, documents). |
-| Platforms | A responsive web app; a mobile app (a PWA in V1, native Android and iOS apps in V2) for parents, students, teachers. |
-| Offline | Taking attendance and entering grades tolerant of connectivity drops, with sync and conflict resolution. |
-| Performance | Common pages under 2 s on a 4G mobile network; generating a report card under 3 s; publishing report cards for a 2,000-student school under 10 minutes. |
-| Availability | A 99.5% target, excluding announced maintenance; maintenance windows outside start-of-year and exam periods. |
-| Target scale | Technical sizing for three years: 500 schools, 500,000 students, 1,000,000 guardians, 30,000 teachers — roughly 2.5 times the commercial ambition in DEC-27 (300 schools, 200,000 students). |
-| Timezone and calendar | Africa/Casablanca, handling the switch to UTC+0 during Ramadan, both Hijri and Gregorian calendars for holidays. |
-| Notifications | An absence-notification delay under 5 minutes after the roll call is validated. |
-| Documents | Bilingual PDFs, correct Arabic fonts, A4 and A5 formats, batch printing. |
-| Accessibility | Contrast, font sizes, keyboard navigation, screen readers on the main journeys. |
-| Observability | Logs, metrics, alerts, per-tenant traceability. |
-| Interoperability | Excel/CSV/PDF exports everywhere; a documented public API in V2; webhooks. |
-| Backups | Daily, at least 30 days' retention, restore tested quarterly. |
+| Domain                | Requirement                                                                                                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Languages             | FR and AR in V1 with full RTL; EN in V2; bilingual user content (names, labels, documents).                                                                                                  |
+| Platforms             | A responsive web app; a mobile app (a PWA in V1, native Android and iOS apps in V2) for parents, students, teachers.                                                                         |
+| Offline               | Taking attendance and entering grades tolerant of connectivity drops, with sync and conflict resolution.                                                                                     |
+| Performance           | Common pages under 2 s on a 4G mobile network; generating a report card under 3 s; publishing report cards for a 2,000-student school under 10 minutes.                                      |
+| Availability          | A 99.5% target, excluding announced maintenance; maintenance windows outside start-of-year and exam periods.                                                                                 |
+| Target scale          | Technical sizing for three years: 500 schools, 500,000 students, 1,000,000 guardians, 30,000 teachers — roughly 2.5 times the commercial ambition in DEC-27 (300 schools, 200,000 students). |
+| Timezone and calendar | Africa/Casablanca, handling the switch to UTC+0 during Ramadan, both Hijri and Gregorian calendars for holidays.                                                                             |
+| Notifications         | An absence-notification delay under 5 minutes after the roll call is validated.                                                                                                              |
+| Documents             | Bilingual PDFs, correct Arabic fonts, A4 and A5 formats, batch printing.                                                                                                                     |
+| Accessibility         | Contrast, font sizes, keyboard navigation, screen readers on the main journeys.                                                                                                              |
+| Observability         | Logs, metrics, alerts, per-tenant traceability.                                                                                                                                              |
+| Interoperability      | Excel/CSV/PDF exports everywhere; a documented public API in V2; webhooks.                                                                                                                   |
+| Backups               | Daily, at least 30 days' retention, restore tested quarterly.                                                                                                                                |
 
 ---
 
@@ -792,56 +792,56 @@ R = read, W = write.
 
 ### 13.1 Contradictions found
 
-| ID | Finding | Impact | Resolution |
-|---|---|---|---|
-| C-01 | The examples use the French nomenclature (5e, 4e, 3e) even though the target market is Moroccan (1AC, 2AC, 3AC). | An implicit, ill-fitting level model. | Levels configurable per section and system, with the national model as the default (2.2, 2.3, RG-24). |
-| C-02 | Inconsistent timelines between examples: §4 (School A 2022-2024, School B 2024-2025, School C 2025-2026), §6 (School A 2023-2024), §28 (School A 2022-2024, School C 2024-…). | Confusion over the number of schools and years. | Examples harmonized in this document; the PRD will use a single scenario set. |
-| C-03 | §12: "the school manages its parents"; §7: the parent is global. | Ambiguity over who owns the parent. | The school manages the **relationship** and its context attributes, not the identity (RG-15). |
-| C-04 | Partial, differing enrollment statuses between §6 (Completed, Transferred, Active) and §23 (ACTIVE → ENDED/TRANSFERRED). | No state machine, no year-end decision. | A complete state machine (6.3, RG-08 to RG-12). |
-| C-05 | §5: the global history contains grades, absences, report cards from every school; §28: School C does not access it automatically; §32: an academic passport. Nothing says who decides on sharing. | The core of the promise is undetermined. | An ownership, consent, and default transfer-profile model (6.9, RG-27 to RG-35). |
-| C-06 | §9-11 describe a sequential career (leave, then join); the Moroccan reality is simultaneous multi-affiliation for part-time teachers. | An overly restrictive affiliation model. | Simultaneous affiliations authorized (RG-17). |
-| C-07 | Redundant entities: SchoolMembership, TeacherMembership, StaffProfile, an undefined "Relationship". | An inconsistent data model. | A single SchoolMembership entity with a role and a contract; profiles kept distinct from affiliations (6.5, 6.10). |
-| C-08 | §13: strict isolation; §11: a school directory; §7: a cross-school parent. | Isolation defined in absolute terms yet contradicted. | A distinction between public directory data, isolated operational data, and global data reachable through a relationship (RG-21, RG-23). |
-| C-09 | §15: "Administration" as a single role; §12: fifteen different functions. | No permission granularity. | Detailed school roles and fine-grained permissions (8.1, RG-37). |
-| C-10 | §20: finance stays tied to the school; §24: a transfer closes the relationship. Nothing about unpaid balances after departure. | Lost collections or a blocked transfer. | A financial relationship surviving the closing of the enrollment (RG-12, 7.7). |
-| C-11 | §2 mentions a "school or professional career", and §32 an academic passport for the student; the rest of the document covers only K-12. | Ambiguous target (vocational training? higher education?). | Target: preschool through the baccalaureate. "Professional" refers to teachers' careers. Extension to higher education is out of scope (DEC-29). |
+| ID   | Finding                                                                                                                                                                                           | Impact                                                     | Resolution                                                                                                                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C-01 | The examples use the French nomenclature (5e, 4e, 3e) even though the target market is Moroccan (1AC, 2AC, 3AC).                                                                                  | An implicit, ill-fitting level model.                      | Levels configurable per section and system, with the national model as the default (2.2, 2.3, RG-24).                                            |
+| C-02 | Inconsistent timelines between examples: §4 (School A 2022-2024, School B 2024-2025, School C 2025-2026), §6 (School A 2023-2024), §28 (School A 2022-2024, School C 2024-…).                     | Confusion over the number of schools and years.            | Examples harmonized in this document; the PRD will use a single scenario set.                                                                    |
+| C-03 | §12: "the school manages its parents"; §7: the parent is global.                                                                                                                                  | Ambiguity over who owns the parent.                        | The school manages the **relationship** and its context attributes, not the identity (RG-15).                                                    |
+| C-04 | Partial, differing enrollment statuses between §6 (Completed, Transferred, Active) and §23 (ACTIVE → ENDED/TRANSFERRED).                                                                          | No state machine, no year-end decision.                    | A complete state machine (6.3, RG-08 to RG-12).                                                                                                  |
+| C-05 | §5: the global history contains grades, absences, report cards from every school; §28: School C does not access it automatically; §32: an academic passport. Nothing says who decides on sharing. | The core of the promise is undetermined.                   | An ownership, consent, and default transfer-profile model (6.9, RG-27 to RG-35).                                                                 |
+| C-06 | §9-11 describe a sequential career (leave, then join); the Moroccan reality is simultaneous multi-affiliation for part-time teachers.                                                             | An overly restrictive affiliation model.                   | Simultaneous affiliations authorized (RG-17).                                                                                                    |
+| C-07 | Redundant entities: SchoolMembership, TeacherMembership, StaffProfile, an undefined "Relationship".                                                                                               | An inconsistent data model.                                | A single SchoolMembership entity with a role and a contract; profiles kept distinct from affiliations (6.5, 6.10).                               |
+| C-08 | §13: strict isolation; §11: a school directory; §7: a cross-school parent.                                                                                                                        | Isolation defined in absolute terms yet contradicted.      | A distinction between public directory data, isolated operational data, and global data reachable through a relationship (RG-21, RG-23).         |
+| C-09 | §15: "Administration" as a single role; §12: fifteen different functions.                                                                                                                         | No permission granularity.                                 | Detailed school roles and fine-grained permissions (8.1, RG-37).                                                                                 |
+| C-10 | §20: finance stays tied to the school; §24: a transfer closes the relationship. Nothing about unpaid balances after departure.                                                                    | Lost collections or a blocked transfer.                    | A financial relationship surviving the closing of the enrollment (RG-12, 7.7).                                                                   |
+| C-11 | §2 mentions a "school or professional career", and §32 an academic passport for the student; the rest of the document covers only K-12.                                                           | Ambiguous target (vocational training? higher education?). | Target: preschool through the baccalaureate. "Professional" refers to teachers' careers. Extension to higher education is out of scope (DEC-29). |
 
 ### 13.2 Gray areas and gaps
 
-| ID | Gap | Resolution in this document |
-|---|---|---|
-| G-01 | Creating, matching, de-duplicating, and merging identities. | 6.2, RG-04 to RG-07. |
-| G-02 | Minors, young children's accounts, adulthood, consent. | 6.1, RG-01, RG-02, chapter 9. |
-| G-03 | Parental authority, custody, the financial guardian, conflicts between parents. | 6.4, RG-13 to RG-16. |
-| G-04 | Multi-site school groups and the organization level. | 6.6, RG-21. |
-| G-05 | Non-teaching staff, administrative sub-roles, platform roles. | 6.5, 8.1. |
-| G-06 | Onboarding, the subscription lifecycle, cancellation, export, retention. | 7.1, Q-05. |
-| G-07 | Admissions, re-enrollments, the year rollover, promotion, repetition, waitlists. | 7.2. |
-| G-08 | Massar, regulatory obligations, ministry statistics. | 2.6, 7.12, H-03, H-04, H-10. |
-| G-09 | Law 09.08, CNDP, controller/processor roles, hosting. | 2.7, chapter 9. |
-| G-10 | AR/FR bilingualism, RTL, dual-script names, bilingual documents. | 2.9, chapter 10. |
-| G-11 | The Moroccan calendar: Ramadan, UTC+0, movable holidays, Saturday. | 2.4, chapter 10. |
-| G-12 | A configurable assessment system, semesters/trimesters, weightings, certifying exams. | 2.5, 6.7, 7.5. |
-| G-13 | Timetables: constraints, rooms, variants, multi-site. | 7.3. |
-| G-14 | Discipline, student life, health: absences; the portability of this data. | 7.4, 7.14, RG-29, RG-31. |
-| G-15 | Moroccan finance: fee types, payment methods, compliant invoices, sibling discounts, cash. | 2.8, 7.7. |
-| G-16 | Withholding documents for unpaid fees. | 7.7, Q-06. |
-| G-17 | Real-world channels (WhatsApp, SMS), costs, preferences. | 2.10, 7.8. |
-| G-18 | Importing and migrating existing data. | 7.1. |
-| G-19 | Report-card immutability, versioning, verification. | RG-33. |
-| G-20 | Audit, logging, rectification rights. | RG-38, chapter 9. |
-| G-21 | Non-functional requirements. | Chapter 10. |
-| G-22 | MVP scope vs. the vision. | Chapter 12. |
-| G-23 | Confidentiality of teachers' job searches, cross-ratings, diploma verification. | 7.10, RG-35, Q-07. |
-| G-24 | Who pays, the billing unit, pricing. | Chapter 11, Q-10. |
-| G-25 | Competition and differentiation. | 3.3, Q-01. |
-| G-26 | Adult students and targets outside K-12. | RG-02, C-11, Q-11. |
-| G-27 | The same person with several profiles. | 6.1, RG-03, RG-36. |
-| G-28 | The right to erasure vs. historical retention. | RG-34, Q-04. |
-| G-29 | Curriculum, section, language of instruction per subject. | 2.3, 6.7, RG-26. |
-| G-30 | Vague vocabulary: "guardian", "legal guardian", "financial guardian" used interchangeably. | Distinct qualities in 6.4 and the glossary. |
-| G-31 | Signature, seal, and evidentiary value of issued documents. | 7.6, RG-33; an advanced seal in V1, a qualified seal in V2 (DEC-30). |
-| G-32 | ZSchool support's access to schools' data. | 8.1: temporary, ticket-based, audited access. |
+| ID   | Gap                                                                                                   | Resolution in this document                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| G-01 | Creating, matching, de-duplicating, and merging identities.                                           | 6.2, RG-04 to RG-07.                                                                                           |
+| G-02 | Minors, young children's accounts, adulthood, consent.                                                | 6.1, RG-01, RG-02, chapter 9.                                                                                  |
+| G-03 | Parental authority, custody, the financial guardian, conflicts between parents.                       | 6.4, RG-13 to RG-16.                                                                                           |
+| G-04 | Multi-site school groups and the organization level.                                                  | 6.6, RG-21.                                                                                                    |
+| G-05 | Non-teaching staff, administrative sub-roles, platform roles.                                         | 6.5, 8.1.                                                                                                      |
+| G-06 | Onboarding, the subscription lifecycle, cancellation, export, retention.                              | 7.1, Q-05.                                                                                                     |
+| G-07 | Admissions, re-enrollments, the year rollover, promotion, repetition, waitlists.                      | 7.2.                                                                                                           |
+| G-08 | Massar, regulatory obligations, ministry statistics.                                                  | 2.6, 7.12, H-03, H-04, H-10.                                                                                   |
+| G-09 | Law 09.08, CNDP, controller/processor roles, hosting.                                                 | 2.7, chapter 9.                                                                                                |
+| G-10 | AR/FR bilingualism, RTL, dual-script names, bilingual documents.                                      | 2.9, chapter 10.                                                                                               |
+| G-11 | The Moroccan calendar: Ramadan, UTC+0, movable holidays, Saturday.                                    | 2.4, chapter 10.                                                                                               |
+| G-12 | A configurable assessment system, semesters/trimesters, weightings, certifying exams.                 | 2.5, 6.7, 7.5.                                                                                                 |
+| G-13 | Timetables: constraints, rooms, variants, multi-site.                                                 | 7.3.                                                                                                           |
+| G-14 | Discipline, student life, health: absences; the portability of this data.                             | 7.4, 7.14, RG-29, RG-31.                                                                                       |
+| G-15 | Moroccan finance: fee types, payment methods, compliant invoices, sibling discounts, cash.            | 2.8, 7.7.                                                                                                      |
+| G-16 | Withholding documents for unpaid fees.                                                                | 7.7, Q-06.                                                                                                     |
+| G-17 | Real-world channels (WhatsApp, SMS), costs, preferences.                                              | 2.10, 7.8.                                                                                                     |
+| G-18 | Importing and migrating existing data.                                                                | 7.1.                                                                                                           |
+| G-19 | Report-card immutability, versioning, verification.                                                   | RG-33.                                                                                                         |
+| G-20 | Audit, logging, rectification rights.                                                                 | RG-38, chapter 9.                                                                                              |
+| G-21 | Non-functional requirements.                                                                          | Chapter 10.                                                                                                    |
+| G-22 | MVP scope vs. the vision.                                                                             | Chapter 12.                                                                                                    |
+| G-23 | Confidentiality of teachers' job searches, cross-ratings, diploma verification.                       | 7.10, RG-35, Q-07.                                                                                             |
+| G-24 | Who pays, the billing unit, pricing.                                                                  | Chapter 11, Q-10.                                                                                              |
+| G-25 | Competition and differentiation.                                                                      | 3.3, Q-01.                                                                                                     |
+| G-26 | Adult students and targets outside K-12.                                                              | RG-02, C-11, Q-11.                                                                                             |
+| G-27 | The same person with several profiles.                                                                | 6.1, RG-03, RG-36.                                                                                             |
+| G-28 | The right to erasure vs. historical retention.                                                        | RG-34, Q-04.                                                                                                   |
+| G-29 | Curriculum, section, language of instruction per subject.                                             | 2.3, 6.7, RG-26.                                                                                               |
+| G-30 | Vague vocabulary: "guardian", "legal guardian", "financial guardian" used interchangeably.            | Distinct qualities in 6.4 and the glossary.                                                                    |
+| G-31 | Signature, seal, and evidentiary value of issued documents.                                           | 7.6, RG-33; an advanced seal in V1, a qualified seal in V2 (DEC-30).                                           |
+| G-32 | ZSchool support's access to schools' data.                                                            | 8.1: temporary, ticket-based, audited access.                                                                  |
 | G-33 | Removing a school from the network (closure, loss of authorization) and what happens to student data. | 7.1 and RG-28: people keep access to their published documents; a closure procedure to be detailed in the PRD. |
 
 ### 13.3 Points from the initial description confirmed unchanged
@@ -859,49 +859,49 @@ R = read, W = write.
 
 ## 14. Decisions made
 
-| ID | Decision |
-|---|---|
-| DEC-01 | Target: private schools in Morocco, from preschool through the baccalaureate, across every teaching system. The Moroccan national system is the default model. |
-| DEC-02 | The isolation tenant is the school; the organization (a school group) is a consolidation level, not a data merge. |
-| DEC-03 | A global identity for students, parents, teachers, and staff; an account may carry several profiles; a profile may exist with no account. |
-| DEC-04 | The Massar code is the preferred matching key, unique across the platform, not mandatory. |
-| DEC-05 | A single affiliation entity (SchoolMembership) with a role and a contract type; simultaneous affiliations authorized. |
-| DEC-06 | The enrollment state machine from chapter 6.3; no enrollment that has been active is ever deleted. |
+| ID     | Decision                                                                                                                                                                                                                      |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEC-01 | Target: private schools in Morocco, from preschool through the baccalaureate, across every teaching system. The Moroccan national system is the default model.                                                                |
+| DEC-02 | The isolation tenant is the school; the organization (a school group) is a consolidation level, not a data merge.                                                                                                             |
+| DEC-03 | A global identity for students, parents, teachers, and staff; an account may carry several profiles; a profile may exist with no account.                                                                                     |
+| DEC-04 | The Massar code is the preferred matching key, unique across the platform, not mandatory.                                                                                                                                     |
+| DEC-05 | A single affiliation entity (SchoolMembership) with a role and a contract type; simultaneous affiliations authorized.                                                                                                         |
+| DEC-06 | The enrollment state machine from chapter 6.3; no enrollment that has been active is ever deleted.                                                                                                                            |
 | DEC-07 | A data-ownership model: an author (the school) and a data subject (the student); the data subject's permanent access to their published documents; no automatic access between schools; a default transfer profile per RG-31. |
-| DEC-08 | Disciplinary and health data not portable by default; health never transferred automatically. |
-| DEC-09 | Published report cards immutable and versioned, with QR verification. |
-| DEC-10 | An FR and AR (RTL) interface from MVP onward; names in dual script; bilingual documents. |
-| DEC-11 | Primary contact identifier: a mobile phone number; email optional. |
-| DEC-12 | Notification channels: in-app, SMS, and WhatsApp as priority; email secondary. |
-| DEC-13 | The paying customer is the school; parents, students, and teachers pay nothing. Billing per active student and per school year, in MAD. |
-| DEC-14 | No cross-rating between teachers and schools in V1. |
-| DEC-15 | The MVP, V1, and V2 scope from chapter 12. |
-| DEC-16 | ZSchool is the data processor for schools' data and the data controller for global identity and the academic passport; legal formalization before commercial launch. |
-| DEC-17 | Detailed school roles (chapter 8) with fine-grained permissions and logging. |
-| DEC-18 | Every academic data item is tied to an enrollment; no "floating" academic data on the identity. |
+| DEC-08 | Disciplinary and health data not portable by default; health never transferred automatically.                                                                                                                                 |
+| DEC-09 | Published report cards immutable and versioned, with QR verification.                                                                                                                                                         |
+| DEC-10 | An FR and AR (RTL) interface from MVP onward; names in dual script; bilingual documents.                                                                                                                                      |
+| DEC-11 | Primary contact identifier: a mobile phone number; email optional.                                                                                                                                                            |
+| DEC-12 | Notification channels: in-app, SMS, and WhatsApp as priority; email secondary.                                                                                                                                                |
+| DEC-13 | The paying customer is the school; parents, students, and teachers pay nothing. Billing per active student and per school year, in MAD.                                                                                       |
+| DEC-14 | No cross-rating between teachers and schools in V1.                                                                                                                                                                           |
+| DEC-15 | The MVP, V1, and V2 scope from chapter 12.                                                                                                                                                                                    |
+| DEC-16 | ZSchool is the data processor for schools' data and the data controller for global identity and the academic passport; legal formalization before commercial launch.                                                          |
+| DEC-17 | Detailed school roles (chapter 8) with fine-grained permissions and logging.                                                                                                                                                  |
+| DEC-18 | Every academic data item is tied to an enrollment; no "floating" academic data on the identity.                                                                                                                               |
 
 Decisions from resolving open questions (chapter 15):
 
-| ID | Decision |
-|---|---|
-| DEC-19 | Positioning: a multi-school global identity, a reliable parent app, Fatourati collections, an FR/AR interface. Primary target: schools of 300 to 3,000 students along the Casablanca–Kénitra corridor, home to 70% of private schools. |
-| DEC-20 | Adult students: the holder of their own account at 18; parental access kept by default, restrictable by the student for academic, disciplinary, and health data; financial access kept by the financial guardian (RG-02). |
-| DEC-21 | A single active enrollment per student and per school year. Dual enrollment (tutoring centers, outside activities) is not modeled before V2. |
+| ID     | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEC-19 | Positioning: a multi-school global identity, a reliable parent app, Fatourati collections, an FR/AR interface. Primary target: schools of 300 to 3,000 students along the Casablanca–Kénitra corridor, home to 70% of private schools.                                                                                                                                                                                                                                                                                                                                                                               |
+| DEC-20 | Adult students: the holder of their own account at 18; parental access kept by default, restrictable by the student for academic, disciplinary, and health data; financial access kept by the financial guardian (RG-02).                                                                                                                                                                                                                                                                                                                                                                                            |
+| DEC-21 | A single active enrollment per student and per school year. Dual enrollment (tutoring centers, outside activities) is not modeled before V2.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | DEC-22 | Default retention durations: enrollment registers, year-end decisions, report cards, transcripts, and certificates kept permanently by the school (archives and certificate reissuance); financial documents for 10 years (CGI Art. 211); attendance and discipline: end of schooling plus 2 years, then anonymization; health: end of schooling plus 1 year, then deletion; messages and notifications: 2 years; audit logs: 5 years; accounts with no active relationship anonymized after 3 years of inactivity. These durations appear in the CNDP filings and are adjustable by the school within legal limits. |
-| DEC-23 | Cancelling a school: a full export of data and documents handed to the school; read-only access for 90 days; deletion of operational data 12 months after cancellation. People keep their global identity and access to their published documents. |
-| DEC-24 | No blocking of official documents for unpaid fees (7.7). |
-| DEC-25 | No rating or cross-recommendation between teachers and schools on the roadmap. Only verified affiliation periods are shared. |
-| DEC-26 | Production and backup hosting in Morocco (chapter 9). No transfer of minors' data outside Morocco other than through messaging vendors, governed by an F118 authorization. |
-| DEC-27 | Reference ambition: 20 schools and 15,000 students by the end of year 1 (pilots, then the Casablanca–Kénitra corridor), 300 schools and 200,000 students at three years. **Confirmed by the product owner on 9 September 2026.** |
-| DEC-28 | A single plan at **MAD 5 per active student per month**, billed over 10 months (September to June), all modules included; only consumables (SMS, WhatsApp, storage) and services (onboarding, migration) are billed on top (chapter 11). **Confirmed by the product owner on 9 September 2026.** |
-| DEC-29 | Higher education and vocational training out of scope. The level model stays generic so as not to preclude it. |
-| DEC-30 | Documents: in V1, the school's advanced electronic seal, a timestamp, and a verification QR code; in V2, a qualified seal and timestamp through a DGSSI-accredited provider (Barid eSign, AfricTRUST, or DamaneSign) for the certificate of departure, certificates, and transcripts. The parent contract (Law 59.21) signed electronically at the advanced level. |
-| DEC-31 | Online payment: Fatourati (Collect, then Aggregator) from V1 onward as the primary rail, with no funds held; a registered bank card in V2 via NAPS e-Premium or Chari Pay; direct debit left to each school's own bank. |
-| DEC-32 | Transfer to a school outside ZSchool: a bilingual PDF exit file reachable via a time-limited secure link, with a verification QR code, from V1 onward. |
-| DEC-33 | Teachers may declare experience at schools absent from ZSchool; it is shown as "unverified". |
-| DEC-34 | Parent–teacher communication is on by default in moderated mode: the teacher or the school opens the thread, the parent replies; the school may allow parents to initiate; leadership may view threads, which is disclosed to users. |
-| DEC-35 | Pilot school profiles: a primary school of roughly 300 students, a middle/high school of roughly 800 students, a multi-site group of over 2,000 students, and a bilingual school running on trimesters, along the Casablanca–Rabat corridor. **Confirmed by the product owner on 9 September 2026.** |
-| DEC-36 | Notification channels: push first (Android 68%, iOS 32%), WhatsApp "utility" for parents who have opted in, SMS through a Moroccan aggregator as a fallback for households without a smartphone. WhatsApp pricing for Morocco changes on 1 October 2026 and will be reassessed (H-20). |
+| DEC-23 | Cancelling a school: a full export of data and documents handed to the school; read-only access for 90 days; deletion of operational data 12 months after cancellation. People keep their global identity and access to their published documents.                                                                                                                                                                                                                                                                                                                                                                   |
+| DEC-24 | No blocking of official documents for unpaid fees (7.7).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| DEC-25 | No rating or cross-recommendation between teachers and schools on the roadmap. Only verified affiliation periods are shared.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| DEC-26 | Production and backup hosting in Morocco (chapter 9). No transfer of minors' data outside Morocco other than through messaging vendors, governed by an F118 authorization.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| DEC-27 | Reference ambition: 20 schools and 15,000 students by the end of year 1 (pilots, then the Casablanca–Kénitra corridor), 300 schools and 200,000 students at three years. **Confirmed by the product owner on 9 September 2026.**                                                                                                                                                                                                                                                                                                                                                                                     |
+| DEC-28 | A single plan at **MAD 5 per active student per month**, billed over 10 months (September to June), all modules included; only consumables (SMS, WhatsApp, storage) and services (onboarding, migration) are billed on top (chapter 11). **Confirmed by the product owner on 9 September 2026.**                                                                                                                                                                                                                                                                                                                     |
+| DEC-29 | Higher education and vocational training out of scope. The level model stays generic so as not to preclude it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| DEC-30 | Documents: in V1, the school's advanced electronic seal, a timestamp, and a verification QR code; in V2, a qualified seal and timestamp through a DGSSI-accredited provider (Barid eSign, AfricTRUST, or DamaneSign) for the certificate of departure, certificates, and transcripts. The parent contract (Law 59.21) signed electronically at the advanced level.                                                                                                                                                                                                                                                   |
+| DEC-31 | Online payment: Fatourati (Collect, then Aggregator) from V1 onward as the primary rail, with no funds held; a registered bank card in V2 via NAPS e-Premium or Chari Pay; direct debit left to each school's own bank.                                                                                                                                                                                                                                                                                                                                                                                              |
+| DEC-32 | Transfer to a school outside ZSchool: a bilingual PDF exit file reachable via a time-limited secure link, with a verification QR code, from V1 onward.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| DEC-33 | Teachers may declare experience at schools absent from ZSchool; it is shown as "unverified".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| DEC-34 | Parent–teacher communication is on by default in moderated mode: the teacher or the school opens the thread, the parent replies; the school may allow parents to initiate; leadership may view threads, which is disclosed to users.                                                                                                                                                                                                                                                                                                                                                                                 |
+| DEC-35 | Pilot school profiles: a primary school of roughly 300 students, a middle/high school of roughly 800 students, a multi-site group of over 2,000 students, and a bilingual school running on trimesters, along the Casablanca–Rabat corridor. **Confirmed by the product owner on 9 September 2026.**                                                                                                                                                                                                                                                                                                                 |
+| DEC-36 | Notification channels: push first (Android 68%, iOS 32%), WhatsApp "utility" for parents who have opted in, SMS through a Moroccan aggregator as a fallback for households without a smartphone. WhatsApp pricing for Morocco changes on 1 October 2026 and will be reassessed (H-20).                                                                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -909,25 +909,25 @@ Decisions from resolving open questions (chapter 15):
 
 Every question from version 1.0 has been answered. Three of them (ambition, pricing, pilots) are business decisions: a reference value is set and flagged "to be confirmed by the product owner".
 
-| ID | Question | Resolution | Decision |
-|---|---|---|---|
-| Q-01 | Existing competition, pricing, limitations. | Roughly a dozen single-school Moroccan vendors, Massar with poorly rated parent apps, Pronote in French schools; public pricing from MAD 10 to 65 per student per year; no global-identity offer (3.3). | DEC-19 |
-| Q-02 | Parents' access to an adult student. | No legal right to information about an adult; parents remain contract signatories and payers. Kept by default, restrictable at the student's discretion for academic, disciplinary, and health data, with financial access kept by the payer. | DEC-20 |
-| Q-03 | Two simultaneous active enrollments. | Not in V1; a single active enrollment per year. | DEC-21 |
-| Q-04 | Retention durations. | No legal duration specific to private schools; 10 years for accounting; the proportionality principle of Law 09.08. Default durations set per data type. | DEC-22 |
-| Q-05 | Retention after cancellation. | A full export, 90 days read-only, deletion at 12 months, identities and published documents kept for people. | DEC-23 |
-| Q-06 | Documents withholdable for unpaid fees. | No official document: the ministry's position, interim court orders with a daily penalty, the note of 28 May 2021, Law 59.21. Only non-mandatory services may be conditioned. | DEC-24 |
-| Q-07 | Ratings within the teacher network. | No, at any version; verified periods only. | DEC-25 |
-| Q-08 | Hosting. | Oracle Cloud Casablanca for production, a second Moroccan site for backup; no transfer formality. | DEC-26 |
-| Q-09 | Three-year ambition. | 20 schools and 15,000 students in year 1; 300 schools and 200,000 students at three years. | DEC-27, confirmed |
-| Q-10 | Pricing. | A single plan, MAD 5 per active student per month over 10 months, all modules included, consumables on top. | DEC-28, confirmed |
-| Q-11 | Higher education and vocational training. | Out of scope, the model left generic. | DEC-29 |
-| Q-12 | Electronic signature. | An advanced seal plus QR code in V1, a qualified seal through a DGSSI-accredited provider in V2; the parent contract at the advanced signature level. | DEC-30 |
-| Q-13 | Pilot schools. | Four representative profiles along the Casablanca–Rabat corridor. | DEC-35, confirmed |
-| Q-14 | The online-payment provider. | Fatourati in V1, a registered card in V2 (NAPS or Chari Pay), no funds held. | DEC-31 |
-| Q-15 | Access for a school outside ZSchool. | Yes, a time-limited secure link to the exit file, from V1 onward. | DEC-32 |
-| Q-16 | Non-ZSchool experience for teachers. | Yes, self-declared and marked unverified. | DEC-33 |
-| Q-17 | Parent–teacher communication. | On by default in moderated mode, configurable by the school. | DEC-34 |
+| ID   | Question                                    | Resolution                                                                                                                                                                                                                                    | Decision          |
+| ---- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Q-01 | Existing competition, pricing, limitations. | Roughly a dozen single-school Moroccan vendors, Massar with poorly rated parent apps, Pronote in French schools; public pricing from MAD 10 to 65 per student per year; no global-identity offer (3.3).                                       | DEC-19            |
+| Q-02 | Parents' access to an adult student.        | No legal right to information about an adult; parents remain contract signatories and payers. Kept by default, restrictable at the student's discretion for academic, disciplinary, and health data, with financial access kept by the payer. | DEC-20            |
+| Q-03 | Two simultaneous active enrollments.        | Not in V1; a single active enrollment per year.                                                                                                                                                                                               | DEC-21            |
+| Q-04 | Retention durations.                        | No legal duration specific to private schools; 10 years for accounting; the proportionality principle of Law 09.08. Default durations set per data type.                                                                                      | DEC-22            |
+| Q-05 | Retention after cancellation.               | A full export, 90 days read-only, deletion at 12 months, identities and published documents kept for people.                                                                                                                                  | DEC-23            |
+| Q-06 | Documents withholdable for unpaid fees.     | No official document: the ministry's position, interim court orders with a daily penalty, the note of 28 May 2021, Law 59.21. Only non-mandatory services may be conditioned.                                                                 | DEC-24            |
+| Q-07 | Ratings within the teacher network.         | No, at any version; verified periods only.                                                                                                                                                                                                    | DEC-25            |
+| Q-08 | Hosting.                                    | Oracle Cloud Casablanca for production, a second Moroccan site for backup; no transfer formality.                                                                                                                                             | DEC-26            |
+| Q-09 | Three-year ambition.                        | 20 schools and 15,000 students in year 1; 300 schools and 200,000 students at three years.                                                                                                                                                    | DEC-27, confirmed |
+| Q-10 | Pricing.                                    | A single plan, MAD 5 per active student per month over 10 months, all modules included, consumables on top.                                                                                                                                   | DEC-28, confirmed |
+| Q-11 | Higher education and vocational training.   | Out of scope, the model left generic.                                                                                                                                                                                                         | DEC-29            |
+| Q-12 | Electronic signature.                       | An advanced seal plus QR code in V1, a qualified seal through a DGSSI-accredited provider in V2; the parent contract at the advanced signature level.                                                                                         | DEC-30            |
+| Q-13 | Pilot schools.                              | Four representative profiles along the Casablanca–Rabat corridor.                                                                                                                                                                             | DEC-35, confirmed |
+| Q-14 | The online-payment provider.                | Fatourati in V1, a registered card in V2 (NAPS or Chari Pay), no funds held.                                                                                                                                                                  | DEC-31            |
+| Q-15 | Access for a school outside ZSchool.        | Yes, a time-limited secure link to the exit file, from V1 onward.                                                                                                                                                                             | DEC-32            |
+| Q-16 | Non-ZSchool experience for teachers.        | Yes, self-declared and marked unverified.                                                                                                                                                                                                     | DEC-33            |
+| Q-17 | Parent–teacher communication.               | On by default in moderated mode, configurable by the school.                                                                                                                                                                                  | DEC-34            |
 
 ---
 
@@ -937,35 +937,35 @@ Verification through desk research (official sites, press, vendors) carried out 
 
 ### 16.1 Hypotheses from version 1.0
 
-| ID | Hypothesis | Status | Finding |
-|---|---|---|---|
-| H-01 | The private sector's share and enrollment, the number of schools. | Confirmed | 1.27 million students, 15.3% (2025-2026, preschool included); 7,564 schools (2023-2024); 70% along the Casablanca–Kénitra corridor. Figures vary by source (with or without preschool): a figure specific to the three core cycles is still to be extracted from the ministry's statistical yearbook. |
-| H-02 | Baccalaureate weightings. | Confirmed | 25% continuous assessment, 25% regional, 50% national. Added: 3AC 30/30/40 and 6AP 50/25/25. The order numbers were not found (H-16). |
-| H-03 | The scope of Massar entries for private schools. | Confirmed in substance | Massar has covered every private school since 2013-2014; enrollments, classes, and continuous-assessment grades at every level; the ESISE census is validated against Massar. No text naming private schools specifically could be found (H-16). |
-| H-04 | No Massar API, Excel import. | Confirmed | No API and no interoperability program; Excel import and export documented within the grade module. |
-| H-05 | An overhaul of Law 09.08. | Not confirmed for now | No overhaul adopted. A revision drafted by the CNDP in 2026, not yet before Parliament. No obligation for a DPO, breach notification, or a digital age of consent under current law. |
-| H-06 | An obligation to host minors' data in Morocco. | Not confirmed as an obligation | Law 05.20 targets only the public sector and critical infrastructure. The real constraint is Law 09.08: hosting abroad equals a transfer, subject to the adequacy list or a per-school F118 authorization. Hosting in Morocco removes this formality and meets a market expectation. |
-| H-07 | VAT on tuition, transport, and catering. | Confirmed | Tuition with no VAT and no deduction; transport, catering, and leisure activities provided by the school to its own students are exempt (Art. 91-V-4°); taxable if provided by a third party. |
-| H-08 | The e-invoicing timeline. | Partially confirmed | The legal basis is CGI Art. 145-IX and the DGI platform; the decree was unpublished as of mid-2026; large businesses during 2026, SMEs and micro-businesses in 2027-2028 per the DGI; the precise dates circulating among vendors are unofficial. |
-| H-09 | Payment providers. | Confirmed and clarified | CMI became a simple switch as of May 2025; Fatourati already used by school groups and open to vendors (the 2026 Aggregator offer); NAPS and Chari Pay for registered cards; no Stripe; holding funds reserved to licensed payment institutions. |
-| H-10 | The format of required statistics. | Partially confirmed | The channel is ESISE (the private-school census, the HR reference dataset, the May census, year-end results), validated against Massar. Form names could not be found; to be gathered from pilots. |
-| H-11 | Parents' preference for WhatsApp, and acceptance of an app. | Confirmed by indicators | 98.6% of social-media users use WhatsApp; 91.7% of households own a smartphone; the DataSchool parent app reaches 10,000 installs with a 4.2 rating. To be confirmed through a survey of pilots. |
-| H-12 | School leaders accepting a student's permanent access to their report cards. | Not verified | No source. To be tested in interviews with pilots; the ministry's position on unconditional document issuance points that way. |
-| H-13 | The share of part-time teachers in the private sector. | Partially confirmed | Over 50% per parent associations (2023), with no official statistic. Law 06.00 requires at least 80% permanent staff, which points to a gap between the rule and practice. |
+| ID   | Hypothesis                                                                   | Status                         | Finding                                                                                                                                                                                                                                                                                               |
+| ---- | ---------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H-01 | The private sector's share and enrollment, the number of schools.            | Confirmed                      | 1.27 million students, 15.3% (2025-2026, preschool included); 7,564 schools (2023-2024); 70% along the Casablanca–Kénitra corridor. Figures vary by source (with or without preschool): a figure specific to the three core cycles is still to be extracted from the ministry's statistical yearbook. |
+| H-02 | Baccalaureate weightings.                                                    | Confirmed                      | 25% continuous assessment, 25% regional, 50% national. Added: 3AC 30/30/40 and 6AP 50/25/25. The order numbers were not found (H-16).                                                                                                                                                                 |
+| H-03 | The scope of Massar entries for private schools.                             | Confirmed in substance         | Massar has covered every private school since 2013-2014; enrollments, classes, and continuous-assessment grades at every level; the ESISE census is validated against Massar. No text naming private schools specifically could be found (H-16).                                                      |
+| H-04 | No Massar API, Excel import.                                                 | Confirmed                      | No API and no interoperability program; Excel import and export documented within the grade module.                                                                                                                                                                                                   |
+| H-05 | An overhaul of Law 09.08.                                                    | Not confirmed for now          | No overhaul adopted. A revision drafted by the CNDP in 2026, not yet before Parliament. No obligation for a DPO, breach notification, or a digital age of consent under current law.                                                                                                                  |
+| H-06 | An obligation to host minors' data in Morocco.                               | Not confirmed as an obligation | Law 05.20 targets only the public sector and critical infrastructure. The real constraint is Law 09.08: hosting abroad equals a transfer, subject to the adequacy list or a per-school F118 authorization. Hosting in Morocco removes this formality and meets a market expectation.                  |
+| H-07 | VAT on tuition, transport, and catering.                                     | Confirmed                      | Tuition with no VAT and no deduction; transport, catering, and leisure activities provided by the school to its own students are exempt (Art. 91-V-4°); taxable if provided by a third party.                                                                                                         |
+| H-08 | The e-invoicing timeline.                                                    | Partially confirmed            | The legal basis is CGI Art. 145-IX and the DGI platform; the decree was unpublished as of mid-2026; large businesses during 2026, SMEs and micro-businesses in 2027-2028 per the DGI; the precise dates circulating among vendors are unofficial.                                                     |
+| H-09 | Payment providers.                                                           | Confirmed and clarified        | CMI became a simple switch as of May 2025; Fatourati already used by school groups and open to vendors (the 2026 Aggregator offer); NAPS and Chari Pay for registered cards; no Stripe; holding funds reserved to licensed payment institutions.                                                      |
+| H-10 | The format of required statistics.                                           | Partially confirmed            | The channel is ESISE (the private-school census, the HR reference dataset, the May census, year-end results), validated against Massar. Form names could not be found; to be gathered from pilots.                                                                                                    |
+| H-11 | Parents' preference for WhatsApp, and acceptance of an app.                  | Confirmed by indicators        | 98.6% of social-media users use WhatsApp; 91.7% of households own a smartphone; the DataSchool parent app reaches 10,000 installs with a 4.2 rating. To be confirmed through a survey of pilots.                                                                                                      |
+| H-12 | School leaders accepting a student's permanent access to their report cards. | Not verified                   | No source. To be tested in interviews with pilots; the ministry's position on unconditional document issuance points that way.                                                                                                                                                                        |
+| H-13 | The share of part-time teachers in the private sector.                       | Partially confirmed            | Over 50% per parent associations (2023), with no official statistic. Law 06.00 requires at least 80% permanent staff, which points to a gap between the rule and practice.                                                                                                                            |
 
 ### 16.2 Points still to verify against primary texts
 
-| ID | Point | Why |
-|---|---|---|
-| H-14 | The full text of Law 59.21 in the Official Gazette (March 2026): any article on document issuance and unpaid fees, the exact fine schedule, the mandatory content of the parent contract. | The contract module and the arrears policy. |
-| H-15 | The CNDP adequacy list currently in force (Deliberation 236-2015 and updates). | Choosing messaging and backup vendors. |
-| H-16 | The order numbers for the weightings (bac, 3AC, 6AP), memorandum 1887/13 on Massar, memorandum 43 of 2006 on continuous assessment. | Default configuration for average calculation. |
-| H-17 | Whether the e-invoicing decree has been published since June 2026. | Planning the finance module. |
-| H-18 | Services available and pricing in the Oracle Cloud Casablanca region (a managed database, Kubernetes, cross-site backups). | Technical architecture. |
-| H-19 | Fatourati pricing and contract terms (creditor, Collect, Aggregator); Payzone's actual multi-school payout capacity. | The payment module. |
-| H-20 | WhatsApp Business pricing for Morocco after 1 October 2026. | The cost of notifications. |
-| H-21 | The exact numbering of Articles 180 to 186 of the Family Code (the non-custodial parent's oversight right); the DGI's written doctrine on tuition (out of scope or exempt). | Wording of legal mentions. |
-| H-22 | A public SME/micro-business digitalization subsidy program and its applicability to schools. | A commercial argument. |
+| ID   | Point                                                                                                                                                                                     | Why                                            |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| H-14 | The full text of Law 59.21 in the Official Gazette (March 2026): any article on document issuance and unpaid fees, the exact fine schedule, the mandatory content of the parent contract. | The contract module and the arrears policy.    |
+| H-15 | The CNDP adequacy list currently in force (Deliberation 236-2015 and updates).                                                                                                            | Choosing messaging and backup vendors.         |
+| H-16 | The order numbers for the weightings (bac, 3AC, 6AP), memorandum 1887/13 on Massar, memorandum 43 of 2006 on continuous assessment.                                                       | Default configuration for average calculation. |
+| H-17 | Whether the e-invoicing decree has been published since June 2026.                                                                                                                        | Planning the finance module.                   |
+| H-18 | Services available and pricing in the Oracle Cloud Casablanca region (a managed database, Kubernetes, cross-site backups).                                                                | Technical architecture.                        |
+| H-19 | Fatourati pricing and contract terms (creditor, Collect, Aggregator); Payzone's actual multi-school payout capacity.                                                                      | The payment module.                            |
+| H-20 | WhatsApp Business pricing for Morocco after 1 October 2026.                                                                                                                               | The cost of notifications.                     |
+| H-21 | The exact numbering of Articles 180 to 186 of the Family Code (the non-custodial parent's oversight right); the DGI's written doctrine on tuition (out of scope or exempt).               | Wording of legal mentions.                     |
+| H-22 | A public SME/micro-business digitalization subsidy program and its applicability to schools.                                                                                              | A commercial argument.                         |
 
 ### 16.3 Main sources
 
@@ -989,49 +989,49 @@ Verification through desk research (official sites, press, vendors) carried out 
 
 ## 17. Glossary
 
-| French | Arabic | English | ZSchool definition |
-|---|---|---|---|
-| Établissement | مؤسسة تعليمية | School | Tenant; an entity authorized to teach. |
-| Groupe scolaire | مجموعة مدارس | School group / Organization | A set of schools under common governance. |
-| Élève | تلميذ(ة) | Student | A person enrolled in school; a global identity. |
-| Responsable légal | الولي الشرعي | Legal guardian | The holder of guardianship (wilaya). |
-| Titulaire de la garde | الحاضن(ة) | Custodial parent | The holder of custody (hadana). |
-| Responsable financier | المسؤول عن الأداء | Financial guarantor / payer | The person liable for fees. |
-| Enseignant | أستاذ(ة) | Teacher | A global identity; affiliated with one or several schools. |
-| Vacataire | أستاذ متعاقد بالحصة | Hourly / part-time teacher | A teacher paid by the hour, often across several schools. |
-| Surveillant général | الحارس العام | Head of student affairs / dean of discipline | In charge of student life. |
-| Inscription | التسجيل | Enrollment | A student ↔ school ↔ year relationship. |
-| Réinscription | إعادة التسجيل | Re-enrollment | Renewal for the following year. |
-| Année scolaire | السنة الدراسية | Academic year | September to June/July. |
-| Cycle | السلك | Cycle / stage | Preschool, primary, middle school, upper secondary. |
-| Niveau | المستوى | Level / grade | 1AP … 2nd Bac. |
-| Filière | الشعبة | Track / stream | A specialization in upper-secondary school. |
-| Tronc commun | الجذع المشترك | Common core (first year of upper secondary) | The first year of upper-secondary school. |
-| Classe | القسم | Class / homeroom | A group of students at one level. |
-| Matière | المادة | Subject | A taught discipline. |
-| Coefficient | المعامل | Weight | The weighting of a subject or an assessment. |
-| Contrôle continu | المراقبة المستمرة | Continuous assessment | Regular internal assessments. |
-| Semestre / Trimestre | الأسدس / الثلاثي | Semester / Trimester | An assessment period. |
-| Bulletin | بيان النقط | Report card | A document of results per period. |
-| Relevé de notes | كشف النقط | Transcript | A summary of grades (annual or cumulative). |
-| Conseil de classe | مجلس القسم | Class council | An end-of-period deliberation. |
-| Absence / Retard | غياب / تأخر | Absence / Tardiness | Attendance events. |
-| Justificatif | مبرر الغياب | Excuse note | A document justifying an absence. |
-| Certificat de scolarité | شهادة مدرسية | Enrollment certificate | Certifies enrollment. |
-| Certificat de départ | شهادة المغادرة | Leaving / transfer certificate | An exit document for a transfer. |
-| Attestation de réussite | شهادة النجاح | Certificate of achievement | Certifies promotion or a diploma. |
-| Code Massar | رمز مسار | Massar code | A student's national identifier. |
-| CNIE | البطاقة الوطنية للتعريف الإلكترونية | National ID card | An adult identifier. |
-| Frais de scolarité | رسوم التمدرس | Tuition fees | Monthly or annual fees. |
-| Frais d'inscription | رسوم التسجيل | Registration fees | Initial fees. |
-| Remise fratrie | تخفيض الإخوة | Sibling discount | A reduction for siblings. |
-| Reçu | وصل الأداء | Receipt | Proof of payment. |
-| Impayé | متأخرات الأداء | Arrears / outstanding balance | An unsettled instalment. |
-| Transport scolaire | النقل المدرسي | School transport | A bus service. |
-| Cantine | المطعم المدرسي | Canteen | School catering. |
-| Emploi du temps | استعمال الزمن | Timetable | A weekly grid of courses. |
-| Cahier de textes | دفتر النصوص | Class journal / homework log | Session content and homework. |
-| Passeport scolaire | جواز السفر المدرسي | Student academic passport | A consolidated record, subject to consent (V2). |
+| French                  | Arabic                              | English                                      | ZSchool definition                                         |
+| ----------------------- | ----------------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| Établissement           | مؤسسة تعليمية                       | School                                       | Tenant; an entity authorized to teach.                     |
+| Groupe scolaire         | مجموعة مدارس                        | School group / Organization                  | A set of schools under common governance.                  |
+| Élève                   | تلميذ(ة)                            | Student                                      | A person enrolled in school; a global identity.            |
+| Responsable légal       | الولي الشرعي                        | Legal guardian                               | The holder of guardianship (wilaya).                       |
+| Titulaire de la garde   | الحاضن(ة)                           | Custodial parent                             | The holder of custody (hadana).                            |
+| Responsable financier   | المسؤول عن الأداء                   | Financial guarantor / payer                  | The person liable for fees.                                |
+| Enseignant              | أستاذ(ة)                            | Teacher                                      | A global identity; affiliated with one or several schools. |
+| Vacataire               | أستاذ متعاقد بالحصة                 | Hourly / part-time teacher                   | A teacher paid by the hour, often across several schools.  |
+| Surveillant général     | الحارس العام                        | Head of student affairs / dean of discipline | In charge of student life.                                 |
+| Inscription             | التسجيل                             | Enrollment                                   | A student ↔ school ↔ year relationship.                    |
+| Réinscription           | إعادة التسجيل                       | Re-enrollment                                | Renewal for the following year.                            |
+| Année scolaire          | السنة الدراسية                      | Academic year                                | September to June/July.                                    |
+| Cycle                   | السلك                               | Cycle / stage                                | Preschool, primary, middle school, upper secondary.        |
+| Niveau                  | المستوى                             | Level / grade                                | 1AP … 2nd Bac.                                             |
+| Filière                 | الشعبة                              | Track / stream                               | A specialization in upper-secondary school.                |
+| Tronc commun            | الجذع المشترك                       | Common core (first year of upper secondary)  | The first year of upper-secondary school.                  |
+| Classe                  | القسم                               | Class / homeroom                             | A group of students at one level.                          |
+| Matière                 | المادة                              | Subject                                      | A taught discipline.                                       |
+| Coefficient             | المعامل                             | Weight                                       | The weighting of a subject or an assessment.               |
+| Contrôle continu        | المراقبة المستمرة                   | Continuous assessment                        | Regular internal assessments.                              |
+| Semestre / Trimestre    | الأسدس / الثلاثي                    | Semester / Trimester                         | An assessment period.                                      |
+| Bulletin                | بيان النقط                          | Report card                                  | A document of results per period.                          |
+| Relevé de notes         | كشف النقط                           | Transcript                                   | A summary of grades (annual or cumulative).                |
+| Conseil de classe       | مجلس القسم                          | Class council                                | An end-of-period deliberation.                             |
+| Absence / Retard        | غياب / تأخر                         | Absence / Tardiness                          | Attendance events.                                         |
+| Justificatif            | مبرر الغياب                         | Excuse note                                  | A document justifying an absence.                          |
+| Certificat de scolarité | شهادة مدرسية                        | Enrollment certificate                       | Certifies enrollment.                                      |
+| Certificat de départ    | شهادة المغادرة                      | Leaving / transfer certificate               | An exit document for a transfer.                           |
+| Attestation de réussite | شهادة النجاح                        | Certificate of achievement                   | Certifies promotion or a diploma.                          |
+| Code Massar             | رمز مسار                            | Massar code                                  | A student's national identifier.                           |
+| CNIE                    | البطاقة الوطنية للتعريف الإلكترونية | National ID card                             | An adult identifier.                                       |
+| Frais de scolarité      | رسوم التمدرس                        | Tuition fees                                 | Monthly or annual fees.                                    |
+| Frais d'inscription     | رسوم التسجيل                        | Registration fees                            | Initial fees.                                              |
+| Remise fratrie          | تخفيض الإخوة                        | Sibling discount                             | A reduction for siblings.                                  |
+| Reçu                    | وصل الأداء                          | Receipt                                      | Proof of payment.                                          |
+| Impayé                  | متأخرات الأداء                      | Arrears / outstanding balance                | An unsettled instalment.                                   |
+| Transport scolaire      | النقل المدرسي                       | School transport                             | A bus service.                                             |
+| Cantine                 | المطعم المدرسي                      | Canteen                                      | School catering.                                           |
+| Emploi du temps         | استعمال الزمن                       | Timetable                                    | A weekly grid of courses.                                  |
+| Cahier de textes        | دفتر النصوص                         | Class journal / homework log                 | Session content and homework.                              |
+| Passeport scolaire      | جواز السفر المدرسي                  | Student academic passport                    | A consolidated record, subject to consent (V2).            |
 
 ---
 

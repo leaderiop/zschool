@@ -1,11 +1,9 @@
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel } from "./Ownership.ts"
+import { LevelId, SchoolId, TrackId } from "./Ids.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
@@ -47,16 +45,16 @@ export interface UpdateSubjectLevelConfigCommand {
 }
 
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
-export const createSubject = (
+export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(function*(
   command: CreateSubjectCommand
-): Effect.Effect<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, command.schoolId)
+        yield* requireOwnedRow(sql, "sections", "section", command.sectionId, SchoolId(command.schoolId), RowWithId)
 
         const [row] = yield* sql<{ id: string }>`
           INSERT INTO subjects (school_id, academic_year_id, section_id, code, name)
@@ -67,6 +65,7 @@ export const createSubject = (
       })
     )
   )
+})
 
 /**
  * BEH-ZS-053 / REQ-ZS-055: configures one subject for one (level, track)
@@ -75,23 +74,24 @@ export const createSubject = (
  * is refused rather than silently overwriting the first (that's what
  * `updateSubjectLevelConfig` is for).
  */
-export const configureSubjectLevel = (
+export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSubjectLevel")(function*(
   command: ConfigureSubjectLevelCommand
-): Effect.Effect<
-  string,
-  EnforcementError | EntityNotFoundError | DuplicateConfigError | SqlError,
-  SqlClient | EvaluationServices
-> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, command.schoolId)
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
+        yield* requireOwnedRow(sql, "subjects", "subject", command.subjectId, SchoolId(command.schoolId), RowWithId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
         if (command.trackId !== undefined) {
-          yield* requireTrackBelongsToLevel(sql, command.trackId, command.levelId, command.schoolId)
+          yield* requireTrackBelongsToLevel(
+            sql,
+            TrackId(command.trackId),
+            LevelId(command.levelId),
+            SchoolId(command.schoolId)
+          )
         }
 
         const insert = sql<{ id: string }>`
@@ -118,13 +118,14 @@ export const configureSubjectLevel = (
       })
     )
   )
+})
 
 /** Edits an existing (level, track) configuration — scoped to this year's own snapshot (ADR-ZS-105): the `academic_year_id` match means a prior year's closed configuration is never reachable through this call. */
-export const updateSubjectLevelConfig = (
+export const updateSubjectLevelConfig = Effect.fn("SubjectLevelConfigs.updateSubjectLevelConfig")(function*(
   command: UpdateSubjectLevelConfigCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -134,7 +135,9 @@ export const updateSubjectLevelConfig = (
           WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
         `
         if (rows.length === 0) {
-          return yield* Effect.fail(new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId }))
+          return yield* Effect.fail(
+            new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId })
+          )
         }
 
         if (command.coefficient !== undefined) {
@@ -158,3 +161,4 @@ export const updateSubjectLevelConfig = (
       })
     )
   )
+})

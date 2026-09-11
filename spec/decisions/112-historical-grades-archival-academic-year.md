@@ -41,8 +41,8 @@ Historical grade import **creates a new, dedicated archival `AcademicYear`** —
 born closed, never operationally opened on the platform — rather than writing
 into a year the platform itself already closed through the normal
 rollover-then-close flow (ADR-ZS-057). INV-ZS-084's read-only guarantee is
-about *mutating* a year after ZSchool closes it; it says nothing about
-*creating* a year that represents pre-platform history and is immediately
+about _mutating_ a year after ZSchool closes it; it says nothing about
+_creating_ a year that represents pre-platform history and is immediately
 marked closed on arrival. Import is the only path that ever creates a year in
 this already-closed state — every other path (BEH-ZS-057's cloning, the
 normal wizard) always creates a year in "in preparation" or "in progress."

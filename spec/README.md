@@ -1,14 +1,14 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-00                                                     |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective                                                       |
-> | Author         | ZSchool Product                                                |
-> | Classification | Master Index                                                    |
-> | Change History | See §6, "Document history," below.                              |
+> | Property       | Value                              |
+> | -------------- | ---------------------------------- |
+> | Document ID    | ZSCHOOL-00                         |
+> | Revision       | 1.0                                |
+> | Effective Date | 2026-09-09                         |
+> | Status         | Effective                          |
+> | Author         | ZSchool Product                    |
+> | Classification | Master Index                       |
+> | Change History | See §6, "Document history," below. |
 
 # ZSchool Specification
 
@@ -30,14 +30,14 @@ produced this tree is documented in full in
 
 ## 1. Why this spec exists
 
-| Problem with the prior PRD | Now prevented by |
-|---|---|
-| No machine-checkable link integrity — a dangling old-scheme requirement reference could sit unnoticed for months | `scripts/verify-traceability.sh` check 6 (broken relative links) and check 1 (registry↔disk) |
-| The old open-question numbering meant a different question in each of ~20 chapters — file-local numbering that collided by design | Every requirement family (`OQ-ZS`, `BEH-ZS`, `INV-ZS`, …) is a single global, permanent sequence — see `process/requirement-id-scheme.md` |
-| No way to tell whether a chapter's Gherkin coverage regressed silently | `features -> traceability` (check 5): every `@REQ-ZS-NNN` tag used anywhere in `features/` must be defined in `traceability.md` |
-| Review decisions (`DEC-`), arbitrations (`ARB-`), and escalations (`ESC-`) were three separate, table-driven logs for what is really one kind of record | Unified into one `decisions/` ADR log, one file per decision, `ADR-ZS-NNN` |
-| A business rule (`RG-`) and a data-model invariant (`INV-`) describing the same constraint lived in two different documents with no cross-link | Unified into one `invariants.md`, `INV-ZS-NNN` |
-| Nothing distinguished "we described this" from "this is verified" | Behaviors/invariants/decisions/acceptance-scenarios are the normative layer; `appendices/` is explicitly non-normative historical record |
+| Problem with the prior PRD                                                                                                                              | Now prevented by                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| No machine-checkable link integrity — a dangling old-scheme requirement reference could sit unnoticed for months                                        | `scripts/verify-traceability.sh` check 6 (broken relative links) and check 1 (registry↔disk)                                              |
+| The old open-question numbering meant a different question in each of ~20 chapters — file-local numbering that collided by design                       | Every requirement family (`OQ-ZS`, `BEH-ZS`, `INV-ZS`, …) is a single global, permanent sequence — see `process/requirement-id-scheme.md` |
+| No way to tell whether a chapter's Gherkin coverage regressed silently                                                                                  | `features -> traceability` (check 5): every `@REQ-ZS-NNN` tag used anywhere in `features/` must be defined in `traceability.md`           |
+| Review decisions (`DEC-`), arbitrations (`ARB-`), and escalations (`ESC-`) were three separate, table-driven logs for what is really one kind of record | Unified into one `decisions/` ADR log, one file per decision, `ADR-ZS-NNN`                                                                |
+| A business rule (`RG-`) and a data-model invariant (`INV-`) describing the same constraint lived in two different documents with no cross-link          | Unified into one `invariants.md`, `INV-ZS-NNN`                                                                                            |
+| Nothing distinguished "we described this" from "this is verified"                                                                                       | Behaviors/invariants/decisions/acceptance-scenarios are the normative layer; `appendices/` is explicitly non-normative historical record  |
 
 ## 2. Identifier scheme
 
@@ -45,29 +45,29 @@ Project infix: **`ZS`**. Full rulebook: `process/requirement-id-scheme.md`.
 The generated, hand-reviewed old→new crosswalk from the prior PRD: `process/id-migration-map.md`
 (1,333 rows, permanent, append-only).
 
-| Prefix | Meaning | Owning location | Count |
-|---|---|---|---|
-| `BEH-ZS-NNN` | Functional behavior | `behaviors/01..14-*.md` | 258 |
-| `URS-ZS-NNN` | User (persona) requirement | `urs.md` | 58 |
-| `INV-ZS-NNN` | Invariant (data-model or business-rule altitude) | `invariants.md` | 86 |
-| `ADR-ZS-NNN` | Decision record (unifies old DEC/ARB/ESC) | `decisions/NNN-*.md` | 89 |
-| `JNY-ZS-NNN` | Persona journey step | `journeys/01..07-*.md` | 66 |
-| `JMP-ZS-NNN` | Critical end-to-end journey (map level) | `journeys/00-journey-map.md` | 11 |
-| `PER-ZS-NNN` | Permission rule | `cross-cutting/01-permissions.md` | 19 |
-| `SEC-ZS-NNN` | Security requirement | `cross-cutting/02-security-privacy.md` | 28 |
-| `NFR-ZS-NNN` | Non-functional requirement | `cross-cutting/03-non-functional-requirements.md` | 50 |
-| `PAK-ZS-NNN` | Packaging/business-model requirement | `cross-cutting/04-business-model-packaging.md` | 17 |
-| `UX-ZS-NNN` | UX requirement | `cross-cutting/05-ux-ui-mobile-first-rtl.md` | 17 |
-| `INT-ZS-NNN` | External-integration requirement | `cross-cutting/06-external-integrations.md` | 45 |
-| `CNF-ZS-NNN` | Legal-compliance requirement | `cross-cutting/07-legal-compliance-data-protection.md` | 27 |
-| `RDM-ZS-NNN` | Roadmap milestone | `roadmap.md` | 24 |
-| `KPI-ZS-NNN` | Success metric | `metrics.md` | 46 |
-| `RSK-ZS-NNN` | Risk | `risks.md` | 28 |
-| `SCR-ZS-NNN` | Screen | inline `### Screens` subsection of the owning `behaviors/`/`cross-cutting/` file | 130 |
-| `OQ-ZS-NNN` | Open question | `open-questions.md` | 265 |
-| `REQ-ZS-NNN` | Acceptance scenario (Gherkin `Feature:` block) | `features/**/*.feature`, tags | 308 |
-| `CCR-ZS-NNN` | Change control record | Document Control "Change History" fields, §6 below | — |
-| `H-`/`G-`/`C-`/`Q-`/`D1`-`D10` | Historical review artifacts | `appendices/01-review-history.md`, **unrenumbered, non-normative** | — |
+| Prefix                         | Meaning                                          | Owning location                                                                  | Count |
+| ------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------- | ----- |
+| `BEH-ZS-NNN`                   | Functional behavior                              | `behaviors/01..14-*.md`                                                          | 258   |
+| `URS-ZS-NNN`                   | User (persona) requirement                       | `urs.md`                                                                         | 58    |
+| `INV-ZS-NNN`                   | Invariant (data-model or business-rule altitude) | `invariants.md`                                                                  | 86    |
+| `ADR-ZS-NNN`                   | Decision record (unifies old DEC/ARB/ESC)        | `decisions/NNN-*.md`                                                             | 89    |
+| `JNY-ZS-NNN`                   | Persona journey step                             | `journeys/01..07-*.md`                                                           | 66    |
+| `JMP-ZS-NNN`                   | Critical end-to-end journey (map level)          | `journeys/00-journey-map.md`                                                     | 11    |
+| `PER-ZS-NNN`                   | Permission rule                                  | `cross-cutting/01-permissions.md`                                                | 19    |
+| `SEC-ZS-NNN`                   | Security requirement                             | `cross-cutting/02-security-privacy.md`                                           | 28    |
+| `NFR-ZS-NNN`                   | Non-functional requirement                       | `cross-cutting/03-non-functional-requirements.md`                                | 50    |
+| `PAK-ZS-NNN`                   | Packaging/business-model requirement             | `cross-cutting/04-business-model-packaging.md`                                   | 17    |
+| `UX-ZS-NNN`                    | UX requirement                                   | `cross-cutting/05-ux-ui-mobile-first-rtl.md`                                     | 17    |
+| `INT-ZS-NNN`                   | External-integration requirement                 | `cross-cutting/06-external-integrations.md`                                      | 45    |
+| `CNF-ZS-NNN`                   | Legal-compliance requirement                     | `cross-cutting/07-legal-compliance-data-protection.md`                           | 27    |
+| `RDM-ZS-NNN`                   | Roadmap milestone                                | `roadmap.md`                                                                     | 24    |
+| `KPI-ZS-NNN`                   | Success metric                                   | `metrics.md`                                                                     | 46    |
+| `RSK-ZS-NNN`                   | Risk                                             | `risks.md`                                                                       | 28    |
+| `SCR-ZS-NNN`                   | Screen                                           | inline `### Screens` subsection of the owning `behaviors/`/`cross-cutting/` file | 130   |
+| `OQ-ZS-NNN`                    | Open question                                    | `open-questions.md`                                                              | 265   |
+| `REQ-ZS-NNN`                   | Acceptance scenario (Gherkin `Feature:` block)   | `features/**/*.feature`, tags                                                    | 308   |
+| `CCR-ZS-NNN`                   | Change control record                            | Document Control "Change History" fields, §6 below                               | —     |
+| `H-`/`G-`/`C-`/`Q-`/`D1`-`D10` | Historical review artifacts                      | `appendices/01-review-history.md`, **unrenumbered, non-normative**               | —     |
 
 Module codes (ADM, INS, PED, VSC, EVA, DOC, FIN, COM, TRA, CAR, RAP, MAS, SAN,
 HEA), persona codes (DIR, SEC, SUR, ENS, PAR, GAR, ELE), NFR domain codes, and
@@ -142,9 +142,9 @@ See `process/definitions-of-done.md` for the full merge-gate checklist.
 
 ## 6. Document history
 
-| CCR | Date | Description |
-|---|---|---|
-| CCR-ZS-001 | 2026-09-09 | The qadi-style migration itself: Phase 0 (scaffolding + ID map) through Phase 8 (this README). Every file's own Document Control "Change History" cites this CCR for its individual migration. |
+| CCR        | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR-ZS-001 | 2026-09-09 | The qadi-style migration itself: Phase 0 (scaffolding + ID map) through Phase 8 (this README). Every file's own Document Control "Change History" cites this CCR for its individual migration.                                                                                                                                                                                                                      |
 | CCR-ZS-002 | 2026-09-09 | Resolved the [ADR-ZS-091](decisions/091-eu-hosting-deviation-from-morocco-baseline.md) hosting escalation: product-owner sign-off accepted AWS `eu-central-1`/`eu-west-3` over the original Morocco/OCI baseline. Propagated through SEC-ZS-024/025/026, INT-ZS-036/037/039/040, NFR-ZS-009/010, RSK-ZS-011, OQ-ZS-372, `spec/stack.md`, `spec/traceability.md`, and `spec/roadmap.md`'s RDM-ZS-004/013 milestones. |
 
 Prior history (the PRD this spec supersedes: French→English translation,

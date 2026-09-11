@@ -1,14 +1,14 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import { withSchool } from "@zschool/db"
+import { GradingScales, instantiateNationalTemplate, InvalidWeightingError } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import { instantiateNationalTemplate, InvalidWeightingError, setComputationRule, updateGradingScale } from "@zschool/domain"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -35,9 +35,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ And, Given, Then, When }) => {
   Given("year 2026-2027 instantiated on the national template", function*() {
@@ -74,7 +71,15 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
       const rows = yield* withSchool(
         schoolId!,
-        sql<{ code: string; weight_continuous: string; weight_exam_1: string; weight_exam_2: string; reference_text: string }>`
+        sql<
+          {
+            code: string
+            weight_continuous: string
+            weight_exam_1: string
+            weight_exam_2: string
+            reference_text: string
+          }
+        >`
           SELECT l.code, cr.weight_continuous, cr.weight_exam_1, cr.weight_exam_2, cr.reference_text
           FROM computation_rules cr JOIN levels l ON l.id = cr.level_id
           WHERE cr.school_id = ${schoolId} AND cr.is_current
@@ -108,7 +113,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const level6APId = yield* Ref.get(world.level6APId)
 
-    yield* setComputationRule({
+    const gradingScales = yield* GradingScales
+    yield* gradingScales.setComputationRule({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       levelId: level6APId!,
@@ -140,7 +146,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const level6APId = yield* Ref.get(world.level6APId)
 
-    const outcome = yield* setComputationRule({
+    const gradingScales = yield* GradingScales
+    const outcome = yield* gradingScales.setComputationRule({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       levelId: level6APId!,
@@ -186,7 +193,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const academicYearId = yield* Ref.get(world.academicYearId)
     const sectionId = yield* Ref.get(world.sectionId)
 
-    yield* updateGradingScale({
+    const gradingScales = yield* GradingScales
+    yield* gradingScales.updateGradingScale({
       schoolId: schoolId!,
       academicYearId: academicYearId!,
       sectionId: sectionId!,
@@ -202,7 +210,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
 
     const [row] = yield* withSchool(
       schoolId!,
-      sql<{ max_score: string }>`SELECT max_score FROM grading_scales WHERE school_id = ${schoolId} AND section_id = ${sectionId}`
+      sql<
+        { max_score: string }
+      >`SELECT max_score FROM grading_scales WHERE school_id = ${schoolId} AND section_id = ${sectionId}`
     ).pipe(Effect.orDie)
 
     assert.strictEqual(Number(row.max_score), 100)

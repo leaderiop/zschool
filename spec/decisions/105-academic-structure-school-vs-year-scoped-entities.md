@@ -17,9 +17,9 @@ column (`GradingScale`/`ComputationRule` — `N—1 School`) as meaning those tw
 entities are school-level constants, shared unchanged across years, with only
 `Cycle`/`Level`/`Track`/`Subject`/`SubjectLevelConfig`/`Class`/`Group` treated
 as per-year snapshots. That reading directly contradicts the more detailed
-behavior spec: BEH-ZS-057 explicitly lists *sections, cycles, levels, tracks,
+behavior spec: BEH-ZS-057 explicitly lists _sections, cycles, levels, tracks,
 classes, groups, subjects, per-level/track configurations, template periods,
-**grading scales, and computation rules*** as things that "MUST be copied" on
+**grading scales, and computation rules**_ as things that "MUST be copied" on
 cloning, and BEH-ZS-055 states weightings are "versioned per school year." The
 detailed, MUST-level requirement text is the authoritative source here, not a
 summary table's cardinality notation — this ADR corrects the earlier reading.

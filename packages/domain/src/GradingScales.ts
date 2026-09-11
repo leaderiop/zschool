@@ -1,11 +1,11 @@
+import { withSchool } from "@zschool/db"
+import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { SchoolId } from "./Ids.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 /**
  * BEH-ZS-055: default ministry certifying-exam weightings, by level code —
@@ -64,36 +64,35 @@ export interface SetComputationRuleCommand {
 }
 
 /** Seeds the default computation rules for the levels the ministry publishes them for (6AP, 3AC, 2BAC) — called from `InstantiateNationalTemplate.ts` at year creation, same pattern as `seedCalendarEvents`. */
-export const seedDefaultComputationRules = (
-  sql: SqlClient,
+const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputationRules")(function*(
   schoolId: string,
   academicYearId: string,
   levelIdByCode: ReadonlyMap<string, string>
-): Effect.Effect<void, SqlError> =>
-  Effect.gen(function*() {
-    const rows = defaultComputationRules
-      .filter((rule) => levelIdByCode.has(rule.levelCode))
-      .map((rule) => ({
-        school_id: schoolId,
-        academic_year_id: academicYearId,
-        level_id: levelIdByCode.get(rule.levelCode)!,
-        weight_continuous: rule.weightContinuous,
-        weight_exam_1: rule.weightExam1,
-        weight_exam_2: rule.weightExam2,
-        reference_text: rule.referenceText
-      }))
+) {
+  const sql = yield* SqlClient
+  const rows = defaultComputationRules
+    .filter((rule) => levelIdByCode.has(rule.levelCode))
+    .map((rule) => ({
+      school_id: schoolId,
+      academic_year_id: academicYearId,
+      level_id: levelIdByCode.get(rule.levelCode)!,
+      weight_continuous: rule.weightContinuous,
+      weight_exam_1: rule.weightExam1,
+      weight_exam_2: rule.weightExam2,
+      reference_text: rule.referenceText
+    }))
 
-    if (rows.length > 0) {
-      yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
-    }
-  })
+  if (rows.length > 0) {
+    yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
+  }
+})
 
 /** BEH-ZS-055: edits a section's grading scale — scoped to this year's own snapshot (ADR-ZS-105), never a prior closed year's. */
-export const updateGradingScale = (
+const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -104,7 +103,9 @@ export const updateGradingScale = (
             AND academic_year_id = ${command.academicYearId}
         `
         if (rows.length === 0) {
-          return yield* Effect.fail(new EntityNotFoundError({ entityType: "grading_scale", entityId: command.sectionId }))
+          return yield* Effect.fail(
+            new EntityNotFoundError({ entityType: "grading_scale", entityId: command.sectionId })
+          )
         }
 
         if (command.maxScore !== undefined) {
@@ -128,6 +129,7 @@ export const updateGradingScale = (
       })
     )
   )
+})
 
 /**
  * BEH-ZS-055 / REQ-ZS-057: sets a level's computation-rule weighting,
@@ -135,11 +137,11 @@ export const updateGradingScale = (
  * and kept, a new row is inserted as current, so "a change creates a dated
  * version for the year, with the previous one still viewable" (fr-ped-05).
  */
-export const setComputationRule = (
+const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
-): Effect.Effect<string, EnforcementError | EntityNotFoundError | InvalidWeightingError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -149,7 +151,7 @@ export const setComputationRule = (
         }
 
         const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId)
+        yield* requireOwnedRow(sql, "levels", "level", command.levelId, SchoolId(command.schoolId), RowWithId)
 
         yield* sql`
           UPDATE computation_rules SET is_current = false
@@ -169,3 +171,29 @@ export const setComputationRule = (
       })
     )
   )
+})
+
+/**
+ * Pilot (ticket #23): the grading-scales area restructured as a single
+ * injectable service instead of loose exported functions, to validate the
+ * pattern before deciding whether to roll it out to the rest of
+ * `packages/domain`. Every caller now goes through `yield* GradingScales`
+ * rather than importing `seedDefaultComputationRules`/`updateGradingScale`/
+ * `setComputationRule` directly — those three stay as private
+ * implementations the service methods delegate to, so the tracing-span
+ * names from ticket #19 aren't duplicated.
+ */
+export class GradingScales extends Context.Service<GradingScales, {
+  readonly seedDefaultComputationRules: typeof seedDefaultComputationRules
+  readonly updateGradingScale: typeof updateGradingScale
+  readonly setComputationRule: typeof setComputationRule
+}>()("@zschool/domain/GradingScales") {
+  static readonly layer = Layer.succeed(
+    this,
+    GradingScales.of({
+      seedDefaultComputationRules,
+      updateGradingScale,
+      setComputationRule
+    })
+  )
+}

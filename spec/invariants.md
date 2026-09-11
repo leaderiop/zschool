@@ -2,14 +2,14 @@
 
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-INV                                                    |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification                                      |
+> | Property       | Value                                                                                                                                                                                                                                             |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-INV                                                                                                                                                                                                                                       |
+> | Revision       | 1.0                                                                                                                                                                                                                                               |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                        |
+> | Status         | Draft                                                                                                                                                                                                                                             |
+> | Author         | ZSchool Product                                                                                                                                                                                                                                   |
+> | Classification | Functional Specification                                                                                                                                                                                                                          |
 > | Change History | 1.0 (2026-09-09): Migrated and unified from `prd/03-domain-data-model.md` §4 (old `INV-ZS-006..45`) and `PROJECT.md` §6/§9 prose (old `INV-ZS-051..39`, including `INV-ZS-063`/`INV-ZS-066`), per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 ---
@@ -853,8 +853,8 @@ terminated school's data live forever with nobody actively maintaining it.
 
 ---
 
-*(`INV-ZS-046..050` reserved headroom, unused at time of writing — see
-`spec/process/requirement-id-scheme.md` §2 for the block-sizing rule.)*
+_(`INV-ZS-046..050` reserved headroom, unused at time of writing — see
+`spec/process/requirement-id-scheme.md` §2 for the block-sizing rule.)_
 
 ---
 
@@ -1001,7 +1001,7 @@ graduated, tracked (a track/stream choice), or not yet determined.
 
 **Source**: `PROJECT.md` (old `INV-ZS-059`).
 
-**Implication**: a COMPLETED status with no attached decision would leave next year's *rollover*
+**Implication**: a COMPLETED status with no attached decision would leave next year's _rollover_
 with no basis for deciding which level/track to pre-enroll the pupil into.
 
 **Enforcement**: `behaviors/05-assessments-grades-report-cards.md`,

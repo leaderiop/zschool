@@ -1,9 +1,9 @@
-import * as Effect from "effect/Effect"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
 import { withSchool } from "@zschool/db"
+import * as Effect from "effect/Effect"
+import * as Result from "effect/Result"
+import * as Schema from "effect/Schema"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { SchoolId } from "./Ids.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -29,35 +29,51 @@ export interface ClassImportRow {
   readonly capacity: number
 }
 
+/**
+ * Validates the shape of a row before any DB lookup runs — a positive
+ * integer `capacity`, non-empty `levelCode`/`label`. Kept as a standalone,
+ * DB-free function (rather than inlined in `analyzeClassImport`'s loop) so
+ * this boundary is unit-testable without a `SqlClient`.
+ */
+const ClassImportRowSchema = Schema.Struct({
+  levelCode: Schema.NonEmptyString,
+  trackCode: Schema.optional(Schema.NonEmptyString),
+  label: Schema.NonEmptyString,
+  capacity: Schema.Int.check(Schema.isGreaterThan(0))
+})
+
+export const decodeClassImportRow = (row: ClassImportRow): Result.Result<ClassImportRow, Schema.SchemaError> =>
+  Schema.decodeResult(ClassImportRowSchema)(row)
+
 export type ClassImportRowResult =
   | { readonly row: ClassImportRow; readonly status: "creatable" }
   | { readonly row: ClassImportRow; readonly status: "duplicate"; readonly reason: string }
   | { readonly row: ClassImportRow; readonly status: "error"; readonly reason: string }
 
-export const analyzeClassImport = (
+export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImport")(function*(
   schoolId: string,
   rows: ReadonlyArray<ClassImportRow>
-): Effect.Effect<ReadonlyArray<ClassImportRowResult>, EnforcementError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const results: Array<ClassImportRowResult> = []
 
-        for (const row of rows) {
-          if (row.capacity <= 0) {
-            results.push({ row, status: "error", reason: "Capacity must be greater than zero" })
-            continue
+        const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
+          row: ClassImportRow
+        ) {
+          const decoded = decodeClassImportRow(row)
+          if (Result.isFailure(decoded)) {
+            return { row, status: "error", reason: decoded.failure.message } as const
           }
 
           const [level] = yield* sql<{ id: string }>`
             SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
           `
           if (level === undefined) {
-            results.push({ row, status: "error", reason: `Unknown level code: ${row.levelCode}` })
-            continue
+            return { row, status: "error", reason: `Unknown level code: ${row.levelCode}` } as const
           }
 
           if (row.trackCode !== undefined) {
@@ -65,12 +81,11 @@ export const analyzeClassImport = (
               SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
             `
             if (track === undefined) {
-              results.push({
+              return {
                 row,
                 status: "error",
                 reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
-              })
-              continue
+              } as const
             }
           }
 
@@ -78,14 +93,24 @@ export const analyzeClassImport = (
             SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
           `
           if (existing.length > 0) {
-            results.push({ row, status: "duplicate", reason: `A class labeled "${row.label}" already exists under ${row.levelCode}` })
-            continue
+            return {
+              row,
+              status: "duplicate",
+              reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`
+            } as const
           }
 
-          results.push({ row, status: "creatable" })
-        }
+          return { row, status: "creatable" } as const
+        })
 
-        return results
+        // Each row's lookups are independent and read-only — bounded
+        // concurrency (rather than unbounded) caps how many queries are in
+        // flight at once on this transaction's single connection (every row
+        // here shares the one connection `withSchool` opened above, pipelined
+        // rather than spread across the pool). `Effect.forEach` preserves
+        // input order in the returned array regardless of concurrency.
+        return yield* Effect.forEach(rows, analyzeRow, { concurrency: 5 })
       })
     )
   )
+})

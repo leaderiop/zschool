@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-BEH-01                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Draft                                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Functional Specification                                      |
+> | Property       | Value                                                                                                                                                                                                                                       |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Document ID    | ZSCHOOL-BEH-01                                                                                                                                                                                                                              |
+> | Revision       | 1.0                                                                                                                                                                                                                                         |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                                                  |
+> | Status         | Draft                                                                                                                                                                                                                                       |
+> | Author         | ZSchool Product                                                                                                                                                                                                                             |
+> | Classification | Functional Specification                                                                                                                                                                                                                    |
 > | Change History | 1.0 (2026-09-09): Migrated from `prd/modules/10-administration-onboarding-subscription.md` (v0.3), old `FR-ADM-01..20` -> `BEH-ZS-001..020`, old `ECR-ADM-01..07` -> `SCR-ZS-001..007`, per `spec/process/id-migration-map.md` (CCR-ZS-001) |
 
 # Administration, Onboarding and Subscription (ADM)
@@ -18,96 +18,96 @@ The ADM module is the platform's front door: it puts a school into production cl
 
 ### 1.1 In Scope
 
-| Scope item | Version |
-|---|---|
-| Tenant creation via ZSchool provisioning | MVP |
-| School legal information record ([INV-ZS-074](../invariants.md#inv-zs-074)) | MVP |
-| Setup wizard (structure template, school year, terms, grading scales, initial fee schedule) | MVP |
-| Bulk Excel import (students, guardians, teachers, classes, current-term and historical grades) with error report | MVP |
-| Mid-year catch-up: importing partially paid installment schedules, cheques on hand, and aggregated absences; activating enrollments via import (`BEH-ZS-047` in `spec/behaviors/02-admissions-enrollment-reenrollment.md`, [ADR-ZS-043](../decisions/043-mid-year-data-reprise.md)) | MVP |
-| Managing internal users, standard roles and affiliations | MVP |
-| Language configuration (FR/AR, RTL) and notification channels (in-app, SMS, WhatsApp "presence" utility) | MVP |
-| Subscription lifecycle: trial, activation, simplified trial exit | MVP |
-| Mobile number change, access recovery, handling a recycled number ([ADR-ZS-049](../decisions/049-number-change-loss-reassignment.md)) | MVP |
-| ZSchool support access via ticket with explicit director approval ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)) | MVP |
-| Counting the "active student" and usage statement | MVP |
-| Express start-of-year path (onboarding subset unblocking roll call, front-desk enrollment and notifications) | MVP |
-| Administration operations log | MVP |
-| Online self-registration with validation | V1 |
-| Organization (school group): creation, attaching schools, read-only consolidated dashboard ([ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md)) | MVP |
-| Organization: shared administration (shared users and settings), SaaS billing at the organization level | V1 |
-| Subscription payment delinquency and read-only mode | V1 |
-| Cancellation: full export, 90-day read-only period, deletion at 12 months | V1 |
-| School closure procedure | V1 |
-| Consumable packs: counters, alert thresholds, consumption history, storage quota ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md)) | MVP |
-| Self-service subscription and purchase of consumable packs | V1 |
-| Minimal school directory (read: name, city, cycles) | MVP |
-| Directory: additional fields (education systems, website) and publication management | V1 |
-| Tenant administration API | V2+ |
+| Scope item                                                                                                                                                                                                                                                                          | Version |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Tenant creation via ZSchool provisioning                                                                                                                                                                                                                                            | MVP     |
+| School legal information record ([INV-ZS-074](../invariants.md#inv-zs-074))                                                                                                                                                                                                         | MVP     |
+| Setup wizard (structure template, school year, terms, grading scales, initial fee schedule)                                                                                                                                                                                         | MVP     |
+| Bulk Excel import (students, guardians, teachers, classes, current-term and historical grades) with error report                                                                                                                                                                    | MVP     |
+| Mid-year catch-up: importing partially paid installment schedules, cheques on hand, and aggregated absences; activating enrollments via import (`BEH-ZS-047` in `spec/behaviors/02-admissions-enrollment-reenrollment.md`, [ADR-ZS-043](../decisions/043-mid-year-data-reprise.md)) | MVP     |
+| Managing internal users, standard roles and affiliations                                                                                                                                                                                                                            | MVP     |
+| Language configuration (FR/AR, RTL) and notification channels (in-app, SMS, WhatsApp "presence" utility)                                                                                                                                                                            | MVP     |
+| Subscription lifecycle: trial, activation, simplified trial exit                                                                                                                                                                                                                    | MVP     |
+| Mobile number change, access recovery, handling a recycled number ([ADR-ZS-049](../decisions/049-number-change-loss-reassignment.md))                                                                                                                                               | MVP     |
+| ZSchool support access via ticket with explicit director approval ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md))                                                                                                                                    | MVP     |
+| Counting the "active student" and usage statement                                                                                                                                                                                                                                   | MVP     |
+| Express start-of-year path (onboarding subset unblocking roll call, front-desk enrollment and notifications)                                                                                                                                                                        | MVP     |
+| Administration operations log                                                                                                                                                                                                                                                       | MVP     |
+| Online self-registration with validation                                                                                                                                                                                                                                            | V1      |
+| Organization (school group): creation, attaching schools, read-only consolidated dashboard ([ADR-ZS-041](../decisions/041-mvp-scope-mid-year-close.md))                                                                                                                             | MVP     |
+| Organization: shared administration (shared users and settings), SaaS billing at the organization level                                                                                                                                                                             | V1      |
+| Subscription payment delinquency and read-only mode                                                                                                                                                                                                                                 | V1      |
+| Cancellation: full export, 90-day read-only period, deletion at 12 months                                                                                                                                                                                                           | V1      |
+| School closure procedure                                                                                                                                                                                                                                                            | V1      |
+| Consumable packs: counters, alert thresholds, consumption history, storage quota ([ADR-ZS-066](../decisions/066-compliance-and-security-before-pilot-batch.md))                                                                                                                     | MVP     |
+| Self-service subscription and purchase of consumable packs                                                                                                                                                                                                                          | V1      |
+| Minimal school directory (read: name, city, cycles)                                                                                                                                                                                                                                 | MVP     |
+| Directory: additional fields (education systems, website) and publication management                                                                                                                                                                                                | V1      |
+| Tenant administration API                                                                                                                                                                                                                                                           | V2+     |
 
 ### 1.2 Out of Scope (cross-references)
 
-| Out of scope for ADM | Owning file |
-|---|---|
-| Creation and claiming of global identities, Massar matching, profile merges, guardian qualities | `spec/behaviors/02-admissions-enrollment-reenrollment.md` (events `ProbableDuplicateDetected`, `IdentityClaimed`, `IdentityCorrected`, `MergeCompleted` are described there) |
-| Detailed academic structure (sections, cycles, levels, subjects, coefficients, timetables, year-N+1 cloning) | `spec/behaviors/03-academic-structure-timetables.md` |
-| Import of historical grades and Massar exports (formats, compliance) | `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/12-massar-regulatory-exports.md` |
-| School fee schedule, payment schedules, collections, compliant invoices | `spec/behaviors/07-finance-billing-collections.md` |
-| Message content and templates, parent–teacher threads, detailed routing | `spec/behaviors/08-communication-notifications.md` |
-| Student transfers and leaving files | `spec/behaviors/09-transfers-mobility.md` |
-| Detailed permissions and fine-grained role matrix | `spec/cross-cutting/01-permissions.md` (Phase 4) |
-| Pricing, single plan, pack composition and service offerings (onboarding, migration, premium support) | `spec/cross-cutting/04-business-model-packaging.md` (Phase 4) |
-| Electronic signature, stamps, CNDP compliance, technical audit log | `spec/cross-cutting/02-security-privacy.md` (Phase 4), `spec/cross-cutting/07-legal-compliance-data-protection.md` (Phase 4) |
+| Out of scope for ADM                                                                                         | Owning file                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Creation and claiming of global identities, Massar matching, profile merges, guardian qualities              | `spec/behaviors/02-admissions-enrollment-reenrollment.md` (events `ProbableDuplicateDetected`, `IdentityClaimed`, `IdentityCorrected`, `MergeCompleted` are described there) |
+| Detailed academic structure (sections, cycles, levels, subjects, coefficients, timetables, year-N+1 cloning) | `spec/behaviors/03-academic-structure-timetables.md`                                                                                                                         |
+| Import of historical grades and Massar exports (formats, compliance)                                         | `spec/behaviors/05-assessments-grades-report-cards.md`, `spec/behaviors/12-massar-regulatory-exports.md`                                                                     |
+| School fee schedule, payment schedules, collections, compliant invoices                                      | `spec/behaviors/07-finance-billing-collections.md`                                                                                                                           |
+| Message content and templates, parent–teacher threads, detailed routing                                      | `spec/behaviors/08-communication-notifications.md`                                                                                                                           |
+| Student transfers and leaving files                                                                          | `spec/behaviors/09-transfers-mobility.md`                                                                                                                                    |
+| Detailed permissions and fine-grained role matrix                                                            | `spec/cross-cutting/01-permissions.md` (Phase 4)                                                                                                                             |
+| Pricing, single plan, pack composition and service offerings (onboarding, migration, premium support)        | `spec/cross-cutting/04-business-model-packaging.md` (Phase 4)                                                                                                                |
+| Electronic signature, stamps, CNDP compliance, technical audit log                                           | `spec/cross-cutting/02-security-privacy.md` (Phase 4), `spec/cross-cutting/07-legal-compliance-data-protection.md` (Phase 4)                                                 |
 
 ## 2. Users and Use Cases
 
-| Actor | Main use cases in ADM | Related needs |
-|---|---|---|
-| ZSchool super-administrator | Provision a tenant, validate a self-registration, drive subscription states, trigger exports and deletions, access a tenant on a tracked ticket | (historical G-06; §8.1) |
+| Actor                           | Main use cases in ADM                                                                                                                                                                            | Related needs                                                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| ZSchool super-administrator     | Provision a tenant, validate a self-registration, drive subscription states, trigger exports and deletions, access a tenant on a tracked ticket                                                  | (historical G-06; §8.1)                                                                                                                  |
 | School director / administrator | Complete the legal record, run the setup wizard, launch imports, manage users and roles, configure languages and channels, monitor subscription and usage, request cancellation or run a closure | [URS-ZS-004](../urs.md), [URS-ZS-007](../urs.md); ([INV-ZS-074](../invariants.md#inv-zs-074), [INV-ZS-076](../invariants.md#inv-zs-076)) |
-| Group administrator (V1) | Create the organization, attach schools, manage shared users and settings, view consolidated usage | ([INV-ZS-073](../invariants.md#inv-zs-073), [ADR-ZS-013](../decisions/013-school-as-isolation-tenant.md), §10) |
-| Front office | Review and correct import reports, invite users, enter delegated fields on the school record | [URS-ZS-010](../urs.md), [URS-ZS-017](../urs.md); (historical G-18) |
-| Teacher, staff | Accept an affiliation invitation, activate their account | ([INV-ZS-070](../invariants.md#inv-zs-070)) |
-| Parent, student (indirect) | Beneficiaries of language and channel configuration; notification recipients; retain access to their published documents after cancellation or closure | ([INV-ZS-080](../invariants.md#inv-zs-080), [ADR-ZS-004](../decisions/004-cancellation-export-and-deletion-timeline.md)) |
-| ZSchool support | Assist onboarding, run supported imports, handle tracked temporary-access tickets | (§8.1, [INV-ZS-090](../invariants.md#inv-zs-090)) |
+| Group administrator (V1)        | Create the organization, attach schools, manage shared users and settings, view consolidated usage                                                                                               | ([INV-ZS-073](../invariants.md#inv-zs-073), [ADR-ZS-013](../decisions/013-school-as-isolation-tenant.md), §10)                           |
+| Front office                    | Review and correct import reports, invite users, enter delegated fields on the school record                                                                                                     | [URS-ZS-010](../urs.md), [URS-ZS-017](../urs.md); (historical G-18)                                                                      |
+| Teacher, staff                  | Accept an affiliation invitation, activate their account                                                                                                                                         | ([INV-ZS-070](../invariants.md#inv-zs-070))                                                                                              |
+| Parent, student (indirect)      | Beneficiaries of language and channel configuration; notification recipients; retain access to their published documents after cancellation or closure                                           | ([INV-ZS-080](../invariants.md#inv-zs-080), [ADR-ZS-004](../decisions/004-cancellation-export-and-deletion-timeline.md))                 |
+| ZSchool support                 | Assist onboarding, run supported imports, handle tracked temporary-access tickets                                                                                                                | (§8.1, [INV-ZS-090](../invariants.md#inv-zs-090))                                                                                        |
 
 ## 3. Key User Journeys
 
 Cross-reference to the journeys in `spec/journeys/00-journey-map.md` (built in Phase 3); this chapter does not duplicate the steps.
 
-| Journey | Role of the ADM module |
-|---|---|
+| Journey                                                                     | Role of the ADM module                                                                                                                                                                                               |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | JMP-ZS-003 — Onboarding a school (tenant, structure template, Excel import) | Owner: tenant creation, legal record, wizard, imports, users and roles, subscription lifecycle. Owning personas: `spec/journeys/01-school-group-director.md` (DIR) and `spec/journeys/02-secretary-cashier.md` (SEC) |
-| JMP-ZS-004 — A parent claims an identity | Supporting: the module issues invitations and prepares internal accounts; identity matching is owned by `spec/behaviors/02-admissions-enrollment-reenrollment.md` |
-| JMP-ZS-009 — Inter-school transfers and leaving files | Supporting: closing a school (BEH-ZS-013) triggers bulk transfers handled by `spec/behaviors/09-transfers-mobility.md` |
-| JMP-ZS-011 — Communication | Supporting: channel configuration (BEH-ZS-009) feeds the routing described in `spec/behaviors/08-communication-notifications.md` |
+| JMP-ZS-004 — A parent claims an identity                                    | Supporting: the module issues invitations and prepares internal accounts; identity matching is owned by `spec/behaviors/02-admissions-enrollment-reenrollment.md`                                                    |
+| JMP-ZS-009 — Inter-school transfers and leaving files                       | Supporting: closing a school (BEH-ZS-013) triggers bulk transfers handled by `spec/behaviors/09-transfers-mobility.md`                                                                                               |
+| JMP-ZS-011 — Communication                                                  | Supporting: channel configuration (BEH-ZS-009) feeds the routing described in `spec/behaviors/08-communication-notifications.md`                                                                                     |
 
 Seasonality: onboarding is a one-off event per school with two windows (JMP-ZS-003, [ADR-ZS-043](../decisions/043-mid-year-data-reprise.md)): the back-to-school window (April to August, import before the start of the school year) and the mid-year catch-up window (case of pilots activated from 01/02/2027, [RDM-ZS-001](../roadmap.md), catching up on data already produced since September); back-to-school imports (September) form a bulk-processing peak that must be absorbed at target scale (see section 9).
 
 ## 4. Functional Behaviors
 
-| ID | Title | Priority | Version |
-|---|---|---|---|
-| BEH-ZS-001 | Create a school's tenant via ZSchool provisioning | Must | MVP |
-| BEH-ZS-002 | Allow a school to self-register with validation | Should | V1 |
-| BEH-ZS-003 | Maintain the school's legal information record | Must | MVP |
-| BEH-ZS-004 | Administer an organization (school group) | Must | MVP / V1 |
-| BEH-ZS-005 | Run the setup wizard | Must | MVP |
-| BEH-ZS-006 | Bulk-import existing data from Excel | Must | MVP |
-| BEH-ZS-007 | Manage internal users and their roles | Must | MVP |
-| BEH-ZS-008 | Configure languages and bilingualism | Must | MVP |
-| BEH-ZS-009 | Configure communication channels | Must | MVP |
-| BEH-ZS-010 | Manage the subscription trial and activation | Must | MVP |
-| BEH-ZS-011 | Handle subscription payment delinquency | Must | V1 |
-| BEH-ZS-012 | Cancel the subscription with full export and delayed deletion | Must | V1 |
-| BEH-ZS-013 | Manage the closure of a school | Should | V1 |
-| BEH-ZS-014 | Count active students and present usage | Must | MVP |
-| BEH-ZS-015 | Manage consumable packs | Must | MVP / V1 |
-| BEH-ZS-016 | Log administration operations | Must | MVP / V1 |
-| BEH-ZS-017 | Publish the minimal public school directory | Must | MVP / V1 / V2+ |
-| BEH-ZS-018 | Offer a tenant administration API | Could | V2+ |
-| BEH-ZS-019 | Offer an express start-of-year path | Must | MVP |
-| BEH-ZS-020 | Change a mobile number, recover access, and handle a recycled number | Must | MVP |
+| ID         | Title                                                                | Priority | Version        |
+| ---------- | -------------------------------------------------------------------- | -------- | -------------- |
+| BEH-ZS-001 | Create a school's tenant via ZSchool provisioning                    | Must     | MVP            |
+| BEH-ZS-002 | Allow a school to self-register with validation                      | Should   | V1             |
+| BEH-ZS-003 | Maintain the school's legal information record                       | Must     | MVP            |
+| BEH-ZS-004 | Administer an organization (school group)                            | Must     | MVP / V1       |
+| BEH-ZS-005 | Run the setup wizard                                                 | Must     | MVP            |
+| BEH-ZS-006 | Bulk-import existing data from Excel                                 | Must     | MVP            |
+| BEH-ZS-007 | Manage internal users and their roles                                | Must     | MVP            |
+| BEH-ZS-008 | Configure languages and bilingualism                                 | Must     | MVP            |
+| BEH-ZS-009 | Configure communication channels                                     | Must     | MVP            |
+| BEH-ZS-010 | Manage the subscription trial and activation                         | Must     | MVP            |
+| BEH-ZS-011 | Handle subscription payment delinquency                              | Must     | V1             |
+| BEH-ZS-012 | Cancel the subscription with full export and delayed deletion        | Must     | V1             |
+| BEH-ZS-013 | Manage the closure of a school                                       | Should   | V1             |
+| BEH-ZS-014 | Count active students and present usage                              | Must     | MVP            |
+| BEH-ZS-015 | Manage consumable packs                                              | Must     | MVP / V1       |
+| BEH-ZS-016 | Log administration operations                                        | Must     | MVP / V1       |
+| BEH-ZS-017 | Publish the minimal public school directory                          | Must     | MVP / V1 / V2+ |
+| BEH-ZS-018 | Offer a tenant administration API                                    | Could    | V2+            |
+| BEH-ZS-019 | Offer an express start-of-year path                                  | Must     | MVP            |
+| BEH-ZS-020 | Change a mobile number, recover access, and handle a recycled number | Must     | MVP            |
 
 ### BEH-ZS-001: Create a school's tenant via ZSchool provisioning
 
@@ -388,81 +388,81 @@ Screens described in text, mobile-first, available in French and Arabic (full RT
 
 ## 5. Morocco-Specific Considerations
 
-| Specific | Treatment in this module | Source |
-|---|---|---|
-| A school's legal identifiers | Legal record with ICE, IF, RC, patente, CNSS, authorization number, AREF and provincial education office | [INV-ZS-074](../invariants.md#inv-zs-074); `prd/research/02-regulatory-data.md` §7 (historical research corpus) |
-| Adults' CNIE (Law 09.08) | Guardians' and staff's CNIE number is neither entered nor imported at MVP: the field is disabled until CNDP's prior F112 authorization is obtained | `spec/cross-cutting/07-legal-compliance-data-protection.md` (Phase 4) |
-| Oversight by the AREF | Authorization number and AREF/provincial office affiliation mandatory on the record; authorized cycles bound structure instantiation | [INV-ZS-074](../invariants.md#inv-zs-074); Law 59.21 |
-| Bilingualism and dual script | School and person names in dual AR/FR script; bilingual documents and notifications; full RTL interface | [ADR-ZS-021](../decisions/021-bilingual-fr-ar-interface-from-mvp.md) |
-| Time zone | Configuration fixed to `Africa/Casablanca` at permanent UTC+0 since 20/09/2026 (Decree No. 2.26.530); the baseline's former Ramadan alternation is obsolete — divergence recorded in OQ-ZS-036 (`spec/open-questions.md`) | historical research corrections |
-| Ministry calendar | Preloading the year's calendar, Saturday morning classes configurable, movable religious holidays marked "to confirm" | historical research corpus |
-| Communication channels | Mobile phone as primary identifier; SMS as a universal fallback channel; WhatsApp under prior opt-in; pricing shift on 01/10/2026 to be absorbed via a parameter (OQ-ZS-037) | historical research corpus |
-| Digitalization support | The MOWAKABA program may fund onboarding, configuration, and training services; school eligibility is unconfirmed | historical research corpus |
-| Sovereign hosting | Production and backups in Morocco ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)); constrains export timelines and the location of cancellation archives | [ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md) |
+| Specific                     | Treatment in this module                                                                                                                                                                                                  | Source                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| A school's legal identifiers | Legal record with ICE, IF, RC, patente, CNSS, authorization number, AREF and provincial education office                                                                                                                  | [INV-ZS-074](../invariants.md#inv-zs-074); `prd/research/02-regulatory-data.md` §7 (historical research corpus) |
+| Adults' CNIE (Law 09.08)     | Guardians' and staff's CNIE number is neither entered nor imported at MVP: the field is disabled until CNDP's prior F112 authorization is obtained                                                                        | `spec/cross-cutting/07-legal-compliance-data-protection.md` (Phase 4)                                           |
+| Oversight by the AREF        | Authorization number and AREF/provincial office affiliation mandatory on the record; authorized cycles bound structure instantiation                                                                                      | [INV-ZS-074](../invariants.md#inv-zs-074); Law 59.21                                                            |
+| Bilingualism and dual script | School and person names in dual AR/FR script; bilingual documents and notifications; full RTL interface                                                                                                                   | [ADR-ZS-021](../decisions/021-bilingual-fr-ar-interface-from-mvp.md)                                            |
+| Time zone                    | Configuration fixed to `Africa/Casablanca` at permanent UTC+0 since 20/09/2026 (Decree No. 2.26.530); the baseline's former Ramadan alternation is obsolete — divergence recorded in OQ-ZS-036 (`spec/open-questions.md`) | historical research corrections                                                                                 |
+| Ministry calendar            | Preloading the year's calendar, Saturday morning classes configurable, movable religious holidays marked "to confirm"                                                                                                     | historical research corpus                                                                                      |
+| Communication channels       | Mobile phone as primary identifier; SMS as a universal fallback channel; WhatsApp under prior opt-in; pricing shift on 01/10/2026 to be absorbed via a parameter (OQ-ZS-037)                                              | historical research corpus                                                                                      |
+| Digitalization support       | The MOWAKABA program may fund onboarding, configuration, and training services; school eligibility is unconfirmed                                                                                                         | historical research corpus                                                                                      |
+| Sovereign hosting            | Production and backups in Morocco ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)); constrains export timelines and the location of cancellation archives                                    | [ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)                                     |
 
 ## 6. Data and Events
 
 ### 6.1 Entities used (dictionary: `spec/domain-model.md`)
 
-| Domain | Entities | Usage in ADM |
-|---|---|---|
-| School | `School`, `Organization`, `Campus`, `Section`, `AcademicYear`, `Calendar`, `Holiday`, `ScheduleVariant`, `Cycle`, `Level`, `Track`, `Class`, `Group`, `GradingScale`, `EvaluationPeriod`, `ComputationRule` | Legal record and settings, organization, setup wizard (template instantiation) |
-| Relations | `SchoolMembership` | Internal affiliations, roles, invited/active/suspended/terminated statuses |
-| Identity | `User`, `StaffProfile` | Internal accounts, invitations, phone as primary identifier |
-| Platform | `Subscription`, `Plan`, `ModuleActivation`, `UsageMetric`, `AuditLog`, `DataExport`, `SupportTicket` (MVP) | Subscription lifecycle, active-student and consumable counting, administration log, cancellation exports, ticket-based support access with director approval |
-| Identity | `User` (login identifier distinct from contact identifiers, INV-ZS-003) | Number change, access recovery, recycled number (BEH-ZS-020) |
-| Imports | `Person`, profiles, `ParentStudentRelationship`, `Enrollment`, `StudentClassHistory` (derived creations) | Produced by imports; matching and duplicate rules owned by `spec/behaviors/02-admissions-enrollment-reenrollment.md` |
+| Domain    | Entities                                                                                                                                                                                                    | Usage in ADM                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| School    | `School`, `Organization`, `Campus`, `Section`, `AcademicYear`, `Calendar`, `Holiday`, `ScheduleVariant`, `Cycle`, `Level`, `Track`, `Class`, `Group`, `GradingScale`, `EvaluationPeriod`, `ComputationRule` | Legal record and settings, organization, setup wizard (template instantiation)                                                                               |
+| Relations | `SchoolMembership`                                                                                                                                                                                          | Internal affiliations, roles, invited/active/suspended/terminated statuses                                                                                   |
+| Identity  | `User`, `StaffProfile`                                                                                                                                                                                      | Internal accounts, invitations, phone as primary identifier                                                                                                  |
+| Platform  | `Subscription`, `Plan`, `ModuleActivation`, `UsageMetric`, `AuditLog`, `DataExport`, `SupportTicket` (MVP)                                                                                                  | Subscription lifecycle, active-student and consumable counting, administration log, cancellation exports, ticket-based support access with director approval |
+| Identity  | `User` (login identifier distinct from contact identifiers, INV-ZS-003)                                                                                                                                     | Number change, access recovery, recycled number (BEH-ZS-020)                                                                                                 |
+| Imports   | `Person`, profiles, `ParentStudentRelationship`, `Enrollment`, `StudentClassHistory` (derived creations)                                                                                                    | Produced by imports; matching and duplicate rules owned by `spec/behaviors/02-admissions-enrollment-reenrollment.md`                                         |
 
 ### 6.2 Notifiable Events
 
 Per the domain event catalog (`spec/domain-model.md`):
 
-| Event | ADM's role | Effects |
-|---|---|---|
-| `SubscriptionSuspendedOrTerminated` | Producer | Notifies the director: move to read-only, export available, deletion timeline |
-| `ProbableDuplicateDetected` | Consumer (imports) | Alerts the school when a weak match is detected during an import; never automatic linking |
-| `IdentityCorrected` | Indirect consumer | Post-import identity corrections follow the rules in `spec/behaviors/02-admissions-enrollment-reenrollment.md` |
-| Invitation and alert notifications | Producer | Affiliation invitations, subscription alerts, consumable thresholds: issued via `Notification` with a `DeliveryLog` |
+| Event                               | ADM's role         | Effects                                                                                                             |
+| ----------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `SubscriptionSuspendedOrTerminated` | Producer           | Notifies the director: move to read-only, export available, deletion timeline                                       |
+| `ProbableDuplicateDetected`         | Consumer (imports) | Alerts the school when a weak match is detected during an import; never automatic linking                           |
+| `IdentityCorrected`                 | Indirect consumer  | Post-import identity corrections follow the rules in `spec/behaviors/02-admissions-enrollment-reenrollment.md`      |
+| Invitation and alert notifications  | Producer           | Affiliation invitations, subscription alerts, consumable thresholds: issued via `Notification` with a `DeliveryLog` |
 
 ## 8. Integrations
 
 Cross-reference to the integrations catalog (`spec/cross-cutting/06-external-integrations.md` (Phase 4)); this chapter does not substitute for any technical specification.
 
-| Integration | Usage in ADM |
-|---|---|
-| SMS via a Moroccan aggregator (INT-SMS) | Fallback notification channel; consumption deducted from packs |
-| WhatsApp Business Platform (INT-WAP) | Parent channel under opt-in: MVP limited to utility attendance notifications; generalized at V1; pricing-shift parameter on 01/10/2026 |
-| Email (INT-EML) | Secondary, optional channel |
-| Hosting (INT-HEB) | Production and backups in Morocco ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)); governs the location of cancellation exports and archives |
-| Electronic signature (INT-SIG) | No direct application in ADM; the legal record's image stamp precedes the advanced electronic stamp (V1) owned by documents ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md)) |
+| Integration                             | Usage in ADM                                                                                                                                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SMS via a Moroccan aggregator (INT-SMS) | Fallback notification channel; consumption deducted from packs                                                                                                                                     |
+| WhatsApp Business Platform (INT-WAP)    | Parent channel under opt-in: MVP limited to utility attendance notifications; generalized at V1; pricing-shift parameter on 01/10/2026                                                             |
+| Email (INT-EML)                         | Secondary, optional channel                                                                                                                                                                        |
+| Hosting (INT-HEB)                       | Production and backups in Morocco ([ADR-ZS-007](../decisions/007-hosting-and-cross-border-transfer-morocco.md)); governs the location of cancellation exports and archives                         |
+| Electronic signature (INT-SIG)          | No direct application in ADM; the legal record's image stamp precedes the advanced electronic stamp (V1) owned by documents ([ADR-ZS-011](../decisions/011-document-seal-and-signature-levels.md)) |
 
 ## 9. Module-Specific Non-Functional Requirements
 
 Numbered `NFR-ZS-*` requirements are owned by `spec/cross-cutting/03-non-functional-requirements.md` (Phase 4); this chapter cites the applicable domains and the historical baseline's thresholds.
 
-| Domain | Application to ADM |
-|---|---|
-| NFR-RES (volumetry) | Back-to-school imports must absorb the pilots' scale (up to 2,000+ students for the multi-site group) and the three-year target (500 schools, 500,000 students) |
-| NFR-PERF (performance) | Analyzing an import of several thousand rows and producing a full cancellation export must stay within objective timeframes; the admin interface follows the general requirement of common pages loading under 2s on 4G |
-| NFR-DISP (availability) | Heavy onboarding processes are scheduled outside the start of the school year and exam periods |
-| NFR-I18N (languages) | FR/AR interface with full RTL from MVP; English out of scope before V2 |
-| NFR-OBS (observability) | Logging and per-tenant traceability of administration operations |
-| NFR-SAV (support) | Temporary, audited support-access procedure by ticket; traceable onboarding assistance |
-| Application security | Rate limiting on self-registration, MFA for director/administration/accounting/system-administrator roles (optional for teachers and supervisors), anti-enumeration protection on searches during imports, knowledge challenge on recycled numbers; security requirements are owned by `spec/cross-cutting/02-security-privacy.md` (Phase 4) |
+| Domain                  | Application to ADM                                                                                                                                                                                                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NFR-RES (volumetry)     | Back-to-school imports must absorb the pilots' scale (up to 2,000+ students for the multi-site group) and the three-year target (500 schools, 500,000 students)                                                                                                                                                                              |
+| NFR-PERF (performance)  | Analyzing an import of several thousand rows and producing a full cancellation export must stay within objective timeframes; the admin interface follows the general requirement of common pages loading under 2s on 4G                                                                                                                      |
+| NFR-DISP (availability) | Heavy onboarding processes are scheduled outside the start of the school year and exam periods                                                                                                                                                                                                                                               |
+| NFR-I18N (languages)    | FR/AR interface with full RTL from MVP; English out of scope before V2                                                                                                                                                                                                                                                                       |
+| NFR-OBS (observability) | Logging and per-tenant traceability of administration operations                                                                                                                                                                                                                                                                             |
+| NFR-SAV (support)       | Temporary, audited support-access procedure by ticket; traceable onboarding assistance                                                                                                                                                                                                                                                       |
+| Application security    | Rate limiting on self-registration, MFA for director/administration/accounting/system-administrator roles (optional for teachers and supervisors), anti-enumeration protection on searches during imports, knowledge challenge on recycled numbers; security requirements are owned by `spec/cross-cutting/02-security-privacy.md` (Phase 4) |
 
 ## 10. Success Metrics
 
 Indicators proposed for this module (consolidation and `KPI-ZS-*` numbering owned by `spec/metrics.md`):
 
-| Indicator | Proposed definition | Indicative target |
-|---|---|---|
-| Time to production | Time between tenant creation and the first roll call taken in production | Under 10 business days with standard support |
-| "Express start-of-year" time | Preparation time for the minimal subset (BEH-ZS-019) until critical functions are in production | Under 1 day for 300 students |
-| Onboarding autonomy | Share of schools completing the wizard without support intervention | To be established with the pilots |
-| Import quality | Share of rows committable on the first pass (no correction) | Above 95% |
-| Internal-user adoption | Share of invited affiliations that become active within 14 days | To be established with the pilots |
-| Subscription health | Share of active schools with no delinquency incident; annual renewal rate | Commercial tracking |
-| Counting accuracy | Gap between the "active students" count and enrollments actually active on the count date | Zero (monthly check) |
+| Indicator                    | Proposed definition                                                                             | Indicative target                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Time to production           | Time between tenant creation and the first roll call taken in production                        | Under 10 business days with standard support |
+| "Express start-of-year" time | Preparation time for the minimal subset (BEH-ZS-019) until critical functions are in production | Under 1 day for 300 students                 |
+| Onboarding autonomy          | Share of schools completing the wizard without support intervention                             | To be established with the pilots            |
+| Import quality               | Share of rows committable on the first pass (no correction)                                     | Above 95%                                    |
+| Internal-user adoption       | Share of invited affiliations that become active within 14 days                                 | To be established with the pilots            |
+| Subscription health          | Share of active schools with no delinquency incident; annual renewal rate                       | Commercial tracking                          |
+| Counting accuracy            | Gap between the "active students" count and enrollments actually active on the count date       | Zero (monthly check)                         |
 
 ## 11. Open Questions
 

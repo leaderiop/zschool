@@ -1,7 +1,10 @@
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
+import * as SqlSchema from "effect/unstable/sql/SqlSchema"
+import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
 export class InvalidMobileNumberError extends Data.TaggedError("InvalidMobileNumberError")<{
   readonly mobileNumber: string
@@ -16,7 +19,22 @@ export interface PersonMatch {
   readonly matchKind: "strong" | "weak"
 }
 
-const E164_PATTERN = /^\+[1-9]\d{7,14}$/
+/** The `find_person_matches` (migration 0008) row shape, decoded rather than trusted via a compile-time-only cast — a future column rename/type change is caught here instead of silently producing wrong fields. */
+export const PersonMatchRow = Schema.Struct({
+  person_id: Schema.String,
+  first_name: Schema.String,
+  last_name: Schema.String,
+  date_of_birth: Schema.String,
+  massar_code: Schema.NullOr(Schema.String),
+  match_kind: Schema.Literals(["strong", "weak"])
+})
+
+/** The `find_guardian_by_mobile` (migration ...) row shape, decoded for the same reason as `PersonMatchRow`. */
+export const GuardianMatchRow = Schema.Struct({
+  person_id: Schema.String
+})
+
+export const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
 export const isValidE164 = (mobileNumber: string): boolean => E164_PATTERN.test(mobileNumber)
 
@@ -42,36 +60,43 @@ export interface NewPersonInput {
  * `find_person_matches` (migration 0008) for why that can't be widened into
  * a general search tool.
  */
-export const findPersonMatches = (
+export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(function*(
   massarCode: string | undefined,
   firstName: string,
   lastName: string,
   dateOfBirth: string
-): Effect.Effect<ReadonlyArray<PersonMatch>, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const rows = yield* sql<
-      { person_id: string; first_name: string; last_name: string; date_of_birth: string; massar_code: string | null; match_kind: "strong" | "weak" }
-    >`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
-    return rows.map((r) => ({
-      personId: r.person_id,
-      firstName: r.first_name,
-      lastName: r.last_name,
-      dateOfBirth: r.date_of_birth,
-      massarCode: r.massar_code,
-      matchKind: r.match_kind
-    }))
+) {
+  const sql = yield* SqlClient
+  const query = SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: PersonMatchRow,
+    execute: () =>
+      sql`SELECT * FROM find_person_matches(${massarCode ?? null}, ${firstName}, ${lastName}, ${dateOfBirth})`
   })
+  const rows = yield* query(undefined)
+  return rows.map((r) => ({
+    personId: r.person_id,
+    firstName: r.first_name,
+    lastName: r.last_name,
+    dateOfBirth: r.date_of_birth,
+    massarCode: r.massar_code,
+    matchKind: r.match_kind
+  }))
+})
 
 /** ADR-ZS-050: a guardian's mobile number is the key used to detect an existing account, across schools. */
-export const findGuardianMatch = (
+export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(function*(
   mobileNumber: string
-): Effect.Effect<{ readonly personId: string } | undefined, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const [row] = yield* sql<{ person_id: string }>`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
-    return row === undefined ? undefined : { personId: row.person_id }
+) {
+  const sql = yield* SqlClient
+  const query = SqlSchema.findOneOption({
+    Request: Schema.Void,
+    Result: GuardianMatchRow,
+    execute: () => sql`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
   })
+  const result = yield* query(undefined)
+  return Option.getOrUndefined(Option.map(result, (row) => ({ personId: row.person_id })))
+})
 
 /**
  * Creates the shared `Person` row a profile attaches to. Not
@@ -87,18 +112,17 @@ export const findGuardianMatch = (
  * find no visible row and fail with "new row violates row-level security
  * policy". Knowing the id up front sidesteps needing to read it back at all.
  */
-export const createPerson = (
+export const createPerson = Effect.fn("Identity.createPerson")(function*(
   input: NewPersonInput
-): Effect.Effect<string, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const id = randomUUID()
-    yield* sql`
-      INSERT INTO persons (id, first_name, last_name, date_of_birth, massar_code)
-      VALUES (${id}, ${input.firstName}, ${input.lastName}, ${input.dateOfBirth}, ${input.massarCode ?? null})
-    `
-    return id
-  })
+) {
+  const sql = yield* SqlClient
+  const id = randomUUID()
+  yield* sql`
+    INSERT INTO persons (id, first_name, last_name, date_of_birth, massar_code)
+    VALUES (${id}, ${input.firstName}, ${input.lastName}, ${input.dateOfBirth}, ${input.massarCode ?? null})
+  `
+  return id
+})
 
 /**
  * Idempotent — a `Person` has at most one `StudentProfile` (unique
@@ -116,35 +140,33 @@ export const createPerson = (
  * function's return value — nothing downstream uses a profile's own id,
  * only the `Person`'s.
  */
-export const attachStudentProfile = (
+export const attachStudentProfile = Effect.fn("Identity.attachStudentProfile")(function*(
   personId: string
-): Effect.Effect<void, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    // A caught error still leaves the *transaction* aborted in Postgres —
-    // catching it in Effect doesn't undo that at the connection level.
-    // `withTransaction` opens a SAVEPOINT here (nested inside the caller's
-    // own transaction) and rolls back to just that savepoint on failure, so
-    // the surrounding import transaction stays usable afterward.
-    yield* sql.withTransaction(sql`INSERT INTO student_profiles (person_id) VALUES (${personId})`).pipe(
-      Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void)
-    )
-  })
+) {
+  const sql = yield* SqlClient
+  // A caught error still leaves the *transaction* aborted in Postgres —
+  // catching it in Effect doesn't undo that at the connection level.
+  // `withTransaction` opens a SAVEPOINT here (nested inside the caller's
+  // own transaction) and rolls back to just that savepoint on failure, so
+  // the surrounding import transaction stays usable afterward.
+  yield* sql.withTransaction(sql`INSERT INTO student_profiles (person_id) VALUES (${personId})`).pipe(
+    Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void)
+  )
+})
 
 /** Same reasoning as `attachStudentProfile` above. */
-export const attachGuardianProfile = (
+export const attachGuardianProfile = Effect.fn("Identity.attachGuardianProfile")(function*(
   personId: string,
   mobileNumber: string
-): Effect.Effect<void, InvalidMobileNumberError | SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    if (!isValidE164(mobileNumber)) {
-      return yield* Effect.fail(new InvalidMobileNumberError({ mobileNumber }))
-    }
-    const sql = yield* SqlClient
-    yield* sql.withTransaction(
-      sql`INSERT INTO guardian_profiles (person_id, mobile_number) VALUES (${personId}, ${mobileNumber})`
-    ).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
-  })
+) {
+  if (!isValidE164(mobileNumber)) {
+    return yield* Effect.fail(new InvalidMobileNumberError({ mobileNumber }))
+  }
+  const sql = yield* SqlClient
+  yield* sql.withTransaction(
+    sql`INSERT INTO guardian_profiles (person_id, mobile_number) VALUES (${personId}, ${mobileNumber})`
+  ).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
+})
 
 export interface GuardianQualities {
   readonly relationshipType: "mother" | "father" | "guardian" | "other"
@@ -161,20 +183,19 @@ export interface GuardianQualities {
  * reasoning as `attachStudentProfile`/`attachGuardianProfile` above.
  * Re-importing the same relationship leaves the existing row as-is.
  */
-export const recordGuardianRelationship = (
-  guardianPersonId: string,
-  studentPersonId: string,
+export const recordGuardianRelationship = Effect.fn("Identity.recordGuardianRelationship")(function*(
+  guardianPersonId: GuardianPersonId,
+  studentPersonId: StudentPersonId,
   qualities: GuardianQualities
-): Effect.Effect<void, SqlError, SqlClient> =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    yield* sql.withTransaction(sql`
-      INSERT INTO parent_student_relationships
-        (guardian_person_id, student_person_id, relationship_type, is_legal_guardian, is_financial_guardian, is_custodial_guardian, is_emergency_contact, is_authorized_for_pickup)
-      VALUES (
-        ${guardianPersonId}, ${studentPersonId}, ${qualities.relationshipType},
-        ${qualities.isLegalGuardian}, ${qualities.isFinancialGuardian}, ${qualities.isCustodialGuardian},
-        ${qualities.isEmergencyContact}, ${qualities.isAuthorizedForPickup}
-      )
-    `).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
-  })
+) {
+  const sql = yield* SqlClient
+  yield* sql.withTransaction(sql`
+    INSERT INTO parent_student_relationships
+      (guardian_person_id, student_person_id, relationship_type, is_legal_guardian, is_financial_guardian, is_custodial_guardian, is_emergency_contact, is_authorized_for_pickup)
+    VALUES (
+      ${guardianPersonId}, ${studentPersonId}, ${qualities.relationshipType},
+      ${qualities.isLegalGuardian}, ${qualities.isFinancialGuardian}, ${qualities.isCustodialGuardian},
+      ${qualities.isEmergencyContact}, ${qualities.isAuthorizedForPickup}
+    )
+  `).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
+})

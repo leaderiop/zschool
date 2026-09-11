@@ -1,13 +1,13 @@
 > **Document Control**
 >
-> | Property       | Value                                                        |
-> | -------------- | ------------------------------------------------------------- |
-> | Document ID    | ZSCHOOL-RES-03                                                 |
-> | Revision       | 1.0                                                            |
-> | Effective Date | 2026-09-09                                                     |
-> | Status         | Effective — Reference                                          |
-> | Author         | ZSchool Product                                                |
-> | Classification | Research Reference                                             |
+> | Property       | Value                                                                                                                                                                                                                    |
+> | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Document ID    | ZSCHOOL-RES-03                                                                                                                                                                                                           |
+> | Revision       | 1.0                                                                                                                                                                                                                      |
+> | Effective Date | 2026-09-09                                                                                                                                                                                                               |
+> | Status         | Effective — Reference                                                                                                                                                                                                    |
+> | Author         | ZSchool Product                                                                                                                                                                                                          |
+> | Classification | Research Reference                                                                                                                                                                                                       |
 > | Change History | 1.0 (2026-09-09): Relocated from `prd/research/03-payments-communications.md` (v0.3) during the qadi-style spec migration; `DEC-` citations retargeted to `ADR-ZS-` per `spec/process/id-migration-map.md` (CCR-ZS-001). |
 
 # Web Research — Payments and Communications (09/09/2026)

@@ -1,17 +1,18 @@
+import { withSchool } from "@zschool/db"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import type { SqlError } from "effect/unstable/sql/SqlError"
-import type { EnforcementError } from "@qadi/core/Qadi"
-import type { EvaluationServices } from "@qadi/core/Evaluate"
-import { withSchool } from "@zschool/db"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
+import { SchoolId } from "./Ids.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 
 export class PeriodOverlapError extends Data.TaggedError("PeriodOverlapError")<{
   readonly periodId: string
   readonly conflictingPeriodId: string
 }> {}
+
+const EvaluationPeriodRow = Schema.Struct({ id: Schema.String, academic_year_id: Schema.String })
 
 export interface SetEvaluationPeriodDatesCommand {
   readonly schoolId: string
@@ -38,11 +39,11 @@ export interface AddSubPeriodCommand {
  * periods refused" scenario) rather than silently accepting inconsistent
  * dates.
  */
-export const setEvaluationPeriodDates = (
+export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodDates")(function*(
   command: SetEvaluationPeriodDatesCommand
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | PeriodOverlapError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -51,12 +52,13 @@ export const setEvaluationPeriodDates = (
         // one, for the overlap search — a stale/mismatched `academicYearId`
         // alongside a valid `periodId` must not search the wrong year and
         // find zero conflicts.
-        const period = yield* requireOwnedRow<{ id: string; academic_year_id: string }>(
+        const period = yield* requireOwnedRow(
           sql,
           "evaluation_periods",
           "evaluation_period",
           command.periodId,
-          command.schoolId,
+          SchoolId(command.schoolId),
+          EvaluationPeriodRow,
           "id, academic_year_id"
         )
 
@@ -79,13 +81,14 @@ export const setEvaluationPeriodDates = (
       })
     )
   )
+})
 
 /** BEH-ZS-054: a dated sub-period (exam, mock exam, standardized test) within an evaluation period. */
-export const addSubPeriod = (
+export const addSubPeriod = Effect.fn("Calendar.addSubPeriod")(function*(
   command: AddSubPeriodCommand
-): Effect.Effect<string, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    command.schoolId,
+) {
+  return yield* authorized(
+    SchoolId(command.schoolId),
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
@@ -93,12 +96,13 @@ export const addSubPeriod = (
         // Insert the period's OWN academic_year_id, never the caller-supplied
         // one — a mismatched command.academicYearId must not create a row
         // whose evaluation_period_id and academic_year_id disagree.
-        const period = yield* requireOwnedRow<{ id: string; academic_year_id: string }>(
+        const period = yield* requireOwnedRow(
           sql,
           "evaluation_periods",
           "evaluation_period",
           command.evaluationPeriodId,
-          command.schoolId,
+          SchoolId(command.schoolId),
+          EvaluationPeriodRow,
           "id, academic_year_id"
         )
 
@@ -115,6 +119,7 @@ export const addSubPeriod = (
       })
     )
   )
+})
 
 /**
  * BEH-ZS-066 / REQ-ZS-064: preloads the ministry calendar for a newly
@@ -128,61 +133,60 @@ export const addSubPeriod = (
  * scope at year-creation time, instead of nesting a second authorization
  * check and transaction inside the one it's already in.
  */
-export const seedCalendarEvents = (
-  sql: SqlClient,
+export const seedCalendarEvents = Effect.fn("Calendar.seedCalendarEvents")(function*(
   schoolId: string,
   academicYearId: string,
   academicYearLabel: string
-): Effect.Effect<void, SqlError> =>
-  Effect.gen(function*() {
-    const rows: Array<Record<string, unknown>> = []
+) {
+  const sql = yield* SqlClient
+  const rows: Array<Record<string, unknown>> = []
 
-        for (const holiday of fixedHolidayDatesForYear(academicYearLabel)) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: holiday.code,
-            name: holiday.name,
-            event_type: "holiday",
-            is_movable: false,
-            confirmation_status: "confirmed",
-            start_date: holiday.date,
-            end_date: holiday.date
-          })
-        }
+  for (const holiday of fixedHolidayDatesForYear(academicYearLabel)) {
+    rows.push({
+      school_id: schoolId,
+      academic_year_id: academicYearId,
+      code: holiday.code,
+      name: holiday.name,
+      event_type: "holiday",
+      is_movable: false,
+      confirmation_status: "confirmed",
+      start_date: holiday.date,
+      end_date: holiday.date
+    })
+  }
 
-        for (const brk of publishedBreaksByYear[academicYearLabel] ?? []) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: brk.code,
-            name: brk.name,
-            event_type: "break",
-            is_movable: false,
-            confirmation_status: "confirmed",
-            start_date: brk.startDate,
-            end_date: brk.endDate
-          })
-        }
+  for (const brk of publishedBreaksByYear[academicYearLabel] ?? []) {
+    rows.push({
+      school_id: schoolId,
+      academic_year_id: academicYearId,
+      code: brk.code,
+      name: brk.name,
+      event_type: "break",
+      is_movable: false,
+      confirmation_status: "confirmed",
+      start_date: brk.startDate,
+      end_date: brk.endDate
+    })
+  }
 
-        for (const holiday of movableReligiousHolidays) {
-          rows.push({
-            school_id: schoolId,
-            academic_year_id: academicYearId,
-            code: holiday.code,
-            name: holiday.name,
-            event_type: "holiday",
-            is_movable: true,
-            confirmation_status: "to_confirm",
-            start_date: null,
-            end_date: null
-          })
-        }
+  for (const holiday of movableReligiousHolidays) {
+    rows.push({
+      school_id: schoolId,
+      academic_year_id: academicYearId,
+      code: holiday.code,
+      name: holiday.name,
+      event_type: "holiday",
+      is_movable: true,
+      confirmation_status: "to_confirm",
+      start_date: null,
+      end_date: null
+    })
+  }
 
-    if (rows.length > 0) {
-      yield* sql`INSERT INTO calendar_events ${sql.insert(rows)}`
-    }
-  })
+  if (rows.length > 0) {
+    yield* sql`INSERT INTO calendar_events ${sql.insert(rows)}`
+  }
+})
 
 /**
  * Public, standalone entry point for preloading a calendar outside of
@@ -192,30 +196,28 @@ export const seedCalendarEvents = (
  * does no `ON CONFLICT` handling, so a second call fails with a raw
  * `SqlError` rather than silently no-oping.
  */
-export const preloadNationalCalendar = (
+export const preloadNationalCalendar = Effect.fn("Calendar.preloadNationalCalendar")(function*(
   schoolId: string,
   academicYearId: string,
   academicYearLabel: string
-): Effect.Effect<void, EnforcementError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-        yield* seedCalendarEvents(sql, schoolId, academicYearId, academicYearLabel)
-      })
+      seedCalendarEvents(schoolId, academicYearId, academicYearLabel)
     )
   )
+})
 
 /** Confirms a movable holiday's actual date once officially announced (OQ-ZS-068's confirmation mechanism is still open — this only records the date and flips the flag). */
-export const confirmMovableHoliday = (
+export const confirmMovableHoliday = Effect.fn("Calendar.confirmMovableHoliday")(function*(
   schoolId: string,
   eventId: string,
   confirmedDate: string
-): Effect.Effect<void, EnforcementError | EntityNotFoundError | SqlError, SqlClient | EvaluationServices> =>
-  authorized(
-    schoolId,
+) {
+  return yield* authorized(
+    SchoolId(schoolId),
     withSchool(
       schoolId,
       Effect.gen(function*() {
@@ -238,3 +240,4 @@ export const confirmMovableHoliday = (
       })
     )
   )
+})

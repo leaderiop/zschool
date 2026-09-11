@@ -1,14 +1,14 @@
-import { fileURLToPath } from "node:url"
 import { describeFeature, loadFeature } from "@effect-cucumber/vitest"
 import { assert } from "@effect-cucumber/vitest"
+import { withSchool } from "@zschool/db"
+import { createClass, deactivateCourse, generateCoursesForClass, instantiateNationalTemplate } from "@zschool/domain"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { qadiTestLayer, subjectWith } from "@qadi/testing"
-import { withSchool } from "@zschool/db"
-import { createClass, deactivateCourse, generateCoursesForClass, instantiateNationalTemplate } from "@zschool/domain"
+import { fileURLToPath } from "node:url"
+import { asDirectorOf } from "../support/layers/auth.ts"
 import { DatabaseTestLive } from "../support/layers/db.ts"
 
 const feature = await loadFeature(
@@ -33,9 +33,6 @@ class World extends Context.Service<World, {
     })
   )
 }
-
-const asDirectorOf = (schoolId: string) =>
-  qadiTestLayer(subjectWith({ roles: ["director"], attributes: { school_id: schoolId } }))
 
 describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer }, ({ Given, Then, When }) => {
   Given("a class under level 1AC with the national template's mandatory subjects configured", function*() {
@@ -122,7 +119,9 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
       capacity: 30
     }).pipe(Effect.provide(asDirectorOf(school.id)))
 
-    yield* generateCoursesForClass(school.id, result.academicYearId, classId).pipe(Effect.provide(asDirectorOf(school.id)))
+    yield* generateCoursesForClass(school.id, result.academicYearId, classId).pipe(
+      Effect.provide(asDirectorOf(school.id))
+    )
 
     yield* Ref.set(world.schoolId, school.id)
     yield* Ref.set(world.academicYearId, result.academicYearId)
