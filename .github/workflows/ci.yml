@@ -25,15 +25,15 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # turbo needs the PR's base commit (which may be many commits back), not just HEAD^
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22.22.0
           cache: pnpm
