@@ -36,14 +36,22 @@ jobs:
       # own `tsc -b` above doesn't include this tree.
       - run: pnpm exec tsc --noEmit -p tsconfig.json
 
-      # DATABASE_URL/APP_DATABASE_URL must be configured as repo secrets
-      # (see env.example) — today every run shares the one provisioned Neon
-      # branch (ADR-ZS-103's per-PR/per-BDD-run branching isn't wired up
-      # yet), so this step is skipped rather than failing red until they are.
+      # No secrets needed: the bdd project stands up its own disposable
+      # Postgres via testcontainers (issue #35, ADR-ZS-115) — runs
+      # unconditionally on every PR now, unlike the Neon-branch-gated step
+      # this replaced. ubuntu-latest ships Docker preinstalled.
+      - run: pnpm run test:bdd
+
+      # RlsPolicy.test.ts is the deliberate exception (issue #35): it verifies
+      # a Neon control-plane-specific behavior (migration 0007's
+      # neon_superuser/BYPASSRLS fix) that a vanilla Postgres container can't
+      # reproduce, so it alone still needs a real Neon branch and stays
+      # gated on DATABASE_URL/APP_DATABASE_URL being configured as repo
+      # secrets (see env.example).
       - if: ${{ secrets.DATABASE_URL != '' && secrets.APP_DATABASE_URL != '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
         run: |
           pnpm --filter @zschool/db run migrate
-          pnpm run test:bdd
+          pnpm --filter @zschool/db run test:rls

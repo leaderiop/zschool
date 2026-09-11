@@ -6,15 +6,12 @@ import * as Layer from "effect/Layer"
  * The database Layer every BDD scenario that touches Postgres shares
  * (features/support/README.md).
  *
- * Reads `NEON_TEST_BRANCH_URL` when set (a dedicated per-PR/per-run Neon
- * branch, ADR-ZS-103) and otherwise falls back to `DATABASE_URL`/
- * `APP_DATABASE_URL`: the per-PR branching automation itself is not wired
- * up yet, so today every local run shares the one provisioned Neon branch.
+ * `DATABASE_URL`/`APP_DATABASE_URL` are set by
+ * `features/support/testcontainers/globalSetup.ts` before this module is
+ * ever loaded (issue #35, ADR-ZS-115, superseding ADR-ZS-101's per-run Neon
+ * branch): every local and CI run gets its own disposable Postgres
+ * container, genuinely isolated, with no Neon secret or network dependency.
  */
-if (process.env.NEON_TEST_BRANCH_URL) {
-  process.env.DATABASE_URL ??= process.env.NEON_TEST_BRANCH_URL
-  process.env.APP_DATABASE_URL ??= process.env.NEON_TEST_BRANCH_URL
-}
 
 /**
  * Migrations run once against `SqlLive` (`neondb_owner`) — a Scenario's own

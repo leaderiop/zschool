@@ -24,6 +24,7 @@
     "@effect/vitest": "4.0.0-rc.113",
     "@qadi/core": "0.5.0",
     "@qadi/testing": "0.5.0",
+    "@testcontainers/postgresql": "^12.1.0",
     "@zschool/db": "workspace:*",
     "@zschool/domain": "workspace:*",
     "dotenv-cli": "^11.0.0",

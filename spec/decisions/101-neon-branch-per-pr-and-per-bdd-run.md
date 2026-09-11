@@ -1,8 +1,16 @@
 # ADR-ZS-101: A Neon branch per developer, per PR, and per BDD test run
 
-> **Status:** Accepted
+> **Status:** Superseded by [ADR-ZS-115](./115-testcontainers-for-automated-tests.md)
 > **Date:** 2026-09-09
 > **Historical aliases:** none (STACK.md §5, §9)
+
+**Superseded note (2026-09-11):** the per-run ephemeral-branch automation this
+ADR describes was never actually built (see ADR-ZS-115's Context). Automated
+test runs (`unit`, `bdd`) now use a disposable testcontainers Postgres
+instead; `packages/db/src/RlsPolicy.test.ts` is the sole deliberate exception
+and keeps running against a real Neon branch. Developer personal branches
+(`dev-*`) and per-PR Alchemy preview stages (ADR-ZS-089) are unaffected by
+this supersession — they were never automated-test infrastructure.
 
 ## Context
 

@@ -9,6 +9,12 @@ import { defineConfig } from "vitest/config"
  */
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"]
+    include: ["src/**/*.test.ts"],
+    // Runs against a real Neon branch, not the testcontainers Postgres every
+    // other suite uses (issue #35) — see vitest.rls.config.ts, which is how
+    // it's actually invoked (packages/db's own `test` script, and turbo's
+    // generic `test` task by extension, must never pick it up: it needs
+    // Neon secrets this script doesn't require).
+    exclude: ["src/RlsPolicy.test.ts"]
   }
 })
