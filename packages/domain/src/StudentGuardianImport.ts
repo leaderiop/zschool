@@ -5,7 +5,6 @@ import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { isSqlError } from "effect/unstable/sql/SqlError"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   attachGuardianProfile,
@@ -19,7 +18,7 @@ import {
   recordGuardianRelationship
 } from "./Identity.ts"
 import { GuardianPersonId, SchoolId, StudentPersonId } from "./Ids.ts"
-import { ImportRowError } from "./ImportRowError.ts"
+import { failureReason, ImportRowError } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -78,10 +77,6 @@ const GuardianImportRowSchema = Schema.Struct({
 
 export const decodeGuardianImportRow = (row: GuardianImportRow): Result.Result<GuardianImportRow, Schema.SchemaError> =>
   Schema.decodeResult(GuardianImportRowSchema)(row)
-
-/** A `SqlError`'s own reason tag is more specific than the generic "SqlError" tag; every other tagged failure just uses its own `_tag`. */
-const failureReason = (failure: { readonly _tag: string }): string =>
-  isSqlError(failure) ? failure.reason._tag : failure._tag
 
 /**
  * The one place a per-row outcome (a matching lookup, a committed

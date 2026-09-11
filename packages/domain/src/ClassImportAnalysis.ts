@@ -4,7 +4,7 @@ import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { SchoolId } from "./Ids.ts"
-import { ImportRowError } from "./ImportRowError.ts"
+import { failureReason, ImportRowError } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -108,7 +108,11 @@ const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
   }))
 
   if (Result.isFailure(outcome)) {
-    return { row, status: "error", error: new ImportRowError({ reason: "SqlError", cause: outcome.failure }) } as const
+    return {
+      row,
+      status: "error",
+      error: new ImportRowError({ reason: failureReason(outcome.failure), cause: outcome.failure })
+    } as const
   }
 
   switch (outcome.success._tag) {

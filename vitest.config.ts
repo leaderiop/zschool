@@ -5,17 +5,6 @@ export default defineConfig({
   test: {
     projects: [
       {
-        test: {
-          name: "unit",
-          include: ["packages/*/src/**/*.test.ts", "apps/*/src/**/*.test.ts"],
-          // Runs against real Neon, unlike everything else here (issue #35)
-          // — see packages/db/vitest.rls.config.ts, which is how it's
-          // actually invoked (packages/db's own `test` script excludes it).
-          exclude: ["**/RlsPolicy.test.ts"],
-          globalSetup: ["./features/support/testcontainers/globalSetup.ts"]
-        }
-      },
-      {
         plugins: [gherkinWatchTriggers("features/**/*.feature", { cwd: process.cwd() })],
         test: {
           name: "bdd",

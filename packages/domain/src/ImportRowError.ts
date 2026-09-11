@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema"
+import { isSqlError } from "effect/unstable/sql/SqlError"
 
 /**
  * One shared "this row failed" shape (issue #34) — `ClassImportAnalysis.ts`,
@@ -14,3 +15,7 @@ export class ImportRowError extends Schema.TaggedError<ImportRowError>()("Import
   reason: Schema.String,
   cause: Schema.optional(Schema.Defect())
 }) {}
+
+/** A `SqlError`'s own reason tag is more specific than the generic "SqlError" tag; every other tagged failure just uses its own `_tag`. Shared by every import pipeline's per-row `Effect.result` handling so a transient infrastructure failure stays distinguishable from a data problem everywhere, not just in the pipeline that happened to define this first. */
+export const failureReason = (failure: { readonly _tag: string }): string =>
+  isSqlError(failure) ? failure.reason._tag : failure._tag

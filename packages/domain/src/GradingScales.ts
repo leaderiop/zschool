@@ -207,10 +207,23 @@ const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputat
 /**
  * BEH-ZS-055: edits a section's grading scale — scoped to this year's own
  * snapshot (ADR-ZS-105), never a prior closed year's. The not-found check
- * comes from the repository's own `findById` (`section_id`) instead of a
- * hand-written pre-check `SELECT`; the update itself is one
- * `repo.update(...)` built from whichever optional fields were supplied,
- * instead of up to three near-identical conditional `UPDATE` statements.
+ * starts from the repository's own `findById` (`section_id`) instead of a
+ * hand-written pre-check `SELECT`, but `findById`'s `idColumn` is
+ * `section_id` alone — it can't also filter by `academic_year_id` the way
+ * the old hand-written `SELECT ... WHERE section_id = ... AND
+ * academic_year_id = ...` did, so that year-scoping is re-checked explicitly
+ * against the found row below (same guarantee as
+ * `SubjectLevelConfigs.updateSubjectLevelConfig`'s `AND academic_year_id =
+ * ...`, just expressed post-fetch instead of in the `WHERE` clause).
+ *
+ * `repo.update(...)` only runs when at least one field actually changed:
+ * `SqlModel.makeRepository`'s single-row update compiles a bare `SET`
+ * clause from whatever keys remain after excluding `idColumn`, and the pg
+ * dialect has no `onRecordUpdateSingle` override to special-case an empty
+ * one — calling it with nothing but `section_id` set would compile to
+ * `UPDATE grading_scales SET  WHERE section_id = $1`, a syntax error. The
+ * old code had the same effect (zero conditional `UPDATE`s ran) by
+ * construction; this preserves it explicitly.
  */
 const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(function*(
   command: UpdateGradingScaleCommand
@@ -223,19 +236,24 @@ const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(functio
       Effect.gen(function*() {
         const repo = yield* gradingScaleRepo
 
-        yield* repo.findById(command.sectionId).pipe(
-          Effect.catchTag(
-            "NoSuchElementError",
-            () => Effect.fail(new EntityNotFoundError({ entityType: "grading_scale", entityId: command.sectionId }))
-          )
-        )
+        const notFound = () =>
+          Effect.fail(new EntityNotFoundError({ entityType: "grading_scale", entityId: command.sectionId }))
 
-        yield* repo.update({
-          section_id: command.sectionId,
+        const scale = yield* repo.findById(command.sectionId).pipe(
+          Effect.catchTag("NoSuchElementError", notFound)
+        )
+        if (scale.academic_year_id !== command.academicYearId) {
+          return yield* notFound()
+        }
+
+        const fields = {
           ...(command.maxScore !== undefined ? { max_score: command.maxScore } : {}),
           ...(command.decimals !== undefined ? { decimals: command.decimals } : {}),
           ...(command.rounding !== undefined ? { rounding: command.rounding } : {})
-        })
+        }
+        if (Object.keys(fields).length > 0) {
+          yield* repo.update({ section_id: command.sectionId, ...fields })
+        }
       })
     )
   )
