@@ -1,6 +1,9 @@
 import * as Effect from "effect/Effect"
+import * as Option from "effect/Option"
+import * as RequestResolver from "effect/RequestResolver"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import * as SqlResolver from "effect/unstable/sql/SqlResolver"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
 
@@ -90,23 +93,64 @@ export const findPersonMatches = Effect.fn("Identity.findPersonMatches")(functio
 })
 
 /**
+ * Batches the phone-number lookup across a whole import's rows into one
+ * query (issue #37) instead of one round trip per row.
+ *
+ * `find_guardian_by_mobile` (migration 0008) is `SECURITY DEFINER` —
+ * deliberately: it's the only path to a cross-tenant match (ADR-ZS-050),
+ * bypassing `guardian_profiles`' own RLS policy (`person_scoped_select`,
+ * which only shows a guardian already linked, via `persons`, to the
+ * CURRENT school). A naive batched rewrite querying `guardian_profiles`
+ * directly (`... WHERE mobile_number IN (...)`) would run under that RLS
+ * policy instead of the function's escalated privilege, silently losing
+ * cross-tenant matching entirely — this instead calls the SAME
+ * unmodified function once per input via `LATERAL`, still as exactly one
+ * round trip: `unnest` turns the batched array into rows, and Postgres
+ * evaluates the set-returning function against each one in a single
+ * statement. `mobile_number` binds as a native array parameter (no
+ * `sql.in`, which expands to one placeholder per element — the point here
+ * is one parameter regardless of batch size).
+ *
+ * `mobile_number` has no uniqueness constraint (two guardians can share a
+ * landline, per the migration's own comment) — `ResultGroupKey` reads it
+ * from the raw row (not the decoded `GuardianMatch`, which doesn't carry
+ * it), and `findGuardianMatch` below keeps today's "first match wins"
+ * behavior when a key has more than one.
+ */
+const guardianMatchByMobileResolver = SqlResolver.grouped({
+  Request: Schema.String,
+  RequestGroupKey: (mobileNumber: string) => mobileNumber,
+  Result: GuardianMatch,
+  execute: (mobileNumbers) =>
+    Effect.gen(function*() {
+      const sql = yield* SqlClient
+      return yield* sql<{ readonly person_id: string; readonly mobile_number: string }>`
+        SELECT f.* FROM unnest(${mobileNumbers}) AS m(mobile_number)
+        CROSS JOIN LATERAL find_guardian_by_mobile(m.mobile_number) AS f
+      `
+    }),
+  ResultGroupKey: (_result, row) => row.mobile_number
+}).pipe(RequestResolver.withSpan("Identity.findGuardianMatch.batched"))
+
+/**
  * ADR-ZS-050: a guardian's mobile number is the key used to detect an
  * existing account, across schools. Returns `Option` rather than collapsing
  * to `undefined` here — the "may not exist yet" stays composable all the way
  * to whichever caller actually needs a raw nullable (issue #34: `Option`
  * kept through the caller boundary, converted only at the one call site in
  * `StudentGuardianImport.ts`'s `commitImportBatch` that wants a `??` chain).
+ *
+ * Effect coalesces same-tick requests issued by concurrent callers (e.g.
+ * `Effect.forEach` over an import batch) against `guardianMatchByMobileResolver`
+ * into one query — callers don't need to know or care that this happens.
  */
 export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(function*(
   mobileNumber: string
 ) {
-  const sql = yield* SqlClient
-  const query = SqlSchema.findOneOption({
-    Request: Schema.Void,
-    Result: GuardianMatch,
-    execute: () => sql`SELECT * FROM find_guardian_by_mobile(${mobileNumber})`
-  })
-  return yield* query(undefined)
+  const matches = yield* SqlResolver.request(mobileNumber, guardianMatchByMobileResolver).pipe(
+    Effect.catchTag("NoSuchElementError", () => Effect.void)
+  )
+  return matches === undefined ? Option.none() : Option.some(matches[0])
 })
 
 /**
