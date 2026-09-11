@@ -2,8 +2,9 @@ import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { requireTrackBelongsToLevel } from "./AcademicTree.ts"
 import { LevelId, SchoolId, TrackId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow, requireTrackBelongsToLevel, RowWithId } from "./Ownership.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
@@ -95,7 +96,7 @@ export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSub
         if (command.trackId !== undefined) {
           const trackId = yield* Schema.decodeEffect(TrackId)(command.trackId)
           const levelId = yield* Schema.decodeEffect(LevelId)(command.levelId)
-          yield* requireTrackBelongsToLevel(sql, trackId, levelId, command.schoolId)
+          yield* requireTrackBelongsToLevel(trackId, levelId, command.schoolId)
         }
 
         const insert = sql<{ id: string }>`

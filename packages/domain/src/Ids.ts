@@ -23,6 +23,9 @@ export type LevelId = typeof LevelId.Type
 export const TrackId = Schema.String.pipe(Schema.brand("TrackId"))
 export type TrackId = typeof TrackId.Type
 
+export const GroupId = Schema.String.pipe(Schema.brand("GroupId"))
+export type GroupId = typeof GroupId.Type
+
 export const GuardianPersonId = Schema.String.pipe(Schema.brand("GuardianPersonId"))
 export type GuardianPersonId = typeof GuardianPersonId.Type
 

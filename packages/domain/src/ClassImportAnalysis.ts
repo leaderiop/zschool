@@ -1,8 +1,9 @@
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
+import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { findClassByLevelAndLabel, findLevelByCode, findTrackByCode } from "./AcademicTree.ts"
 import { SchoolId } from "./Ids.ts"
 import { failureReason, ImportRowError } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
@@ -52,17 +53,18 @@ export type ClassImportRowResult =
   | { readonly row: ClassImportRow; readonly status: "error"; readonly error: ImportRowError }
 
 /**
- * Requests `SqlClient` from context instead of receiving it as a parameter
- * (issue #34's DI correction — see the same fix in
- * `StudentGuardianImport.ts`'s `resolveClass`/`analyzeStudentRow`), and is
- * hoisted to module scope rather than redeclared inside
- * `analyzeClassImport`'s body on every call. `schoolId` stays a plain
- * parameter throughout — it's ordinary data, not a service.
+ * The three lookups go through `AcademicTree.ts`'s shared `Level`/`Track`/
+ * `Class`-decoding functions (issue #39) instead of ad hoc `sql<{id:
+ * string}>` casts — each pulls `SqlClient` from context itself, so this
+ * function no longer needs to (issue #34's DI correction). Hoisted to
+ * module scope rather than redeclared inside `analyzeClassImport`'s body on
+ * every call; `schoolId` stays a plain parameter throughout — it's ordinary
+ * data, not a service.
  *
  * The three sequential lookups run inside `Effect.result` (matching
- * `StudentGuardianImport.ts`'s row analyzers) so a transient `SqlError` on
- * one row surfaces as that row's own error instead of aborting the whole
- * `Effect.forEach` batch.
+ * `StudentGuardianImport.ts`'s row analyzers) so a transient `SqlError` or
+ * `Schema.SchemaError` on one row surfaces as that row's own error instead
+ * of aborting the whole `Effect.forEach` batch.
  */
 const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
   schoolId: string,
@@ -73,20 +75,16 @@ const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
     return { row, status: "error", error: new ImportRowError({ reason: decoded.failure.message }) } as const
   }
 
-  const sql = yield* SqlClient
   const outcome = yield* Effect.result(Effect.gen(function*() {
-    const [level] = yield* sql<{ id: string }>`
-      SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${row.levelCode}
-    `
-    if (level === undefined) {
+    const levelOpt = yield* findLevelByCode(schoolId, row.levelCode)
+    if (Option.isNone(levelOpt)) {
       return { _tag: "error" as const, reason: `Unknown level code: ${row.levelCode}` }
     }
+    const level = levelOpt.value
 
     if (row.trackCode !== undefined) {
-      const [track] = yield* sql<{ id: string }>`
-        SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${row.trackCode}
-      `
-      if (track === undefined) {
+      const trackOpt = yield* findTrackByCode(schoolId, level.id, row.trackCode)
+      if (Option.isNone(trackOpt)) {
         return {
           _tag: "error" as const,
           reason: `Track "${row.trackCode}" does not belong to level ${row.levelCode}`
@@ -94,10 +92,8 @@ const analyzeRow = Effect.fn("ClassImportAnalysis.analyzeRow")(function*(
       }
     }
 
-    const existing = yield* sql`
-      SELECT id FROM classes WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${row.label}
-    `
-    if (existing.length > 0) {
+    const existingOpt = yield* findClassByLevelAndLabel(schoolId, level.id, row.label)
+    if (Option.isSome(existingOpt)) {
       return {
         _tag: "duplicate" as const,
         reason: `A class labeled "${row.label}" already exists under ${row.levelCode}`

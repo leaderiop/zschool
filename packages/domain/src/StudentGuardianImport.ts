@@ -5,6 +5,7 @@ import * as Option from "effect/Option"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { findClassByLevelLabelAndTrack, findLevelByCode, findTrackByCode } from "./AcademicTree.ts"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   attachGuardianProfile,
@@ -205,11 +206,14 @@ export type StudentRowResult =
   | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
 
 /**
- * Requests `SqlClient` from context instead of receiving it as a parameter
- * (issue #34's DI correction) — this and `analyzeStudentRow` below were the
- * codebase's own anti-pattern example: `Identity.ts`'s functions three lines
- * away in the same import already did this correctly. `schoolId` stays a
- * plain parameter — it's data, not a service.
+ * The three lookups go through `AcademicTree.ts`'s shared `Level`/`Track`/
+ * `Class`-decoding functions (issue #39) instead of ad hoc `sql<{id:
+ * string}>` casts — each pulls `SqlClient` from context itself, so this
+ * function no longer needs to (issue #34's DI correction: this and
+ * `analyzeStudentRow` below were the codebase's own anti-pattern example —
+ * `Identity.ts`'s functions three lines away in the same import already did
+ * this correctly). `schoolId` stays a plain parameter — it's data, not a
+ * service.
  */
 const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
   schoolId: string,
@@ -217,27 +221,19 @@ const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
   trackCode: string | undefined,
   classLabel: string
 ) {
-  const sql = yield* SqlClient
-  const [level] = yield* sql<
-    { id: string }
-  >`SELECT id FROM levels WHERE school_id = ${schoolId} AND code = ${levelCode}`
-  if (level === undefined) return undefined
+  const levelOpt = yield* findLevelByCode(schoolId, levelCode)
+  if (Option.isNone(levelOpt)) return undefined
+  const level = levelOpt.value
 
   let trackId: string | null = null
   if (trackCode !== undefined) {
-    const [track] = yield* sql<{ id: string }>`
-      SELECT id FROM tracks WHERE school_id = ${schoolId} AND level_id = ${level.id} AND code = ${trackCode}
-    `
-    if (track === undefined) return undefined
-    trackId = track.id
+    const trackOpt = yield* findTrackByCode(schoolId, level.id, trackCode)
+    if (Option.isNone(trackOpt)) return undefined
+    trackId = trackOpt.value.id
   }
 
-  const [cls] = yield* sql<{ id: string }>`
-    SELECT id FROM classes
-    WHERE school_id = ${schoolId} AND level_id = ${level.id} AND label = ${classLabel}
-      AND track_id IS NOT DISTINCT FROM ${trackId}
-  `
-  return cls === undefined ? undefined : { id: cls.id }
+  const classOpt = yield* findClassByLevelLabelAndTrack(schoolId, level.id, classLabel, trackId)
+  return Option.isNone(classOpt) ? undefined : { id: classOpt.value.id }
 })
 
 export type StudentAnalysisResult =
