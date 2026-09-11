@@ -12,6 +12,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
+import type { SchemaError } from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
 import { fileURLToPath } from "node:url"
@@ -27,7 +28,10 @@ class World extends Context.Service<World, {
   readonly authorizedCycles: Ref.Ref<ReadonlyArray<CycleCode>>
   readonly academicYearLabel: Ref.Ref<string>
   readonly result: Ref.Ref<InstantiateNationalTemplateResult | undefined>
-  readonly error: Ref.Ref<UnauthorizedCycleError | SqlError | EnforcementError | undefined>
+  // `SchemaError` joined this union (issue #42): `instantiateNationalTemplate`
+  // now decodes `schoolId` and its `AcademicYear`/`Section` repository
+  // inserts through `Model.Class` schemas instead of hand-written queries.
+  readonly error: Ref.Ref<UnauthorizedCycleError | SchemaError | SqlError | EnforcementError | undefined>
   readonly otherSchoolId: Ref.Ref<string | undefined>
 }>()("World") {
   static readonly layer = Layer.effect(
@@ -38,7 +42,9 @@ class World extends Context.Service<World, {
         authorizedCycles: yield* Ref.make<ReadonlyArray<CycleCode>>([]),
         academicYearLabel: yield* Ref.make("2026-2027"),
         result: yield* Ref.make<InstantiateNationalTemplateResult | undefined>(undefined),
-        error: yield* Ref.make<UnauthorizedCycleError | SqlError | EnforcementError | undefined>(undefined),
+        error: yield* Ref.make<UnauthorizedCycleError | SchemaError | SqlError | EnforcementError | undefined>(
+          undefined
+        ),
         otherSchoolId: yield* Ref.make<string | undefined>(undefined)
       })
     })

@@ -2,10 +2,12 @@ import * as Effect from "effect/Effect"
 import * as Option from "effect/Option"
 import * as RequestResolver from "effect/RequestResolver"
 import * as Schema from "effect/Schema"
+import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlResolver from "effect/unstable/sql/SqlResolver"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
-import type { GuardianPersonId, StudentPersonId } from "./Ids.ts"
+import { GuardianPersonId, PersonId, StudentPersonId } from "./Ids.ts"
 
 export class InvalidMobileNumberError extends Schema.TaggedError<InvalidMobileNumberError>()(
   "InvalidMobileNumberError",
@@ -59,6 +61,101 @@ export type GuardianMatch = typeof GuardianMatch.Type
 // provides `randomUUID` is available at runtime (Node 22, browsers) without
 // needing the DOM lib this package doesn't otherwise pull in.
 const randomUUID = (): string => (globalThis as unknown as { crypto: { randomUUID(): string } }).crypto.randomUUID()
+
+/**
+ * `Model.Class` for `persons`/`student_profiles`/`guardian_profiles`/
+ * `parent_student_relationships` (issue #42), matching migration 0008's DDL.
+ * Every one of these is insert-only from this file's perspective (no
+ * `update` path exists for any of them) — same reasoning as
+ * `SubjectLevelConfigs.ts`'s `Subject`, so no `FieldExcept` is needed on
+ * their identity columns.
+ *
+ * `date_of_birth`/dates stay plain `Schema.String` (a Postgres `date`
+ * column, no time-of-day/UTC-offset semantics), matching `Calendar.ts`'s
+ * explicit decision for the same column shape.
+ *
+ * Only `Person.id` (this file's own primary key) uses the branded `PersonId`
+ * — `StudentProfile.person_id`/`GuardianProfile.person_id`/
+ * `ParentStudentRelationship.{guardian,student}_person_id` use the
+ * role-specific `StudentPersonId`/`GuardianPersonId` (predating this ticket)
+ * instead, since those already distinguish "a person acting as a student"
+ * from "a person acting as a guardian" at the type level — the same
+ * foreign-key convention `Courses.ts`/`SubjectLevelConfigs.ts` established
+ * (a model's OWN id is branded; a reference to another row stays whichever
+ * id type that reference's role already calls for).
+ */
+export class Person extends Model.Class<Person>("Person")({
+  // Custom variant set (not `Model.GeneratedByDb`): `createPerson` below
+  // generates this id client-side rather than relying on the column's own
+  // `DEFAULT gen_random_uuid()` — see that function's own comment for why
+  // (Postgres RLS filters a `RETURNING` clause through the table's SELECT
+  // policy, which a brand-new person can never satisfy yet) — so `id` must
+  // be part of `insert`/`jsonCreate` too, unlike every other id in this
+  // file's models below.
+  id: Model.Field({
+    select: PersonId,
+    insert: PersonId,
+    update: PersonId,
+    json: PersonId,
+    jsonCreate: PersonId,
+    jsonUpdate: PersonId
+  }),
+  first_name: Schema.String,
+  last_name: Schema.String,
+  date_of_birth: Schema.String,
+  massar_code: Schema.NullOr(Schema.String),
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export class StudentProfile extends Model.Class<StudentProfile>("StudentProfile")({
+  // DB-generated (`DEFAULT gen_random_uuid()`) and never read back by any
+  // caller — the custom variant set (rather than `Model.GeneratedByDb`) is
+  // needed purely to satisfy `SqlModel.makeRepository`'s `idColumn`
+  // constraint, same precedent as `ComputationRule.id`/`EvaluationSubPeriod.id`.
+  id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
+  person_id: StudentPersonId,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export class GuardianProfile extends Model.Class<GuardianProfile>("GuardianProfile")({
+  id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
+  person_id: GuardianPersonId,
+  // Format already enforced pre-insert by `attachGuardianProfile`'s own
+  // `isValidE164` guard (the DB's CHECK constraint is the backstop) — no
+  // need to duplicate `MobileNumber`'s pattern check at the model level too.
+  mobile_number: Schema.String,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export class ParentStudentRelationship extends Model.Class<ParentStudentRelationship>("ParentStudentRelationship")({
+  id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
+  guardian_person_id: GuardianPersonId,
+  student_person_id: StudentPersonId,
+  relationship_type: Schema.Literals(["mother", "father", "guardian", "other"]),
+  is_legal_guardian: Schema.Boolean,
+  is_financial_guardian: Schema.Boolean,
+  is_custodial_guardian: Schema.Boolean,
+  is_emergency_contact: Schema.Boolean,
+  is_authorized_for_pickup: Schema.Boolean,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+const personRepo = SqlModel.makeRepository(Person, { tableName: "persons", spanPrefix: "Identity", idColumn: "id" })
+const studentProfileRepo = SqlModel.makeRepository(StudentProfile, {
+  tableName: "student_profiles",
+  spanPrefix: "Identity",
+  idColumn: "id"
+})
+const guardianProfileRepo = SqlModel.makeRepository(GuardianProfile, {
+  tableName: "guardian_profiles",
+  spanPrefix: "Identity",
+  idColumn: "id"
+})
+const parentStudentRelationshipRepo = SqlModel.makeRepository(ParentStudentRelationship, {
+  tableName: "parent_student_relationships",
+  spanPrefix: "Identity",
+  idColumn: "id"
+})
 
 export interface NewPersonInput {
   readonly firstName: string
@@ -170,12 +267,21 @@ export const findGuardianMatch = Effect.fn("Identity.findGuardianMatch")(functio
 export const createPerson = Effect.fn("Identity.createPerson")(function*(
   input: NewPersonInput
 ) {
-  const sql = yield* SqlClient
+  const repo = yield* personRepo
   const id = randomUUID()
-  yield* sql`
-    INSERT INTO persons (id, first_name, last_name, date_of_birth, massar_code)
-    VALUES (${id}, ${input.firstName}, ${input.lastName}, ${input.dateOfBirth}, ${input.massarCode ?? null})
-  `
+  // `insertVoid`, not `insert` — `insert` compiles to `RETURNING *`, which
+  // this comment's own reasoning above (and `Person.id`'s field comment)
+  // rules out for a brand-new person: `persons`' SELECT policy needs an
+  // `Enrollment`/relationship that doesn't exist yet, so a returned row
+  // would come back invisible under RLS. `insertVoid` never emits a
+  // `RETURNING` clause, matching the raw `INSERT` this replaces exactly.
+  yield* repo.insertVoid({
+    id: PersonId.make(id),
+    first_name: input.firstName,
+    last_name: input.lastName,
+    date_of_birth: input.dateOfBirth,
+    massar_code: input.massarCode ?? null
+  })
   return id
 })
 
@@ -199,12 +305,19 @@ export const attachStudentProfile = Effect.fn("Identity.attachStudentProfile")(f
   personId: string
 ) {
   const sql = yield* SqlClient
+  const repo = yield* studentProfileRepo
+  const validPersonId = yield* Schema.decodeEffect(StudentPersonId)(personId)
   // A caught error still leaves the *transaction* aborted in Postgres —
   // catching it in Effect doesn't undo that at the connection level.
   // `withTransaction` opens a SAVEPOINT here (nested inside the caller's
   // own transaction) and rolls back to just that savepoint on failure, so
   // the surrounding import transaction stays usable afterward.
-  yield* sql.withTransaction(sql`INSERT INTO student_profiles (person_id) VALUES (${personId})`).pipe(
+  //
+  // `insertVoid`, not `insert` — same RLS/`RETURNING` reasoning as
+  // `createPerson`: `student_profiles`' SELECT policy (migration 0008)
+  // delegates to `persons`' own, which a brand-new profile's person can't
+  // satisfy yet either.
+  yield* sql.withTransaction(repo.insertVoid({ person_id: validPersonId })).pipe(
     Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void)
   )
 })
@@ -218,8 +331,10 @@ export const attachGuardianProfile = Effect.fn("Identity.attachGuardianProfile")
     return yield* Effect.fail(new InvalidMobileNumberError({ mobileNumber }))
   }
   const sql = yield* SqlClient
+  const repo = yield* guardianProfileRepo
+  const validPersonId = yield* Schema.decodeEffect(GuardianPersonId)(personId)
   yield* sql.withTransaction(
-    sql`INSERT INTO guardian_profiles (person_id, mobile_number) VALUES (${personId}, ${mobileNumber})`
+    repo.insertVoid({ person_id: validPersonId, mobile_number: mobileNumber })
   ).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
 })
 
@@ -251,13 +366,17 @@ export const recordGuardianRelationship = Effect.fn("Identity.recordGuardianRela
   qualities: GuardianQualities
 ) {
   const sql = yield* SqlClient
-  yield* sql.withTransaction(sql`
-    INSERT INTO parent_student_relationships
-      (guardian_person_id, student_person_id, relationship_type, is_legal_guardian, is_financial_guardian, is_custodial_guardian, is_emergency_contact, is_authorized_for_pickup)
-    VALUES (
-      ${guardianPersonId}, ${studentPersonId}, ${qualities.relationshipType},
-      ${qualities.isLegalGuardian}, ${qualities.isFinancialGuardian}, ${qualities.isCustodialGuardian},
-      ${qualities.isEmergencyContact}, ${qualities.isAuthorizedForPickup}
-    )
-  `).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
+  const repo = yield* parentStudentRelationshipRepo
+  yield* sql.withTransaction(
+    repo.insertVoid({
+      guardian_person_id: guardianPersonId,
+      student_person_id: studentPersonId,
+      relationship_type: qualities.relationshipType,
+      is_legal_guardian: qualities.isLegalGuardian,
+      is_financial_guardian: qualities.isFinancialGuardian,
+      is_custodial_guardian: qualities.isCustodialGuardian,
+      is_emergency_contact: qualities.isEmergencyContact,
+      is_authorized_for_pickup: qualities.isAuthorizedForPickup
+    })
+  ).pipe(Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void))
 })

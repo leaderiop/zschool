@@ -2,11 +2,14 @@ import * as Qadi from "@qadi/core/Qadi"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
+import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import type { SqlError } from "effect/unstable/sql/SqlError"
+import * as SqlModel from "effect/unstable/sql/SqlModel"
 import { canManageAcademicStructure } from "./authorization/Policies.ts"
 import { seedCalendarEvents } from "./Calendar.ts"
 import { GradingScales } from "./GradingScales.ts"
+import { AcademicYearId, SchoolId, SectionId } from "./Ids.ts"
 import {
   type CycleCode,
   defaultEvaluationPeriods,
@@ -15,6 +18,62 @@ import {
   nationalTemplate,
   subjectsForLevel
 } from "./NationalTemplate.ts"
+
+/**
+ * `Model.Class` for `academic_years`/`sections` (issue #42), matching
+ * migration 0001's DDL — owned here since this is the only file that ever
+ * creates a row in either table. Both are insert-only from every domain
+ * module's perspective today (same reasoning as `SubjectLevelConfigs.ts`'s
+ * `Subject`): no `FieldExcept` needed on their identity columns since no
+ * `update` path exists to accidentally carry one. `id` still needs the
+ * custom `Model.Field` variant (not `Model.GeneratedByDb`) purely to satisfy
+ * `SqlModel.makeRepository`'s `idColumn` constraint, per the same precedent
+ * as `ComputationRule.id`/`EvaluationSubPeriod.id`.
+ *
+ * `academicYearRepo` is exported so `Enrollment.ts` can read a year's
+ * `label`/`school_id` through this same model instead of its own
+ * independently-typed `sql<{label: string}>` row shape (issue #42, user
+ * story 4).
+ */
+export class AcademicYear extends Model.Class<AcademicYear>("AcademicYear")({
+  id: Model.Field({
+    select: AcademicYearId,
+    update: AcademicYearId,
+    json: AcademicYearId,
+    jsonUpdate: AcademicYearId
+  }),
+  school_id: SchoolId,
+  label: Schema.String,
+  // Relies on the column's own DEFAULT 'draft' (migration 0001) — no writer
+  // in this file sets it explicitly today, and (unlike `Course.is_active`,
+  // which stays part of `update` because `deactivateCourse` really does go
+  // through `courseRepo.update`) nothing here ever transitions an academic
+  // year's status through this repository either — same `GeneratedByDb`
+  // treatment as `AcademicTree.ts`'s `Class.is_active`, whose own transition
+  // stays a raw `UPDATE` outside the repository.
+  status: Model.GeneratedByDb(Schema.Literals(["draft", "active", "closed"])),
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export class Section extends Model.Class<Section>("Section")({
+  id: Model.Field({ select: SectionId, update: SectionId, json: SectionId, jsonUpdate: SectionId }),
+  school_id: SchoolId,
+  academic_year_id: Schema.String,
+  template: Schema.Literals(["national", "french", "international"]),
+  name: Schema.String,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export const academicYearRepo = SqlModel.makeRepository(AcademicYear, {
+  tableName: "academic_years",
+  spanPrefix: "InstantiateNationalTemplate",
+  idColumn: "id"
+})
+const sectionRepo = SqlModel.makeRepository(Section, {
+  tableName: "sections",
+  spanPrefix: "InstantiateNationalTemplate",
+  idColumn: "id"
+})
 
 /** Mirrors `NationalTemplate.ts`'s `CycleCode` union as a runtime schema, so `UnauthorizedCycleError`'s fields are validated, not just cast. */
 const CycleCodeSchema = Schema.Literals(["preschool", "primary", "middle", "upper_secondary"])
@@ -97,19 +156,19 @@ export const instantiateNationalTemplate = Effect.fn("InstantiateNationalTemplat
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
+        const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
 
-        const [year] = yield* sql<{ id: string }>`
-          INSERT INTO academic_years (school_id, label)
-          VALUES (${schoolId}, ${command.academicYearLabel})
-          RETURNING id
-        `
+        const yearRepo = yield* academicYearRepo
+        const year = yield* yearRepo.insert({ school_id: validSchoolId, label: command.academicYearLabel })
         const academicYearId = year.id
 
-        const [section] = yield* sql<{ id: string }>`
-          INSERT INTO sections (school_id, academic_year_id, template, name)
-          VALUES (${schoolId}, ${academicYearId}, 'national', 'National')
-          RETURNING id
-        `
+        const sectionRepoInstance = yield* sectionRepo
+        const section = yield* sectionRepoInstance.insert({
+          school_id: validSchoolId,
+          academic_year_id: academicYearId,
+          template: "national",
+          name: "National"
+        })
         const sectionId = section.id
 
         const cycleRows = yield* insertBatch<{ id: string; code: string }>(

@@ -1,9 +1,49 @@
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
+import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { SchoolId } from "./Ids.ts"
+import * as SqlModel from "effect/unstable/sql/SqlModel"
+import { AcademicYearId, EnrollmentId, SchoolId, StudentPersonId } from "./Ids.ts"
+import { academicYearRepo } from "./InstantiateNationalTemplate.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
+
+/**
+ * `Model.Class` for `enrollments` (issue #42), matching migration 0008's
+ * DDL. Insert-only from this file's perspective (nothing ever updates an
+ * `Enrollment` row) — same `FieldExcept`-free reasoning as
+ * `SubjectLevelConfigs.ts`'s `Subject`. `id` still needs the custom
+ * `Model.Field` variant, not `Model.GeneratedByDb`, purely to satisfy
+ * `SqlModel.makeRepository`'s `idColumn` constraint (`ComputationRule.id`'s
+ * precedent). `academic_year_id`/`class_id` stay plain `Schema.String`,
+ * matching `Course.ts`'s convention of only branding a model's OWN id, not
+ * its references into other tables — but `student_person_id` uses the
+ * role-specific `StudentPersonId` (predating this ticket), matching
+ * `Identity.ts`'s `StudentProfile.person_id` for the identical column shape
+ * (a reference to a person acting as a student), not a fresh plain string.
+ */
+export class Enrollment extends Model.Class<Enrollment>("Enrollment")({
+  id: Model.Field({
+    select: EnrollmentId,
+    update: EnrollmentId,
+    json: EnrollmentId,
+    jsonUpdate: EnrollmentId
+  }),
+  school_id: SchoolId,
+  academic_year_id: Schema.String,
+  academic_year_label: Schema.String,
+  student_person_id: StudentPersonId,
+  class_id: Schema.String,
+  status: Schema.Literals(["pre_enrolled", "active"]),
+  effective_date: Schema.String,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+const enrollmentRepo = SqlModel.makeRepository(Enrollment, {
+  tableName: "enrollments",
+  spanPrefix: "Enrollment",
+  idColumn: "id"
+})
 
 export class DuplicateActiveEnrollmentError
   extends Schema.TaggedError<DuplicateActiveEnrollmentError>()("DuplicateActiveEnrollmentError", {
@@ -77,31 +117,45 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
 
   // academic_year_label is denormalized onto enrollments — see migration
   // 0008's comment on why the uniqueness check can't key on
-  // academic_year_id (a per-school row) and still be platform-wide. Also
-  // doubles as the only check that academicYearId actually belongs to
-  // schoolId — neither this function nor its callers otherwise verify
-  // that, and a bare `const [{ label }] = rows` on an empty result would
-  // crash with a raw destructuring TypeError instead of a typed error.
-  const [academicYear] = yield* sql<{ label: string }>`
-      SELECT label FROM academic_years WHERE id = ${command.academicYearId} AND school_id = ${command.schoolId}
-    `
-  if (academicYear === undefined) {
-    return yield* Effect.fail(
-      new EntityNotFoundError({ entityType: "academic_year", entityId: command.academicYearId })
-    )
+  // academic_year_id (a per-school row) and still be platform-wide. Reading
+  // it through `InstantiateNationalTemplate.ts`'s own `AcademicYear` model
+  // (issue #42) also doubles as the only check that academicYearId actually
+  // belongs to schoolId — neither this function nor its callers otherwise
+  // verify that. `findById` only filters by `id` (RLS is the sole backstop
+  // otherwise) — `school_id` is re-checked explicitly below, per
+  // `Ownership.ts`'s own stated invariant that every domain module scopes
+  // its lookups by `school_id` explicitly rather than relying solely on RLS.
+  const yearRepo = yield* academicYearRepo
+  const notFoundYear = () =>
+    Effect.fail(new EntityNotFoundError({ entityType: "academic_year", entityId: command.academicYearId }))
+  const validAcademicYearId = yield* Schema.decodeEffect(AcademicYearId)(command.academicYearId)
+  const academicYear = yield* yearRepo.findById(validAcademicYearId).pipe(
+    Effect.catchTag("NoSuchElementError", notFoundYear)
+  )
+  if (academicYear.school_id !== command.schoolId) {
+    return yield* notFoundYear()
   }
   const { label } = academicYear
 
+  const repo = yield* enrollmentRepo
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(command.schoolId)
+  const validStudentPersonId = yield* Schema.decodeEffect(StudentPersonId)(command.studentPersonId)
   // A savepoint (via withTransaction, nested inside the caller's own
   // transaction): catching the unique-violation below doesn't undo
   // Postgres's own "transaction is aborted" state on a plain caught
   // error — this keeps the surrounding transaction usable for whatever
   // the caller (e.g. the next student row in an import batch) does next.
-  const [row] = yield* sql.withTransaction(sql<{ id: string }>`
-      INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
-      VALUES (${command.schoolId}, ${command.academicYearId}, ${label}, ${command.studentPersonId}, ${command.classId}, ${status}, ${command.effectiveDate})
-      RETURNING id
-    `).pipe(
+  const enrollment = yield* sql.withTransaction(
+    repo.insert({
+      school_id: validSchoolId,
+      academic_year_id: command.academicYearId,
+      academic_year_label: label,
+      student_person_id: validStudentPersonId,
+      class_id: command.classId,
+      status,
+      effective_date: command.effectiveDate
+    })
+  ).pipe(
     Effect.catchReason("SqlError", "UniqueViolation", () =>
       Effect.fail(
         new DuplicateActiveEnrollmentError({
@@ -110,7 +164,7 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
         })
       ))
   )
-  return { id: row.id, status }
+  return { id: enrollment.id, status: enrollment.status }
 })
 
 export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(function*(

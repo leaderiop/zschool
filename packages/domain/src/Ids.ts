@@ -55,3 +55,15 @@ export type EvaluationPeriodId = typeof EvaluationPeriodId.Type
 
 export const EvaluationSubPeriodId = Schema.String.pipe(Schema.brand("EvaluationSubPeriodId"))
 export type EvaluationSubPeriodId = typeof EvaluationSubPeriodId.Type
+
+export const PersonId = Schema.String.pipe(Schema.brand("PersonId"))
+export type PersonId = typeof PersonId.Type
+
+export const EnrollmentId = Schema.String.pipe(Schema.brand("EnrollmentId"))
+export type EnrollmentId = typeof EnrollmentId.Type
+
+export const AcademicYearId = Schema.String.pipe(Schema.brand("AcademicYearId"))
+export type AcademicYearId = typeof AcademicYearId.Type
+
+export const SectionId = Schema.String.pipe(Schema.brand("SectionId"))
+export type SectionId = typeof SectionId.Type
