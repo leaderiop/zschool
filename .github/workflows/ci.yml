@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # turbo needs the previous commit to compute --filter=...[HEAD^]
+          fetch-depth: 0 # turbo needs the PR's base commit (which may be many commits back), not just HEAD^
 
       - uses: pnpm/action-setup@v4
         with:
@@ -40,7 +40,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm turbo run lint typecheck test build --filter=...[HEAD^]
+      # `HEAD^` alone only diffs against the immediately preceding commit —
+      # wrong for a multi-commit PR whose *last* commit might touch nothing
+      # under packages/apps (e.g. a workflow-only fix): turbo would then
+      # select zero packages, skip building their dependencies, and the
+      # tsc --noEmit step below fails with "Cannot find module '@zschool/db'"
+      # (confirmed by reproducing this exact failure on a workflow-only
+      # commit). `pull_request.base.sha` diffs against the PR's whole base
+      # instead, capturing every package touched anywhere in the PR; a
+      # direct push to main (no pull_request context) falls back to HEAD^1.
+      - run: pnpm turbo run lint typecheck test build --filter=...[${{ github.event.pull_request.base.sha || 'HEAD^1' }}]
 
       # Covers features/**/*.ts (root tsconfig.json) — the workspace packages'
       # own `tsc -b` above doesn't include this tree.
