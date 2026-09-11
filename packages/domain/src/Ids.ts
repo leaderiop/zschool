@@ -37,3 +37,12 @@ export type GradingScaleId = typeof GradingScaleId.Type
 
 export const ComputationRuleId = Schema.String.pipe(Schema.brand("ComputationRuleId"))
 export type ComputationRuleId = typeof ComputationRuleId.Type
+
+export const SubjectId = Schema.String.pipe(Schema.brand("SubjectId"))
+export type SubjectId = typeof SubjectId.Type
+
+export const SubjectLevelConfigId = Schema.String.pipe(Schema.brand("SubjectLevelConfigId"))
+export type SubjectLevelConfigId = typeof SubjectLevelConfigId.Type
+
+export const CourseId = Schema.String.pipe(Schema.brand("CourseId"))
+export type CourseId = typeof CourseId.Type

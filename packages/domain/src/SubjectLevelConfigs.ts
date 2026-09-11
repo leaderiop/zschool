@@ -1,9 +1,13 @@
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
+import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import * as SqlModel from "effect/unstable/sql/SqlModel"
+import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import { requireTrackBelongsToLevel } from "./AcademicTree.ts"
-import { LevelId, SchoolId, TrackId } from "./Ids.ts"
+import { LevelId, SchoolId, SubjectId, SubjectLevelConfigId, TrackId } from "./Ids.ts"
+import { optionalOnUpdate } from "./ModelVariants.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
@@ -15,6 +19,55 @@ export class DuplicateConfigError extends Schema.TaggedError<DuplicateConfigErro
   subjectId: Schema.String,
   levelId: Schema.String,
   trackId: Schema.UndefinedOr(Schema.String)
+}) {}
+
+/**
+ * `Model.Class` for `subjects`/`subject_level_configs` (issue #40) — matches
+ * migration 0001's DDL. `Subject` is insert-only from this file's
+ * perspective (no update path exists for it, unchanged by this ticket), but
+ * its repository's `idColumn` is still `"id"` (no other natural unique key),
+ * so `id` needs the same custom `Model.Field` variant as `ComputationRule.id`
+ * (issue #36) / `Class.id` (issue #39) rather than `Model.GeneratedByDb`:
+ * `makeRepository` requires `idColumn` to be part of `update`'s Type
+ * regardless of whether `.update` is ever actually called.
+ */
+export class Subject extends Model.Class<Subject>("Subject")({
+  id: Model.Field({ select: SubjectId, update: SubjectId, json: SubjectId, jsonUpdate: SubjectId }),
+  school_id: SchoolId,
+  academic_year_id: Schema.String,
+  section_id: Schema.String,
+  code: Schema.String,
+  name: Schema.String
+}) {}
+
+/**
+ * `school_id`/`academic_year_id`/`subject_id`/`level_id`/`track_id` are
+ * identity, fixed at creation — excluded from `update`/`jsonUpdate` the same
+ * way `GradingScale.school_id` is, so a payload built from
+ * `updateSubjectLevelConfig`'s partial-update fields can never accidentally
+ * carry one of them. `coefficient`/`teaching_language`/`is_mandatory` go
+ * through `optionalOnUpdate` for the same partial-update reason.
+ * `coefficient` is `numeric` (migration 0001) — round-trips through
+ * `@effect/sql-pg` as a decimal string, not a JS number, same reasoning as
+ * `GradingScale.max_score`.
+ */
+export class SubjectLevelConfig extends Model.Class<SubjectLevelConfig>("SubjectLevelConfig")({
+  // Same reasoning as `Subject.id` above — `updateSubjectLevelConfig` does
+  // call `.update`/`.findById` on this one, but the constraint holds either way.
+  id: Model.Field({
+    select: SubjectLevelConfigId,
+    update: SubjectLevelConfigId,
+    json: SubjectLevelConfigId,
+    jsonUpdate: SubjectLevelConfigId
+  }),
+  school_id: SchoolId.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  academic_year_id: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  subject_id: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  level_id: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  track_id: Schema.NullOr(Schema.String).pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  coefficient: optionalOnUpdate(Schema.NumberFromString),
+  teaching_language: optionalOnUpdate(Schema.String),
+  is_mandatory: optionalOnUpdate(Schema.Boolean)
 }) {}
 
 /** `Schema.Class` instead of a plain interface (issue #34) — decoded once, at the start of the handler below. */
@@ -50,6 +103,45 @@ export class UpdateSubjectLevelConfigCommand
   })
 {}
 
+const subjectRepo = SqlModel.makeRepository(Subject, {
+  tableName: "subjects",
+  spanPrefix: "SubjectLevelConfigs",
+  idColumn: "id"
+})
+const subjectLevelConfigRepo = SqlModel.makeRepository(SubjectLevelConfig, {
+  tableName: "subject_level_configs",
+  spanPrefix: "SubjectLevelConfigs",
+  idColumn: "id"
+})
+
+/**
+ * `Courses.ts`'s read-only reuse point (issue #40, user story 3/5): the
+ * mandatory configurations for a (level, track) pair, decoded through this
+ * file's own `SubjectLevelConfig` model instead of `Courses.ts` maintaining
+ * its own independently-typed `sql<{id: string}>` row shape for the same
+ * table. `Courses.ts` never writes to `subject_level_configs` — this is the
+ * only surface it reads through.
+ */
+export const findMandatorySubjectLevelConfigs = Effect.fn("SubjectLevelConfigs.findMandatorySubjectLevelConfigs")(
+  function*(schoolId: string, levelId: string, trackId: string | null) {
+    const sql = yield* SqlClient
+    return yield* SqlSchema.findAll({
+      Request: Schema.Struct({
+        schoolId: Schema.String,
+        levelId: Schema.String,
+        trackId: Schema.NullOr(Schema.String)
+      }),
+      Result: SubjectLevelConfig,
+      execute: (req) =>
+        sql`
+          SELECT * FROM subject_level_configs
+          WHERE school_id = ${req.schoolId} AND level_id = ${req.levelId}
+            AND track_id IS NOT DISTINCT FROM ${req.trackId} AND is_mandatory
+        `
+    })({ schoolId, levelId, trackId })
+  }
+)
+
 /** Adds a subject to the school's catalog for the year — no coefficient/language here (INV-ZS-014/078): those only ever exist on a `SubjectLevelConfig`. */
 export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(function*(
   rawCommand: (typeof CreateSubjectCommand)["Encoded"]
@@ -63,12 +155,15 @@ export const createSubject = Effect.fn("SubjectLevelConfigs.createSubject")(func
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "sections", "section", command.sectionId, command.schoolId, RowWithId)
 
-        const [row] = yield* sql<{ id: string }>`
-          INSERT INTO subjects (school_id, academic_year_id, section_id, code, name)
-          VALUES (${command.schoolId}, ${command.academicYearId}, ${command.sectionId}, ${command.code}, ${command.name})
-          RETURNING id
-        `
-        return row.id
+        const repo = yield* subjectRepo
+        const subject = yield* repo.insert({
+          school_id: command.schoolId,
+          academic_year_id: command.academicYearId,
+          section_id: command.sectionId,
+          code: command.code,
+          name: command.name
+        })
+        return subject.id
       })
     )
   )
@@ -99,17 +194,17 @@ export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSub
           yield* requireTrackBelongsToLevel(trackId, levelId, command.schoolId)
         }
 
-        const insert = sql<{ id: string }>`
-          INSERT INTO subject_level_configs
-            (school_id, academic_year_id, subject_id, level_id, track_id, coefficient, teaching_language, is_mandatory)
-          VALUES (
-            ${command.schoolId}, ${command.academicYearId}, ${command.subjectId}, ${command.levelId},
-            ${command.trackId ?? null}, ${command.coefficient}, ${command.teachingLanguage}, ${command.isMandatory}
-          )
-          RETURNING id
-        `
-
-        const [row] = yield* insert.pipe(
+        const repo = yield* subjectLevelConfigRepo
+        const config = yield* repo.insert({
+          school_id: command.schoolId,
+          academic_year_id: command.academicYearId,
+          subject_id: command.subjectId,
+          level_id: command.levelId,
+          track_id: command.trackId ?? null,
+          coefficient: command.coefficient,
+          teaching_language: command.teachingLanguage,
+          is_mandatory: command.isMandatory
+        }).pipe(
           Effect.catchReason("SqlError", "UniqueViolation", () =>
             Effect.fail(
               new DuplicateConfigError({
@@ -119,7 +214,7 @@ export const configureSubjectLevel = Effect.fn("SubjectLevelConfigs.configureSub
               })
             ))
         )
-        return row.id
+        return config.id
       })
     )
   )
@@ -135,34 +230,31 @@ export const updateSubjectLevelConfig = Effect.fn("SubjectLevelConfigs.updateSub
     withSchool(
       command.schoolId,
       Effect.gen(function*() {
-        const sql = yield* SqlClient
-        const rows = yield* sql`
-          SELECT id FROM subject_level_configs
-          WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
-        `
-        if (rows.length === 0) {
-          return yield* Effect.fail(
-            new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId })
-          )
+        const repo = yield* subjectLevelConfigRepo
+
+        const notFound = () =>
+          Effect.fail(new EntityNotFoundError({ entityType: "subject_level_config", entityId: command.configId }))
+
+        const validConfigId = yield* Schema.decodeEffect(SubjectLevelConfigId)(command.configId)
+        const config = yield* repo.findById(validConfigId).pipe(
+          Effect.catchTag("NoSuchElementError", notFound)
+        )
+        // `findById` only filters by `id` (RLS is the sole backstop otherwise)
+        // — `school_id` is re-checked explicitly here, same as
+        // `academic_year_id` below, per `Ownership.ts`'s own stated invariant
+        // that every domain module scopes its lookups by `school_id`
+        // explicitly rather than relying solely on RLS.
+        if (config.school_id !== command.schoolId || config.academic_year_id !== command.academicYearId) {
+          return yield* notFound()
         }
 
-        if (command.coefficient !== undefined) {
-          yield* sql`
-            UPDATE subject_level_configs SET coefficient = ${command.coefficient}
-            WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
-          `
+        const fields = {
+          ...(command.coefficient !== undefined ? { coefficient: command.coefficient } : {}),
+          ...(command.teachingLanguage !== undefined ? { teaching_language: command.teachingLanguage } : {}),
+          ...(command.isMandatory !== undefined ? { is_mandatory: command.isMandatory } : {})
         }
-        if (command.teachingLanguage !== undefined) {
-          yield* sql`
-            UPDATE subject_level_configs SET teaching_language = ${command.teachingLanguage}
-            WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
-          `
-        }
-        if (command.isMandatory !== undefined) {
-          yield* sql`
-            UPDATE subject_level_configs SET is_mandatory = ${command.isMandatory}
-            WHERE id = ${command.configId} AND school_id = ${command.schoolId} AND academic_year_id = ${command.academicYearId}
-          `
+        if (Object.keys(fields).length > 0) {
+          yield* repo.update({ id: validConfigId, ...fields })
         }
       })
     )
