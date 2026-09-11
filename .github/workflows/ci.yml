@@ -40,16 +40,24 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # `HEAD^` alone only diffs against the immediately preceding commit —
-      # wrong for a multi-commit PR whose *last* commit might touch nothing
-      # under packages/apps (e.g. a workflow-only fix): turbo would then
-      # select zero packages, skip building their dependencies, and the
-      # tsc --noEmit step below fails with "Cannot find module '@zschool/db'"
-      # (confirmed by reproducing this exact failure on a workflow-only
-      # commit). `pull_request.base.sha` diffs against the PR's whole base
-      # instead, capturing every package touched anywhere in the PR; a
+      # Always builds every package, unfiltered (cheap: turbo's remote cache
+      # makes an unchanged package's build a no-op). The root-level
+      # `tsc --noEmit` step below needs every package's `dist/` to exist
+      # regardless of which package the latest commit happened to touch —
+      # scoping *this* step by `--filter=...[HEAD^]` (as it used to be) left
+      # a workflow-only or docs-only commit with zero packages selected, no
+      # `@zschool/db` build, and a "Cannot find module '@zschool/db'" failure
+      # below (confirmed by reproducing it on a commit that only touched
+      # this file).
+      - run: pnpm turbo run build
+
+      # lint/typecheck/test stay scoped to what actually changed, for CI
+      # speed. `HEAD^` alone only diffs against the immediately preceding
+      # commit — wrong for a multi-commit PR whose last commit might be
+      # small; `pull_request.base.sha` diffs against the PR's whole base
+      # instead, capturing every package touched anywhere in the PR. A
       # direct push to main (no pull_request context) falls back to HEAD^1.
-      - run: pnpm turbo run lint typecheck test build --filter=...[${{ github.event.pull_request.base.sha || 'HEAD^1' }}]
+      - run: pnpm turbo run lint typecheck test --filter=...[${{ github.event.pull_request.base.sha || 'HEAD^1' }}]
 
       # Covers features/**/*.ts (root tsconfig.json) — the workspace packages'
       # own `tsc -b` above doesn't include this tree.
