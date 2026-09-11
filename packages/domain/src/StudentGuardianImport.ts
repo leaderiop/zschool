@@ -13,7 +13,6 @@ import {
   findGuardianMatch,
   findPersonMatches,
   type GuardianQualities,
-  isValidE164,
   recordGuardianRelationship
 } from "./Identity.ts"
 import { GuardianPersonId, SchoolId, StudentPersonId } from "./Ids.ts"
@@ -225,7 +224,13 @@ export type StudentAnalysisResult =
   | { readonly rowId: string; readonly status: "weak_match_alert"; readonly personId: string }
   | { readonly rowId: string; readonly status: "error"; readonly reason: string }
 
-/** Same reasoning as `analyzeGuardianRow` above. */
+/**
+ * Same decode-isolation reasoning as `analyzeGuardianRow` above. Unlike that
+ * one, every row here shares the single connection `withSchool` opens below
+ * (school-scoped matching, not platform-wide) — the concurrency bound caps
+ * how many queries are in flight on that one connection at once, not how
+ * many pool connections are held.
+ */
 const analyzeStudentRow = Effect.fn("StudentGuardianImport.analyzeStudentRow")(function*(
   sql: SqlClient,
   schoolId: string,
@@ -313,10 +318,12 @@ export interface ImportBatchResult {
  * (`studentRows` narrowed to those) without re-processing guardians or
  * classes that already succeeded.
  *
- * Both matching functions are re-called here even though the caller likely
- * already ran `analyzeGuardianRows`/`analyzeStudentRows` — ADR-ZS-106
- * re-validation: a match found at analyze time can go stale by commit time
- * (e.g. another import ran in between).
+ * Both the row-shape decode and the matching functions are re-run here even
+ * though the caller likely already ran
+ * `analyzeGuardianRows`/`analyzeStudentRows` — ADR-ZS-106 re-validation: a
+ * row shape can be malformed, or a match found at analyze time can go stale,
+ * by commit time (e.g. a caller skips straight to commit, or another import
+ * ran in between).
  */
 export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBatch")(function*(
   input: CommitImportBatchInput
@@ -346,8 +353,9 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
         // already-committed work" guarantee.
         const guardianResults = new Map<string, GuardianCommitResult>()
         for (const g of uniqueGuardianRows.values()) {
-          if (!isValidE164(g.mobileNumber)) {
-            guardianResults.set(g.mobileNumber, { status: "error", reason: "InvalidMobileNumberError" })
+          const decodedGuardian = decodeGuardianImportRow(g)
+          if (Result.isFailure(decodedGuardian)) {
+            guardianResults.set(g.mobileNumber, { status: "error", reason: decodedGuardian.failure.message })
             continue
           }
 
@@ -381,6 +389,12 @@ export const commitImportBatch = Effect.fn("StudentGuardianImport.commitImportBa
         // undo every guardian/student already committed for earlier rows.
         const studentResults: Array<StudentRowResult> = []
         for (const s of input.studentRows) {
+          const decodedStudent = decodeStudentImportRow(s)
+          if (Result.isFailure(decodedStudent)) {
+            studentResults.push({ rowId: s.rowId, status: "error", reason: decodedStudent.failure.message })
+            continue
+          }
+
           const unit = yield* Effect.result(sql.withTransaction(Effect.gen(function*() {
             const resolved = yield* resolveClass(sql, input.schoolId, s.levelCode, s.trackCode, s.classLabel)
             if (resolved === undefined) {

@@ -104,10 +104,11 @@ export const analyzeClassImport = Effect.fn("ClassImportAnalysis.analyzeClassImp
         })
 
         // Each row's lookups are independent and read-only — bounded
-        // concurrency (rather than unbounded) caps how many connections a
-        // single large import batch can hold from the pool at once.
-        // `Effect.forEach` preserves input order in the returned array
-        // regardless of concurrency.
+        // concurrency (rather than unbounded) caps how many queries are in
+        // flight at once on this transaction's single connection (every row
+        // here shares the one connection `withSchool` opened above, pipelined
+        // rather than spread across the pool). `Effect.forEach` preserves
+        // input order in the returned array regardless of concurrency.
         return yield* Effect.forEach(rows, analyzeRow, { concurrency: 5 })
       })
     )
