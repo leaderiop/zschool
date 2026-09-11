@@ -7,18 +7,8 @@ import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
 import { ComputationRuleId, GradingScaleId, SchoolId } from "./Ids.ts"
+import { optionalOnUpdate } from "./ModelVariants.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
-
-/** A field required on insert/select but optional (a partial-update PATCH field) on update — `max_score`/`decimals`/`rounding` below, none of which `updateGradingScale` requires touching together. */
-const optionalOnUpdate = <S extends Schema.Top>(schema: S) =>
-  Model.Field({
-    select: schema,
-    insert: schema,
-    update: Schema.optional(schema),
-    json: schema,
-    jsonCreate: schema,
-    jsonUpdate: Schema.optional(schema)
-  })
 
 /**
  * `Model.Class` instead of hand-written queries + manual row typing (issue
