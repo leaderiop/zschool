@@ -152,6 +152,27 @@ describe("ImportsApi (issue #38)", () => {
   )
 
   it.effect(
+    "analyzeGrades surfaces a row referencing a student with no matching Enrollment as a per-row error, not an HTTP failure",
+    () =>
+      Effect.gen(function*() {
+        const client = yield* makeClient
+        const rows = [{
+          rowId: "row-1",
+          massarCode: "does-not-exist",
+          subjectCode: "MATH",
+          periodCode: "S1",
+          value: 15
+        }]
+        const result = yield* client.imports.analyzeGrades({
+          params: { schoolId: DIRECTOR_SCHOOL_ID },
+          payload: { academicYearId: "00000000-0000-0000-0000-000000000099", rows }
+        })
+        assert.strictEqual(result.length, 1)
+        assert.strictEqual(result[0].status, "error")
+      }).pipe(Effect.provide(AppAsDirector))
+  )
+
+  it.effect(
     "analyzeStudents surfaces a student row's missing class as a per-row error, not an HTTP failure",
     () =>
       Effect.gen(function*() {
