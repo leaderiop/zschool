@@ -138,11 +138,20 @@ export class TeacherProfile extends Model.Class<TeacherProfile>("TeacherProfile"
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
+/**
+ * `relationship_type: "third_party_payer"` (migration 0015 / ADR-ZS-055,
+ * ticket #56): a payer with no parental relationship (an employer, a
+ * sponsor, extended family) — the DB's own
+ * `third_party_payer_financial_only` CHECK is the actual enforcement that
+ * this variant carries ONLY `is_financial_guardian: true` and every other
+ * quality `false`; `FinancialAccount.ts`'s `createThirdPartyPayer` is the
+ * only writer of this relationship type.
+ */
 export class ParentStudentRelationship extends Model.Class<ParentStudentRelationship>("ParentStudentRelationship")({
   id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
   guardian_person_id: GuardianPersonId,
   student_person_id: StudentPersonId,
-  relationship_type: Schema.Literals(["mother", "father", "guardian", "other"]),
+  relationship_type: Schema.Literals(["mother", "father", "guardian", "other", "third_party_payer"]),
   is_legal_guardian: Schema.Boolean,
   is_financial_guardian: Schema.Boolean,
   is_custodial_guardian: Schema.Boolean,
@@ -371,9 +380,16 @@ export const attachGuardianProfile = Effect.fn("Identity.attachGuardianProfile")
  * #34) — previously declared twice (an interface here, a structurally
  * identical `GuardianQualitiesSchema` in `StudentGuardianImport.ts`), which
  * meant a field added to one could silently fail to reach the other.
+ *
+ * `"third_party_payer"` is accepted here for `FinancialAccount.ts`'s
+ * `createThirdPartyPayer` — never for `StudentGuardianImport.ts`'s bulk-import
+ * row schema, which uses `ImportableGuardianQualitiesSchema` below instead.
+ * An imported row setting this relationship type would create the DB row
+ * without `createThirdPartyPayer`'s own `ensureFinancialAccount`/designation
+ * trace, silently breaking ticket #56's "designated and traced" guarantee.
  */
 export const GuardianQualitiesSchema = Schema.Struct({
-  relationshipType: Schema.Literals(["mother", "father", "guardian", "other"]),
+  relationshipType: Schema.Literals(["mother", "father", "guardian", "other", "third_party_payer"]),
   isLegalGuardian: Schema.Boolean,
   isFinancialGuardian: Schema.Boolean,
   isCustodialGuardian: Schema.Boolean,
@@ -381,6 +397,17 @@ export const GuardianQualitiesSchema = Schema.Struct({
   isAuthorizedForPickup: Schema.Boolean
 })
 export type GuardianQualities = typeof GuardianQualitiesSchema.Type
+
+/** Same shape as `GuardianQualitiesSchema`, `relationshipType` restricted to the pre-ticket-#56 vocabulary — the only schema `StudentGuardianImport.ts`'s row validation may use (see `GuardianQualitiesSchema`'s own doc comment for why `"third_party_payer"` must never reach it). */
+export const ImportableGuardianQualitiesSchema = Schema.Struct({
+  relationshipType: Schema.Literals(["mother", "father", "guardian", "other"]),
+  isLegalGuardian: Schema.Boolean,
+  isFinancialGuardian: Schema.Boolean,
+  isCustodialGuardian: Schema.Boolean,
+  isEmergencyContact: Schema.Boolean,
+  isAuthorizedForPickup: Schema.Boolean
+})
+export type ImportableGuardianQualities = typeof ImportableGuardianQualitiesSchema.Type
 
 /**
  * INV-ZS-021/064. Idempotent on the (guardian, student) pair via a caught

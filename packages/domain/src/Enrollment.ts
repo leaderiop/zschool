@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema"
 import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
+import { ensureFinancialAccount } from "./FinancialAccount.ts"
 import { AcademicYearId, EnrollmentId, SchoolId, StudentPersonId } from "./Ids.ts"
 import { academicYearRepo } from "./InstantiateNationalTemplate.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
@@ -213,6 +214,16 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
         })
       ))
   )
+  // ticket #56 (BEH-ZS-172/173): every LIVE enrollment created through this
+  // path (direct `createEnrollment`, or `StudentGuardianImport.ts`'s
+  // per-student commit, which calls this function directly) gets a
+  // `FinancialAccount` immediately — never a lazily-created one a caller
+  // might forget to trigger. `HistoricalGradeImport.ts`'s synthesized
+  // `'completed'` enrollments deliberately go through `enrollmentRepo`
+  // directly, not this function, and don't get one: an already-closed
+  // archival year has no live financial relationship to track.
+  yield* ensureFinancialAccount(validSchoolId, enrollment.id)
+
   // `status` (computed above via `computeEnrollmentStatus`), not
   // `enrollment.status` — the latter now decodes against the Model's own
   // widened `"pre_enrolled" | "active" | "completed"` literal (migration

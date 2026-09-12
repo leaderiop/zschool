@@ -7,19 +7,28 @@ import * as P from "@qadi/core/Policy"
  * before Postgres RLS (ADR-ZS-092) ever sees a query — RLS is the backstop,
  * not the primary gate.
  *
- * A director may manage their own school's academic structure only: the
- * subject must hold the `director` role, and the resource's `school_id`
- * (the school the caller is acting on) must equal the subject's own
- * `school_id` attribute (set from the authenticated session at login,
- * never taken from caller input).
+ * A director may manage their own school only: the subject must hold the
+ * `director` role, and the resource's `school_id` (the school the caller is
+ * acting on) must equal the subject's own `school_id` attribute (set from
+ * the authenticated session at login, never taken from caller input). Every
+ * MVP capability gated by `Ownership.ts`'s `authorizeWith` resolves to this
+ * same check — `canManageAcademicStructure`/`canManageFinance` below are
+ * distinct exports for readability at each call site (and so a capability
+ * that later needs its own rule has a name to diverge from), not distinct
+ * policies today.
  */
-export const canManageAcademicStructure = P.allOf([
+const directorScopedToOwnSchool = P.allOf([
   P.hasRole("director"),
   // `M.subject(path)` already scopes into the subject's own `attributes` —
   // it is not a path into the whole `AuthSubject`, so this reads
   // `subject.attributes.school_id`, not `subject.attributes.attributes.school_id`.
   P.hasResourceAttribute("school_id", M.eq(M.subject("school_id")))
 ])
+
+export const canManageAcademicStructure = directorScopedToOwnSchool
+
+/** Finance writes (ticket #56 onward) are a distinct capability from academic-structure writes, even though both resolve to the same director-scoped-to-own-school check at MVP. */
+export const canManageFinance = directorScopedToOwnSchool
 
 /**
  * Issue #38: the `imports` `HttpApi`'s `RequirePermission` middleware

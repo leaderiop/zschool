@@ -91,3 +91,12 @@ export type FeeScheduleId = typeof FeeScheduleId.Type
 
 export const FeeItemId = Schema.String.pipe(Schema.brand("FeeItemId"))
 export type FeeItemId = typeof FeeItemId.Type
+
+export const FinancialAccountId = Schema.String.pipe(Schema.brand("FinancialAccountId"))
+export type FinancialAccountId = typeof FinancialAccountId.Type
+
+export const FinancialGuardianDesignationId = Schema.String.pipe(Schema.brand("FinancialGuardianDesignationId"))
+export type FinancialGuardianDesignationId = typeof FinancialGuardianDesignationId.Type
+
+export const FinancialAccountPayerId = Schema.String.pipe(Schema.brand("FinancialAccountPayerId"))
+export type FinancialAccountPayerId = typeof FinancialAccountPayerId.Type
