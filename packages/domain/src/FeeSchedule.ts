@@ -69,6 +69,12 @@ export class FeeSchedule extends Model.Class<FeeSchedule>("FeeSchedule")({
   academic_year_id: Schema.String,
   level_id: Schema.String,
   track_id: Schema.NullOr(Schema.String),
+  // Ticket #57 / BEH-ZS-153 (migration 0016): "a started month is due in
+  // full by default; a per-school option switches to daily proration" — no
+  // command sets this explicitly yet (out of this ticket's own scope), so
+  // `GeneratedByDb`, matching `Class.is_active`'s reasoning: read-only
+  // through this Model, defaulting to `false` at the DB level.
+  prorate_partial_month: Model.GeneratedByDb(Schema.Boolean),
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
