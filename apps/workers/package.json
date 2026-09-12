@@ -13,6 +13,13 @@
   "dependencies": {
     "@zschool/domain": "workspace:*",
     "@zschool/db": "workspace:*",
-    "@zschool/infra": "workspace:*"
+    "@zschool/infra": "workspace:*",
+    "effect": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@aws-sdk/client-sqs": "^3.1131.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@qadi/core": "catalog:"
   }
 }

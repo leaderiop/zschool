@@ -143,7 +143,11 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
   const currentEnrollmentCount = Number(count)
   if (currentEnrollmentCount >= classRow.capacity && command.capacityOverrideReason === undefined) {
     return yield* Effect.fail(
-      new CapacityApprovalRequiredError({ classId: command.classId, capacity: classRow.capacity, currentEnrollmentCount })
+      new CapacityApprovalRequiredError({
+        classId: command.classId,
+        capacity: classRow.capacity,
+        currentEnrollmentCount
+      })
     )
   }
 

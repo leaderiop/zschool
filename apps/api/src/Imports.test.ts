@@ -3,12 +3,13 @@ import { anonymous, makeSubject } from "@qadi/core/AuthSubject"
 import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { RequirePermissionLive } from "@qadi/http/RequirePermission"
 import { SubjectExtractor } from "@qadi/http/SubjectExtractor"
-import { AppSqlLive, MigratorLive, SqlLive } from "@zschool/db"
-import { analyzeGuardianRows, Api, SchoolId } from "@zschool/domain"
+import { AppSqlLive, MigratorLive, SqlLive, withSchool } from "@zschool/db"
+import { analyzeGuardianRows, Api, ImportQueue, SchoolId } from "@zschool/domain"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import { HttpServer } from "effect/unstable/http"
 import { HttpApiTest } from "effect/unstable/httpapi"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { ImportsApiHandlers } from "./Imports/http.ts"
 
 /**
@@ -43,7 +44,10 @@ const asAnonymous = Layer.succeed(SubjectExtractor, { extract: () => Effect.succ
 
 const DbLive = Layer.orDie(Layer.merge(MigratorLive.pipe(Layer.provide(SqlLive)), AppSqlLive))
 
-const HandlersLive = ImportsApiHandlers.pipe(Layer.provide([EvaluationServicesNone, AppSqlLive]))
+/** No `commit`/`retry` endpoint is exercised in this file yet — a no-op stands in for the real `@zschool/infra` SQS-backed one, matching `ImportBatch.test.ts`'s own `testImportQueue`. */
+const NoopImportQueue = Layer.succeed(ImportQueue, { enqueueCommit: () => Effect.void })
+
+const HandlersLive = ImportsApiHandlers.pipe(Layer.provide([EvaluationServicesNone, AppSqlLive, NoopImportQueue]))
 
 const makeClient = HttpApiTest.groups(Api, ["imports"])
 
@@ -146,6 +150,64 @@ describe("ImportsApi (issue #38)", () => {
         })
         assert.strictEqual(result.length, 1)
         assert.strictEqual(result[0].status, "error")
+      }).pipe(Effect.provide(AppAsDirector))
+  )
+
+  it.effect(
+    "the classes ImportBatch flow (ticket #8/ADR-ZS-106): analyze persists a report, commit requests move it to committing, retry is accepted",
+    () =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        yield* sql`INSERT INTO schools (id, name) VALUES (${DIRECTOR_SCHOOL_ID}, 'Imports HTTP test school') ON CONFLICT DO NOTHING`
+        yield* withSchool(
+          DIRECTOR_SCHOOL_ID,
+          Effect.gen(function*() {
+            const [year] = yield* sql<{ id: string }>`
+              INSERT INTO academic_years (school_id, label) VALUES (${DIRECTOR_SCHOOL_ID}, '2026-2027') RETURNING id
+            `
+            const [section] = yield* sql<{ id: string }>`
+              INSERT INTO sections (school_id, academic_year_id, template, name)
+              VALUES (${DIRECTOR_SCHOOL_ID}, ${year.id}, 'national', 'National') RETURNING id
+            `
+            const [cycle] = yield* sql<{ id: string }>`
+              INSERT INTO cycles (school_id, academic_year_id, section_id, code, name, sort_order)
+              VALUES (${DIRECTOR_SCHOOL_ID}, ${year.id}, ${section.id}, 'PRIM', 'Primary', 1) RETURNING id
+            `
+            yield* sql`
+              INSERT INTO levels (school_id, academic_year_id, cycle_id, code, name, sort_order)
+              VALUES (${DIRECTOR_SCHOOL_ID}, ${year.id}, ${cycle.id}, '6AP-HTTP', '6ème Année Primaire', 1)
+            `
+          })
+        )
+
+        const client = yield* makeClient
+        const report = yield* client.imports.analyzeClasses({
+          params: { schoolId: DIRECTOR_SCHOOL_ID },
+          payload: [{ levelCode: "6AP-HTTP", label: "HttpClass", capacity: 10 }]
+        })
+        assert.strictEqual(report.status, "report_ready")
+        assert.strictEqual(report.rows.length, 1)
+        assert.strictEqual(report.rows[0].analysisStatus, "creatable")
+        assert.strictEqual(report.rows[0].commitStatus, "pending")
+
+        const fetched = yield* client.imports.classImportBatchReport({
+          params: { schoolId: DIRECTOR_SCHOOL_ID, batchId: report.batchId }
+        })
+        assert.deepStrictEqual(fetched, report)
+
+        yield* client.imports.commitClassImportBatch({
+          params: { schoolId: DIRECTOR_SCHOOL_ID, batchId: report.batchId }
+        })
+        const afterCommitRequest = yield* client.imports.classImportBatchReport({
+          params: { schoolId: DIRECTOR_SCHOOL_ID, batchId: report.batchId }
+        })
+        assert.strictEqual(afterCommitRequest.status, "committing")
+
+        // Retry is accepted even while still `committing` (`retryClassImportBatch`
+        // is the same request as commit — see its own doc comment).
+        yield* client.imports.retryClassImportBatch({
+          params: { schoolId: DIRECTOR_SCHOOL_ID, batchId: report.batchId }
+        })
       }).pipe(Effect.provide(AppAsDirector))
   )
 })

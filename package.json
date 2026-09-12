@@ -26,6 +26,8 @@
     "@qadi/http": "catalog:",
     "@qadi/testing": "catalog:",
     "@testcontainers/postgresql": "^12.1.0",
+    "testcontainers": "^12.1.0",
+    "@aws-sdk/client-sqs": "^3.1131.0",
     "@zschool/db": "workspace:*",
     "@zschool/domain": "workspace:*",
     "dotenv-cli": "^11.0.0",

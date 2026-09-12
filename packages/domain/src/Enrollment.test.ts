@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@effect/vitest"
 import { NodeCrypto } from "@effect/platform-node"
+import { describe, expect, it } from "@effect/vitest"
 import { AppSqlLive, withSchool } from "@zschool/db"
 import * as Crypto from "effect/Crypto"
 import * as Effect from "effect/Effect"
