@@ -148,7 +148,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const world = yield* World
     const seed = yield* seedSchoolWithClass()
     const studentPersonId = yield* createStudent("Yasmine")
-    const guardianId = yield* createGuardianWithRelationship(studentPersonId, "Karim", "+212600000001")
+    const guardianId = yield* createGuardianWithRelationship(studentPersonId, "Karim", "+212700000001")
     const enrollment = yield* withSchool(seed.schoolId, insertEnrollment({
       schoolId: seed.schoolId,
       academicYearId: seed.academicYearId,
@@ -183,7 +183,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const studentPersonId = yield* Ref.get(world.studentPersonId)
     const existing = yield* Ref.get(world.guardianPersonIds)
 
-    const secondGuardianId = yield* createGuardianWithRelationship(studentPersonId!, "Salma", "+212600000002")
+    const secondGuardianId = yield* createGuardianWithRelationship(studentPersonId!, "Salma", "+212700000002")
     yield* designateFinancialGuardian(schoolId!, enrollmentId!, secondGuardianId).pipe(
       Effect.provide(asDirectorOf(schoolId!)),
       Effect.orDie
@@ -224,7 +224,7 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
       firstName: "Ahmed",
       lastName: "Sponsor",
       dateOfBirth: "1970-01-01",
-      mobileNumber: "+212600000099"
+      mobileNumber: "+212700000099"
     }).pipe(Effect.provide(asDirectorOf(schoolId!)), Effect.orDie)
     yield* Ref.set(world.guardianPersonIds, [thirdPartyId])
   })
@@ -253,8 +253,8 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
     const world = yield* World
     const seed = yield* seedSchoolWithClass()
     const studentPersonId = yield* createStudent("Yasmine")
-    const firstGuardianId = yield* createGuardianWithRelationship(studentPersonId, "Karim", "+212600000003")
-    const secondGuardianId = yield* createGuardianWithRelationship(studentPersonId, "Salma", "+212600000004")
+    const firstGuardianId = yield* createGuardianWithRelationship(studentPersonId, "Karim", "+212700000003")
+    const secondGuardianId = yield* createGuardianWithRelationship(studentPersonId, "Salma", "+212700000004")
     const enrollment = yield* withSchool(seed.schoolId, insertEnrollment({
       schoolId: seed.schoolId,
       academicYearId: seed.academicYearId,

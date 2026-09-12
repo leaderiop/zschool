@@ -97,7 +97,7 @@ const withSeededEnrollment = Effect.fn(function*<A, E, R>(
         lastName: "Guardian",
         dateOfBirth: "1985-01-01"
       })
-      yield* attachGuardianProfile(guardianPersonId, "+212600000001")
+      yield* attachGuardianProfile(guardianPersonId, "+212700000001")
       const qualities = yield* Schema.decodeEffect(GuardianQualitiesSchema)({
         relationshipType: "father",
         isLegalGuardian: true,
@@ -196,7 +196,7 @@ describe("FinancialAccount (ticket #56 / BEH-ZS-172/173)", () => {
           lastName: "SecondGuardian",
           dateOfBirth: "1982-01-01"
         })
-        yield* attachGuardianProfile(secondGuardianId, "+212600000002")
+        yield* attachGuardianProfile(secondGuardianId, "+212700000002")
         const qualities = yield* Schema.decodeEffect(GuardianQualitiesSchema)({
           relationshipType: "mother",
           isLegalGuardian: true,
@@ -235,7 +235,7 @@ describe("FinancialAccount (ticket #56 / BEH-ZS-172/173)", () => {
           firstName: "Ahmed",
           lastName: "Sponsor",
           dateOfBirth: "1970-01-01",
-          mobileNumber: "+212600000099"
+          mobileNumber: "+212700000099"
         }).pipe(Effect.provide(asDirectorOf(schoolId)))
 
         const current = yield* findCurrentFinancialGuardian(schoolId, enrollmentId)
