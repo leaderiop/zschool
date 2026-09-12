@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@effect/vitest"
+import { NodeCrypto } from "@effect/platform-node"
 import { makeSubject } from "@qadi/core/AuthSubject"
 import { currentSubjectLayer } from "@qadi/core/CurrentSubject"
 import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { AppSqlLive, withSchool } from "@zschool/db"
+import * as Crypto from "effect/Crypto"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
@@ -24,6 +26,9 @@ import {
 
 const NIL = "00000000-0000-0000-0000-000000000000"
 
+/** A seed row's id — via Effect's `Crypto` service, not a bare global, so it's provided (`NodeCrypto.layer` below) like every other dependency. */
+const randomUUID = Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4)
+
 /** A director's `Qadi.assert` context, scoped to `schoolId` — every command function under test (`createClass`, `renameClass`, ...) is gated by `Ownership.ts`'s `authorized`. */
 const asDirectorOf = (schoolId: string) =>
   Layer.merge(
@@ -38,52 +43,51 @@ const asDirectorOf = (schoolId: string) =>
  * themselves, to satisfy each table's RLS policy) — enough for the "found"
  * tests below to have a real row to decode.
  */
-const withSeededClass = <A, E, R>(
+const withSeededClass = Effect.fn(function*<A, E, R>(
   use: (
     seed: { schoolId: string; academicYearId: string; levelId: string; trackId: string; classId: string }
   ) => Effect.Effect<A, E, R>
-) =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const [school] = yield* sql<
-      { id: string }
-    >`INSERT INTO schools (name) VALUES ('AcademicTree test school') RETURNING id`
-    return yield* withSchool(
-      school.id,
-      Effect.gen(function*() {
-        const [year] = yield* sql<{ id: string }>`
-          INSERT INTO academic_years (school_id, label) VALUES (${school.id}, '2026-2027') RETURNING id
-        `
-        const [section] = yield* sql<{ id: string }>`
-          INSERT INTO sections (school_id, academic_year_id, template, name)
-          VALUES (${school.id}, ${year.id}, 'national', 'National') RETURNING id
-        `
-        const [cycle] = yield* sql<{ id: string }>`
-          INSERT INTO cycles (school_id, academic_year_id, section_id, code, name, sort_order)
-          VALUES (${school.id}, ${year.id}, ${section.id}, 'PRIM', 'Primary', 1) RETURNING id
-        `
-        const [level] = yield* sql<{ id: string }>`
-          INSERT INTO levels (school_id, academic_year_id, cycle_id, code, name, sort_order)
-          VALUES (${school.id}, ${year.id}, ${cycle.id}, '6AP', '6ème Année Primaire', 1) RETURNING id
-        `
-        const [track] = yield* sql<{ id: string }>`
-          INSERT INTO tracks (school_id, academic_year_id, level_id, code, name)
-          VALUES (${school.id}, ${year.id}, ${level.id}, 'SCI', 'Sciences') RETURNING id
-        `
-        const [cls] = yield* sql<{ id: string }>`
-          INSERT INTO classes (school_id, academic_year_id, level_id, track_id, label, capacity)
-          VALUES (${school.id}, ${year.id}, ${level.id}, ${track.id}, '6AP-1', 30) RETURNING id
-        `
-        return yield* use({
-          schoolId: school.id,
-          academicYearId: year.id,
-          levelId: level.id,
-          trackId: track.id,
-          classId: cls.id
-        })
+) {
+  const sql = yield* SqlClient
+  const [school] = yield* sql<
+    { id: string }
+  >`INSERT INTO schools (name) VALUES ('AcademicTree test school') RETURNING id`
+  return yield* withSchool(
+    school.id,
+    Effect.gen(function*() {
+      const [year] = yield* sql<{ id: string }>`
+        INSERT INTO academic_years (school_id, label) VALUES (${school.id}, '2026-2027') RETURNING id
+      `
+      const [section] = yield* sql<{ id: string }>`
+        INSERT INTO sections (school_id, academic_year_id, template, name)
+        VALUES (${school.id}, ${year.id}, 'national', 'National') RETURNING id
+      `
+      const [cycle] = yield* sql<{ id: string }>`
+        INSERT INTO cycles (school_id, academic_year_id, section_id, code, name, sort_order)
+        VALUES (${school.id}, ${year.id}, ${section.id}, 'PRIM', 'Primary', 1) RETURNING id
+      `
+      const [level] = yield* sql<{ id: string }>`
+        INSERT INTO levels (school_id, academic_year_id, cycle_id, code, name, sort_order)
+        VALUES (${school.id}, ${year.id}, ${cycle.id}, '6AP', '6ème Année Primaire', 1) RETURNING id
+      `
+      const [track] = yield* sql<{ id: string }>`
+        INSERT INTO tracks (school_id, academic_year_id, level_id, code, name)
+        VALUES (${school.id}, ${year.id}, ${level.id}, 'SCI', 'Sciences') RETURNING id
+      `
+      const [cls] = yield* sql<{ id: string }>`
+        INSERT INTO classes (school_id, academic_year_id, level_id, track_id, label, capacity)
+        VALUES (${school.id}, ${year.id}, ${level.id}, ${track.id}, '6AP-1', 30) RETURNING id
+      `
+      return yield* use({
+        schoolId: school.id,
+        academicYearId: year.id,
+        levelId: level.id,
+        trackId: track.id,
+        classId: cls.id
       })
-    )
-  }).pipe(Effect.provide(AppSqlLive))
+    })
+  )
+}, Effect.provide(Layer.mergeAll(AppSqlLive, NodeCrypto.layer)))
 
 /**
  * Issue #39's regression coverage for the shared `Level`/`Track`/`Class`
@@ -199,7 +203,7 @@ describe("AcademicTree commands (ticket #3)", () => {
       Effect.gen(function*() {
         const director = asDirectorOf(schoolId)
         // `withSeededClass` already seeded one class of capacity 30.
-        const secondClassId = yield* createClass({
+        yield* createClass({
           schoolId,
           academicYearId,
           levelId,
@@ -249,7 +253,7 @@ describe("AcademicTree commands (ticket #3)", () => {
         // can't make a just-inserted row visible for `RETURNING` to return
         // (same chicken-and-egg `Identity.ts`'s `createPerson` documents) —
         // a client-generated id sidesteps that instead.
-        const personId = crypto.randomUUID()
+        const personId = yield* randomUUID
         yield* sql`
           INSERT INTO persons (id, first_name, last_name, date_of_birth) VALUES (${personId}, 'Occupant', 'Student', '2015-01-01')
         `

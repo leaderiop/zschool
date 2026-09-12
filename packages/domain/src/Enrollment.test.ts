@@ -1,8 +1,14 @@
 import { describe, expect, it } from "@effect/vitest"
+import { NodeCrypto } from "@effect/platform-node"
 import { AppSqlLive, withSchool } from "@zschool/db"
+import * as Crypto from "effect/Crypto"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { CapacityApprovalRequiredError, insertEnrollment } from "./Enrollment.ts"
+
+/** A seed row's id — via Effect's `Crypto` service, not a bare global, so it's provided (`NodeCrypto.layer` below) like every other dependency. */
+const randomUUID = Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4)
 
 /**
  * Seeds one school → academic year → section → cycle → level → class of the
@@ -11,53 +17,52 @@ import { CapacityApprovalRequiredError, insertEnrollment } from "./Enrollment.ts
  * `withSeededClass`, kept separate since this file needs to control both
  * numbers independently to put a class exactly at, under, or over capacity.
  */
-const withSeededClassAt = <A, E, R>(
+const withSeededClassAt = Effect.fn(function*<A, E, R>(
   capacity: number,
   occupants: number,
   use: (seed: { schoolId: string; academicYearId: string; classId: string }) => Effect.Effect<A, E, R>
-) =>
-  Effect.gen(function*() {
-    const sql = yield* SqlClient
-    const [school] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES ('Enrollment test school') RETURNING id`
-    return yield* withSchool(
-      school.id,
-      Effect.gen(function*() {
-        const [year] = yield* sql<{ id: string }>`
-          INSERT INTO academic_years (school_id, label) VALUES (${school.id}, '2026-2027') RETURNING id
+) {
+  const sql = yield* SqlClient
+  const [school] = yield* sql<{ id: string }>`INSERT INTO schools (name) VALUES ('Enrollment test school') RETURNING id`
+  return yield* withSchool(
+    school.id,
+    Effect.gen(function*() {
+      const [year] = yield* sql<{ id: string }>`
+        INSERT INTO academic_years (school_id, label) VALUES (${school.id}, '2026-2027') RETURNING id
+      `
+      const [section] = yield* sql<{ id: string }>`
+        INSERT INTO sections (school_id, academic_year_id, template, name)
+        VALUES (${school.id}, ${year.id}, 'national', 'National') RETURNING id
+      `
+      const [cycle] = yield* sql<{ id: string }>`
+        INSERT INTO cycles (school_id, academic_year_id, section_id, code, name, sort_order)
+        VALUES (${school.id}, ${year.id}, ${section.id}, 'PRIM', 'Primary', 1) RETURNING id
+      `
+      const [level] = yield* sql<{ id: string }>`
+        INSERT INTO levels (school_id, academic_year_id, cycle_id, code, name, sort_order)
+        VALUES (${school.id}, ${year.id}, ${cycle.id}, '6AP', '6ème Année Primaire', 1) RETURNING id
+      `
+      const [cls] = yield* sql<{ id: string }>`
+        INSERT INTO classes (school_id, academic_year_id, level_id, label, capacity)
+        VALUES (${school.id}, ${year.id}, ${level.id}, '6AP-1', ${capacity}) RETURNING id
+      `
+      for (let i = 0; i < occupants; i++) {
+        // No `RETURNING` on the `persons` insert — see `insertNewStudent`'s
+        // doc comment below for why.
+        const occupantId = yield* randomUUID
+        yield* sql`
+          INSERT INTO persons (id, first_name, last_name, date_of_birth)
+          VALUES (${occupantId}, ${`Occupant${i}`}, 'Student', '2015-01-01')
         `
-        const [section] = yield* sql<{ id: string }>`
-          INSERT INTO sections (school_id, academic_year_id, template, name)
-          VALUES (${school.id}, ${year.id}, 'national', 'National') RETURNING id
+        yield* sql`
+          INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
+          VALUES (${school.id}, ${year.id}, '2026-2027', ${occupantId}, ${cls.id}, 'active', '2026-09-01')
         `
-        const [cycle] = yield* sql<{ id: string }>`
-          INSERT INTO cycles (school_id, academic_year_id, section_id, code, name, sort_order)
-          VALUES (${school.id}, ${year.id}, ${section.id}, 'PRIM', 'Primary', 1) RETURNING id
-        `
-        const [level] = yield* sql<{ id: string }>`
-          INSERT INTO levels (school_id, academic_year_id, cycle_id, code, name, sort_order)
-          VALUES (${school.id}, ${year.id}, ${cycle.id}, '6AP', '6ème Année Primaire', 1) RETURNING id
-        `
-        const [cls] = yield* sql<{ id: string }>`
-          INSERT INTO classes (school_id, academic_year_id, level_id, label, capacity)
-          VALUES (${school.id}, ${year.id}, ${level.id}, '6AP-1', ${capacity}) RETURNING id
-        `
-        for (let i = 0; i < occupants; i++) {
-          // No `RETURNING` on the `persons` insert — see `insertNewStudent`'s
-          // doc comment below for why.
-          const occupantId = crypto.randomUUID()
-          yield* sql`
-            INSERT INTO persons (id, first_name, last_name, date_of_birth)
-            VALUES (${occupantId}, ${`Occupant${i}`}, 'Student', '2015-01-01')
-          `
-          yield* sql`
-            INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
-            VALUES (${school.id}, ${year.id}, '2026-2027', ${occupantId}, ${cls.id}, 'active', '2026-09-01')
-          `
-        }
-        return yield* use({ schoolId: school.id, academicYearId: year.id, classId: cls.id })
-      })
-    )
-  }).pipe(Effect.provide(AppSqlLive))
+      }
+      return yield* use({ schoolId: school.id, academicYearId: year.id, classId: cls.id })
+    })
+  )
+}, Effect.provide(Layer.mergeAll(AppSqlLive, NodeCrypto.layer)))
 
 /**
  * No `RETURNING` on the `persons` insert: a brand-new person has no
@@ -68,7 +73,7 @@ const withSeededClassAt = <A, E, R>(
  */
 const insertNewStudent = Effect.fn(function*(name: string) {
   const sql = yield* SqlClient
-  const id = crypto.randomUUID()
+  const id = yield* randomUUID
   yield* sql`INSERT INTO persons (id, first_name, last_name, date_of_birth) VALUES (${id}, ${name}, 'Student', '2015-01-01')`
   return id
 })
