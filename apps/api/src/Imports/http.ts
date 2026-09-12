@@ -1,6 +1,7 @@
 import type { CurrentSubject } from "@qadi/core/CurrentSubject"
 import type { EvaluationServices } from "@qadi/core/Evaluate"
 import {
+  analyzeGradeRows,
   analyzeGuardianRows,
   analyzeStudentRows,
   analyzeTeacherRows,
@@ -80,6 +81,10 @@ export const ImportsApiHandlers = HttpApiBuilder.group(
         ),
       analyzeTeachers: ({ params, payload }) =>
         provideHandlerServices(authorized(params.schoolId, analyzeTeacherRows(payload))),
+      analyzeGrades: ({ params, payload }) =>
+        provideHandlerServices(
+          authorized(params.schoolId, analyzeGradeRows(params.schoolId, payload.academicYearId, payload.rows))
+        ).pipe(Effect.catchTag("SqlError", Effect.die)),
       // No `authorized`/`params` use here — the template's content (headers,
       // instructions, example row) is the same for every school, so nothing
       // school-specific is read; `:schoolId` stays in the path only for URL

@@ -79,3 +79,9 @@ export type TeacherPersonId = typeof TeacherPersonId.Type
 
 export const SchoolMembershipId = Schema.String.pipe(Schema.brand("SchoolMembershipId"))
 export type SchoolMembershipId = typeof SchoolMembershipId.Type
+
+export const AssessmentId = Schema.String.pipe(Schema.brand("AssessmentId"))
+export type AssessmentId = typeof AssessmentId.Type
+
+export const MarkId = Schema.String.pipe(Schema.brand("MarkId"))
+export type MarkId = typeof MarkId.Type
