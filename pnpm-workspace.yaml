@@ -10,6 +10,6 @@ catalog:
   "@effect/vitest": 4.0.0-rc.115
   "@effect-cucumber/gherkin": 0.10.0
   "@effect-cucumber/vitest": 0.10.0
-  "@qadi/core": 0.6.1
-  "@qadi/http": 0.6.1
-  "@qadi/testing": 0.6.1
+  "@qadi/core": 0.6.2
+  "@qadi/http": 0.6.2
+  "@qadi/testing": 0.6.2

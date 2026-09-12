@@ -22,14 +22,14 @@ catalogs:
       specifier: 4.0.0-rc.115
       version: 4.0.0-rc.115
     '@qadi/core':
-      specifier: 0.6.1
-      version: 0.6.1
+      specifier: 0.6.2
+      version: 0.6.2
     '@qadi/http':
-      specifier: 0.6.1
-      version: 0.6.1
+      specifier: 0.6.2
+      version: 0.6.2
     '@qadi/testing':
-      specifier: 0.6.1
-      version: 0.6.1
+      specifier: 0.6.2
+      version: 0.6.2
 
 overrides:
   effect: 4.0.0-rc.115
@@ -56,13 +56,13 @@ importers:
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
       '@qadi/core':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@qadi/http':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@qadi/testing':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@testcontainers/postgresql':
         specifier: ^12.1.0
         version: 12.1.0
@@ -104,10 +104,10 @@ importers:
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)
       '@qadi/core':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@qadi/http':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@zschool/clients':
         specifier: workspace:*
         version: link:../../packages/clients
@@ -129,7 +129,7 @@ importers:
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
       '@qadi/testing':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
 
   apps/web:
     dependencies:
@@ -184,10 +184,10 @@ importers:
     dependencies:
       '@qadi/core':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@qadi/http':
         specifier: 'catalog:'
-        version: 0.6.1
+        version: 0.6.2
       '@zschool/db':
         specifier: workspace:*
         version: link:../db
@@ -736,16 +736,16 @@ packages:
   '@protobufjs/utf8@1.1.2':
     resolution: {integrity: sha512-b1UQwcEZ4yCnMCD8DAL1VlbvBJE9/IX4FTIp7BG1xYpf29SLazLSrqUkj4w7Y5y7cCVP6E5tcqqcI0xemPkHug==}
 
-  '@qadi/core@0.6.1':
-    resolution: {integrity: sha512-QmCrr4nRlLCMOgN+szddRAfRsnu/tsRK2VaohyjS3DwaYHYfyTra8fN7SJ6yRh+QCv3WryKkXYABJzU3nsY2DA==}
+  '@qadi/core@0.6.2':
+    resolution: {integrity: sha512-23I1fTh5DjxCXgyqSizabBPoeeEIsPnnbEmUNybnOVB7EH9WSRe4cnDDI+qrKOTJBy5N6ulje5NqKMJOguJ2Sg==}
     engines: {node: '>=22.12.0'}
 
-  '@qadi/http@0.6.1':
-    resolution: {integrity: sha512-LN26bYlu0e3AWvUIVTUwZbnggJpQ6fHLCkxmQ5FhkUOcs06zOATq/kti1mL5rEX8dKMubBykULgbtXuKf9cNYw==}
+  '@qadi/http@0.6.2':
+    resolution: {integrity: sha512-an7DrafkctoDcyUFv157jomzEKPx8OG/zUCk6IfJzste7hFBKz3tMaCa6+Q60d5vchNaI9SwiSDiWId7nYurXg==}
     engines: {node: '>=22.12.0'}
 
-  '@qadi/testing@0.6.1':
-    resolution: {integrity: sha512-50VjELUKkgzuRgTVzpdMCoW67hBth+fM9sgc5nauc9Sd9W49mvmDx/+IciD8hXSTWSgILTSNeqyheEeSjW5f1g==}
+  '@qadi/testing@0.6.2':
+    resolution: {integrity: sha512-WXs+E39x81l37ozFlMEm9Gl8G8eduznq1AkOYJIVs5HnFk9Y9tJiHRmjtPQGUvEEizitoGft17Mp7/+dK0uieQ==}
     engines: {node: '>=22.12.0'}
 
   '@redis/bloom@6.2.1':
@@ -2266,18 +2266,18 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
-  '@qadi/core@0.6.1':
+  '@qadi/core@0.6.2':
     dependencies:
       effect: 4.0.0-rc.115
 
-  '@qadi/http@0.6.1':
+  '@qadi/http@0.6.2':
     dependencies:
-      '@qadi/core': 0.6.1
+      '@qadi/core': 0.6.2
       effect: 4.0.0-rc.115
 
-  '@qadi/testing@0.6.1':
+  '@qadi/testing@0.6.2':
     dependencies:
-      '@qadi/core': 0.6.1
+      '@qadi/core': 0.6.2
       effect: 4.0.0-rc.115
 
   '@redis/bloom@6.2.1(@redis/client@6.2.1)':
