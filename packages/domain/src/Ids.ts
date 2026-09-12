@@ -73,3 +73,9 @@ export type ImportBatchId = typeof ImportBatchId.Type
 
 export const ImportBatchRowId = Schema.String.pipe(Schema.brand("ImportBatchRowId"))
 export type ImportBatchRowId = typeof ImportBatchRowId.Type
+
+export const TeacherPersonId = Schema.String.pipe(Schema.brand("TeacherPersonId"))
+export type TeacherPersonId = typeof TeacherPersonId.Type
+
+export const SchoolMembershipId = Schema.String.pipe(Schema.brand("SchoolMembershipId"))
+export type SchoolMembershipId = typeof SchoolMembershipId.Type

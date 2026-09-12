@@ -4,7 +4,7 @@ import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { RequirePermissionLive } from "@qadi/http/RequirePermission"
 import { SubjectExtractor } from "@qadi/http/SubjectExtractor"
 import { AppSqlLive, MigratorLive, SqlLive, withSchool } from "@zschool/db"
-import { analyzeGuardianRows, Api, ImportQueue, SchoolId } from "@zschool/domain"
+import { analyzeGuardianRows, analyzeTeacherRows, Api, ImportQueue, SchoolId } from "@zschool/domain"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import { HttpServer } from "effect/unstable/http"
@@ -126,6 +126,27 @@ describe("ImportsApi (issue #38)", () => {
           payload: rows
         })
         const viaDomain = yield* analyzeGuardianRows(rows)
+        assert.deepStrictEqual(viaHttp, viaDomain)
+      }).pipe(Effect.provide(AppAsDirector))
+  )
+
+  it.effect(
+    "an authorized director's analyzeTeachers matches calling analyzeTeacherRows directly (contract-vs-domain parity)",
+    () =>
+      Effect.gen(function*() {
+        const client = yield* makeClient
+        const rows = [{
+          rowId: "row-1",
+          firstName: "Karim",
+          lastName: "Sefrioui",
+          dateOfBirth: "1985-04-01",
+          massarCode: "T900001"
+        }]
+        const viaHttp = yield* client.imports.analyzeTeachers({
+          params: { schoolId: DIRECTOR_SCHOOL_ID },
+          payload: rows
+        })
+        const viaDomain = yield* analyzeTeacherRows(rows)
         assert.deepStrictEqual(viaHttp, viaDomain)
       }).pipe(Effect.provide(AppAsDirector))
   )

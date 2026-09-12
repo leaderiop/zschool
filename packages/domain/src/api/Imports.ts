@@ -11,6 +11,7 @@ import {
   StudentAnalysisResultHttpSchema,
   StudentImportRowSchema
 } from "../StudentGuardianImport.ts"
+import { TeacherAnalysisResultHttpSchema, TeacherImportRowSchema } from "../TeacherImport.ts"
 
 /**
  * Issue #38's first two endpoints (`analyzeGuardians`/`analyzeStudents`) plus
@@ -20,6 +21,13 @@ import {
  * re-validate-and-write step) is deliberately NOT exposed here, since it's
  * never called synchronously from a request (`apps/workers` calls it
  * directly, off an SQS message).
+ *
+ * `analyzeTeachers` (ticket #14) follows the guardians/students precedent,
+ * not the classes one: analyze-only over HTTP, no persisted `ImportBatch`
+ * report and no commit endpoint — `commitTeacherImportBatch` is exercised
+ * directly against the `@zschool/domain` service interface (same seam as
+ * `StudentGuardianImport.ts`'s `commitImportBatch`, which has no HTTP
+ * endpoint either).
  *
  * Every endpoint carries its own `RequiredPermission` annotation, inline
  * (per `requiresPermission`'s own doc comment: the type-preserving
@@ -51,6 +59,15 @@ export class ImportsApiGroup extends HttpApiGroup.make("imports")
         params: { schoolId: SchoolId },
         payload: Schema.Array(StudentImportRowSchema),
         success: Schema.Array(StudentAnalysisResultHttpSchema)
+      }
+    ).pipe((e) => e.annotate(RequiredPermission, requiresPermission(e, importsRequirement))),
+    HttpApiEndpoint.post(
+      "analyzeTeachers",
+      "/schools/:schoolId/imports/teachers/analyze",
+      {
+        params: { schoolId: SchoolId },
+        payload: Schema.Array(TeacherImportRowSchema),
+        success: Schema.Array(TeacherAnalysisResultHttpSchema)
       }
     ).pipe((e) => e.annotate(RequiredPermission, requiresPermission(e, importsRequirement))),
     HttpApiEndpoint.get(
