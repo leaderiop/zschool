@@ -3,6 +3,7 @@ import type { EvaluationServices } from "@qadi/core/Evaluate"
 import {
   analyzeGuardianRows,
   analyzeStudentRows,
+  analyzeTeacherRows,
   Api,
   authorized,
   generateClassImportTemplate,
@@ -77,6 +78,8 @@ export const ImportsApiHandlers = HttpApiBuilder.group(
         provideHandlerServices(authorized(params.schoolId, analyzeStudentRows(params.schoolId, payload))).pipe(
           Effect.catchTag("SqlError", Effect.die)
         ),
+      analyzeTeachers: ({ params, payload }) =>
+        provideHandlerServices(authorized(params.schoolId, analyzeTeacherRows(payload))),
       // No `authorized`/`params` use here — the template's content (headers,
       // instructions, example row) is the same for every school, so nothing
       // school-specific is read; `:schoolId` stays in the path only for URL

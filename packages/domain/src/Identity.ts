@@ -7,7 +7,7 @@ import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlResolver from "effect/unstable/sql/SqlResolver"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
-import { GuardianPersonId, PersonId, StudentPersonId } from "./Ids.ts"
+import { GuardianPersonId, PersonId, StudentPersonId, TeacherPersonId } from "./Ids.ts"
 
 export class InvalidMobileNumberError extends Schema.TaggedError<InvalidMobileNumberError>()(
   "InvalidMobileNumberError",
@@ -127,6 +127,17 @@ export class GuardianProfile extends Model.Class<GuardianProfile>("GuardianProfi
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
+/**
+ * `Model.Class` for `teacher_profiles` (migration 0008 created the table
+ * ahead of time, per its own comment, for ticket #10/#14 to populate).
+ * Same shape/reasoning as `StudentProfile`/`GuardianProfile` above.
+ */
+export class TeacherProfile extends Model.Class<TeacherProfile>("TeacherProfile")({
+  id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
+  person_id: TeacherPersonId,
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
 export class ParentStudentRelationship extends Model.Class<ParentStudentRelationship>("ParentStudentRelationship")({
   id: Model.Field({ select: Schema.String, update: Schema.String, json: Schema.String, jsonUpdate: Schema.String }),
   guardian_person_id: GuardianPersonId,
@@ -148,6 +159,11 @@ const studentProfileRepo = SqlModel.makeRepository(StudentProfile, {
 })
 const guardianProfileRepo = SqlModel.makeRepository(GuardianProfile, {
   tableName: "guardian_profiles",
+  spanPrefix: "Identity",
+  idColumn: "id"
+})
+const teacherProfileRepo = SqlModel.makeRepository(TeacherProfile, {
+  tableName: "teacher_profiles",
   spanPrefix: "Identity",
   idColumn: "id"
 })
@@ -317,6 +333,18 @@ export const attachStudentProfile = Effect.fn("Identity.attachStudentProfile")(f
   // `createPerson`: `student_profiles`' SELECT policy (migration 0008)
   // delegates to `persons`' own, which a brand-new profile's person can't
   // satisfy yet either.
+  yield* sql.withTransaction(repo.insertVoid({ person_id: validPersonId })).pipe(
+    Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void)
+  )
+})
+
+/** Same reasoning as `attachStudentProfile` above. */
+export const attachTeacherProfile = Effect.fn("Identity.attachTeacherProfile")(function*(
+  personId: string
+) {
+  const sql = yield* SqlClient
+  const repo = yield* teacherProfileRepo
+  const validPersonId = yield* Schema.decodeEffect(TeacherPersonId)(personId)
   yield* sql.withTransaction(repo.insertVoid({ person_id: validPersonId })).pipe(
     Effect.catchReason("SqlError", "UniqueViolation", () => Effect.void)
   )
