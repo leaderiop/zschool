@@ -34,14 +34,18 @@ export class Enrollment extends Model.Class<Enrollment>("Enrollment")({
   academic_year_label: Schema.String,
   student_person_id: StudentPersonId,
   class_id: Schema.String,
-  status: Schema.Literals(["pre_enrolled", "active"]),
+  // "completed" (migration 0013) is only ever written by
+  // `HistoricalGradeImport.ts`'s synthesized enrollment (ADR-ZS-113) — every
+  // path in this file still only ever produces "pre_enrolled"/"active".
+  status: Schema.Literals(["pre_enrolled", "active", "completed"]),
   effective_date: Schema.String,
   /** ADR-ZS-065 / ticket #3 acceptance criterion 6 — see migration 0009. */
   capacity_override_reason: Schema.NullOr(Schema.String),
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
-const enrollmentRepo = SqlModel.makeRepository(Enrollment, {
+/** Exported so `HistoricalGradeImport.ts` can insert a synthesized `'completed'` enrollment directly, the same way `Enrollment.ts` imports `academicYearRepo` from `InstantiateNationalTemplate.ts` for the identical cross-file reuse reason. */
+export const enrollmentRepo = SqlModel.makeRepository(Enrollment, {
   tableName: "enrollments",
   spanPrefix: "Enrollment",
   idColumn: "id"
@@ -209,7 +213,14 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
         })
       ))
   )
-  return { id: enrollment.id, status: enrollment.status }
+  // `status` (computed above via `computeEnrollmentStatus`), not
+  // `enrollment.status` — the latter now decodes against the Model's own
+  // widened `"pre_enrolled" | "active" | "completed"` literal (migration
+  // 0013, for `HistoricalGradeImport.ts`'s synthesized enrollments), but
+  // this function itself only ever produces the first two; reusing the
+  // already-narrower local keeps `EnrollmentResult.status` honest without a
+  // cast.
+  return { id: enrollment.id, status }
 })
 
 export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(function*(
