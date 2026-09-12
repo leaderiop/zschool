@@ -4,6 +4,7 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/ht
 import { analyzeImportsPermission, canAnalyzeImports } from "../authorization/Policies.ts"
 import { ClassImportRowSchema } from "../ClassImportAnalysis.ts"
 import { GradeAnalysisResultHttpSchema, GradeImportRowSchema } from "../GradeImport.ts"
+import { HistoricalGradeAnalysisResultHttpSchema, HistoricalGradeImportRowSchema } from "../HistoricalGradeImport.ts"
 import { SchoolId } from "../Ids.ts"
 import { ImportBatchReportHttpSchema } from "../ImportBatch.ts"
 import {
@@ -30,14 +31,19 @@ import { TeacherAnalysisResultHttpSchema, TeacherImportRowSchema } from "../Teac
  * `StudentGuardianImport.ts`'s `commitImportBatch`, which has no HTTP
  * endpoint either).
  *
- * `analyzeGrades` (ticket #15, current-term slice only — historical import
- * is a separate follow-up) follows the same precedent: analyze-only over
- * HTTP, `commitGradeImportBatch` exercised directly against the domain
- * service interface. Its payload is a `{academicYearId, rows}` struct, not
- * a bare row array like every other analyze endpoint — a grade row's
- * subject/period codes only resolve within one specific academic year, and
- * every row in one import batch shares it, so it's carried once per request
- * rather than repeated per row.
+ * `analyzeGrades` (ticket #15, current-term slice) follows the same
+ * precedent: analyze-only over HTTP, `commitGradeImportBatch` exercised
+ * directly against the domain service interface. Its payload is a
+ * `{academicYearId, rows}` struct, not a bare row array like every other
+ * analyze endpoint — a grade row's subject/period codes only resolve within
+ * one specific academic year, and every row in one import batch shares it,
+ * so it's carried once per request rather than repeated per row.
+ *
+ * `analyzeHistoricalGrades` (ticket #15's follow-up) mirrors `analyzeGrades`'s
+ * shape exactly, but with `yearLabel` instead of `academicYearId` — a
+ * historical batch's archival `AcademicYear` (ADR-ZS-112) doesn't exist yet
+ * at analyze time, so there's no id to pass; the label is what
+ * `commitHistoricalGradeImportBatch` later finds-or-creates by.
  *
  * Every endpoint carries its own `RequiredPermission` annotation, inline
  * (per `requiresPermission`'s own doc comment: the type-preserving
@@ -53,6 +59,10 @@ const batchParams = { schoolId: SchoolId, batchId: Schema.String }
 const GradeImportBatchPayloadSchema = Schema.Struct({
   academicYearId: Schema.NonEmptyString,
   rows: Schema.Array(GradeImportRowSchema)
+})
+const HistoricalGradeImportBatchPayloadSchema = Schema.Struct({
+  yearLabel: Schema.NonEmptyString,
+  rows: Schema.Array(HistoricalGradeImportRowSchema)
 })
 
 export class ImportsApiGroup extends HttpApiGroup.make("imports")
@@ -91,6 +101,15 @@ export class ImportsApiGroup extends HttpApiGroup.make("imports")
         params: { schoolId: SchoolId },
         payload: GradeImportBatchPayloadSchema,
         success: Schema.Array(GradeAnalysisResultHttpSchema)
+      }
+    ).pipe((e) => e.annotate(RequiredPermission, requiresPermission(e, importsRequirement))),
+    HttpApiEndpoint.post(
+      "analyzeHistoricalGrades",
+      "/schools/:schoolId/imports/grades/historical/analyze",
+      {
+        params: { schoolId: SchoolId },
+        payload: HistoricalGradeImportBatchPayloadSchema,
+        success: Schema.Array(HistoricalGradeAnalysisResultHttpSchema)
       }
     ).pipe((e) => e.annotate(RequiredPermission, requiresPermission(e, importsRequirement))),
     HttpApiEndpoint.get(

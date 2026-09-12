@@ -251,6 +251,48 @@ const mapRowOutcome = <A, B>(
   })
 
 /**
+ * Idempotent on `(assessment_id, enrollment_id)` (the table's own unique
+ * index, migration 0012) — same "try insert, catch, re-select" shape as
+ * `findOrCreateImportedAssessment` above, extracted so
+ * `HistoricalGradeImport.ts`'s commit path shares it rather than
+ * reimplementing the same insert-then-fallback-select logic.
+ */
+export const upsertMark = Effect.fn("GradeImport.upsertMark")(function*(
+  schoolId: string,
+  assessmentId: string,
+  enrollmentId: string,
+  value: number,
+  remark: string | undefined
+) {
+  const sql = yield* SqlClient
+  const repo = yield* markRepo
+  const validSchoolId = yield* Schema.decodeEffect(SchoolId)(schoolId)
+
+  const insertedOrExisting = yield* Effect.result(sql.withTransaction(repo.insert({
+    school_id: validSchoolId,
+    assessment_id: assessmentId,
+    enrollment_id: enrollmentId,
+    value,
+    status: "draft",
+    remark: remark ?? null
+  })))
+
+  if (Result.isSuccess(insertedOrExisting)) return insertedOrExisting.success.id
+
+  const existingMark = yield* SqlSchema.findOneOption({
+    Request: Schema.Struct({ assessmentId: Schema.String, enrollmentId: Schema.String }),
+    Result: Mark,
+    execute: (req) =>
+      sql`SELECT * FROM marks WHERE assessment_id = ${req.assessmentId} AND enrollment_id = ${req.enrollmentId}`
+  })({ assessmentId, enrollmentId })
+
+  return yield* Option.match(existingMark, {
+    onNone: () => Effect.fail(insertedOrExisting.failure),
+    onSome: (mark) => Effect.succeed(mark.id)
+  })
+})
+
+/**
  * Analyze-only, read-only: resolves each row's enrollment/subject/period
  * without writing anything, so a director can review before committing
  * (same non-committal-analyze pattern as every other import domain).
@@ -358,33 +400,8 @@ export const commitGradeImportBatch = Effect.fn("GradeImport.commitGradeImportBa
               enrollment.value.classId
             )
 
-            const repo = yield* markRepo
             const normalizedValue = normalizeToTwenty(row.value, row.scale ?? 20)
-
-            const insertedOrExisting = yield* Effect.result(sql.withTransaction(repo.insert({
-              school_id: validSchoolId,
-              assessment_id: assessmentId,
-              enrollment_id: enrollment.value.enrollmentId,
-              value: normalizedValue,
-              status: "draft",
-              remark: row.remark ?? null
-            })))
-
-            if (Result.isSuccess(insertedOrExisting)) return insertedOrExisting.success.id
-
-            const existingMark = yield* SqlSchema.findOneOption({
-              Request: Schema.Struct({ assessmentId: Schema.String, enrollmentId: Schema.String }),
-              Result: Mark,
-              execute: (req) =>
-                sql`
-                  SELECT * FROM marks WHERE assessment_id = ${req.assessmentId} AND enrollment_id = ${req.enrollmentId}
-                `
-            })({ assessmentId, enrollmentId: enrollment.value.enrollmentId })
-
-            return yield* Option.match(existingMark, {
-              onNone: () => Effect.fail(insertedOrExisting.failure),
-              onSome: (mark) => Effect.succeed(mark.id)
-            })
+            return yield* upsertMark(schoolId, assessmentId, enrollment.value.enrollmentId, normalizedValue, row.remark)
           })))
 
           results.push(
