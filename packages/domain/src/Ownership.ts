@@ -1,21 +1,29 @@
+import type { Policy } from "@qadi/core/Policy"
 import * as Qadi from "@qadi/core/Qadi"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { canManageAcademicStructure } from "./authorization/Policies.ts"
+import { canManageAcademicStructure, canManageFinance } from "./authorization/Policies.ts"
 import type { SchoolId } from "./Ids.ts"
 
-/** Every academic-structure write goes through this same `@qadi` policy — a director may only act on their own school. Shared so a change to how failures surface doesn't need editing in every domain module. */
-export const authorized = Effect.fn("Ownership.authorized")(function*<A, E, R>(
+/** The actual `Qadi.assert` call every capability-scoped write shares — `authorized`/`authorizedFinance` below are named, single-policy wrappers over this so a call site never has to name its own policy/action pair. */
+export const authorizeWith = Effect.fn("Ownership.authorizeWith")(function*<A, E, R>(
+  policy: Policy,
+  action: string,
   schoolId: SchoolId,
   effect: Effect.Effect<A, E, R>
 ) {
-  yield* Qadi.assert(canManageAcademicStructure, {
-    resource: { school_id: schoolId },
-    action: "manage-academic-structure"
-  })
+  yield* Qadi.assert(policy, { resource: { school_id: schoolId }, action })
   return yield* effect
 })
+
+/** Every academic-structure write goes through this same `@qadi` policy — a director may only act on their own school. Shared so a change to how failures surface doesn't need editing in every domain module. */
+export const authorized = <A, E, R>(schoolId: SchoolId, effect: Effect.Effect<A, E, R>) =>
+  authorizeWith(canManageAcademicStructure, "manage-academic-structure", schoolId, effect)
+
+/** Same shape as `authorized` above, gated by `canManageFinance` instead — finance writes (ticket #56 onward) are a distinct capability from academic-structure writes, even though both are director-only at MVP. */
+export const authorizedFinance = <A, E, R>(schoolId: SchoolId, effect: Effect.Effect<A, E, R>) =>
+  authorizeWith(canManageFinance, "manage-finance", schoolId, effect)
 
 /**
  * The target entity a command names either doesn't exist, or doesn't belong

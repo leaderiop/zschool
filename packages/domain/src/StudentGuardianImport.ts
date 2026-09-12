@@ -13,8 +13,8 @@ import {
   createPerson,
   findGuardianMatch,
   findPersonMatches,
-  type GuardianQualities,
-  GuardianQualitiesSchema,
+  type ImportableGuardianQualities,
+  ImportableGuardianQualitiesSchema,
   MobileNumber,
   recordGuardianRelationship
 } from "./Identity.ts"
@@ -201,7 +201,7 @@ export interface StudentImportRow {
   readonly trackCode?: string
   readonly classLabel: string
   readonly effectiveDate: string
-  readonly guardians: ReadonlyArray<{ readonly mobileNumber: string; readonly qualities: GuardianQualities }>
+  readonly guardians: ReadonlyArray<{ readonly mobileNumber: string; readonly qualities: ImportableGuardianQualities }>
   /** A prior analyze pass's proposed Massar-code match, explicitly confirmed by the caller — never inferred (acceptance criterion 1: "proposed, never auto-linked"). */
   readonly confirmedMatchPersonId?: string
 }
@@ -225,7 +225,7 @@ export const StudentImportRowSchema = Schema.Struct({
   guardians: Schema.Array(
     Schema.Struct({
       mobileNumber: MobileNumber,
-      qualities: GuardianQualitiesSchema
+      qualities: ImportableGuardianQualitiesSchema
     })
   ),
   confirmedMatchPersonId: Schema.optional(Schema.String)
