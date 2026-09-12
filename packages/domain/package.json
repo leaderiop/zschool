@@ -16,7 +16,8 @@
     "effect": "catalog:",
     "@zschool/db": "workspace:*",
     "@qadi/core": "catalog:",
-    "@qadi/http": "catalog:"
+    "@qadi/http": "catalog:",
+    "exceljs": "4.4.0"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",

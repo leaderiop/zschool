@@ -67,3 +67,9 @@ export type AcademicYearId = typeof AcademicYearId.Type
 
 export const SectionId = Schema.String.pipe(Schema.brand("SectionId"))
 export type SectionId = typeof SectionId.Type
+
+export const ImportBatchId = Schema.String.pipe(Schema.brand("ImportBatchId"))
+export type ImportBatchId = typeof ImportBatchId.Type
+
+export const ImportBatchRowId = Schema.String.pipe(Schema.brand("ImportBatchRowId"))
+export type ImportBatchRowId = typeof ImportBatchRowId.Type

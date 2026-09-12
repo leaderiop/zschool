@@ -262,6 +262,38 @@ export const findClassByLevelLabelAndTrack = Effect.fn("AcademicTree.findClassBy
 })
 
 /**
+ * The core of `createClass`, without its own `authorized`/`withSchool`
+ * wrapping — callable from `ImportBatch.ts`'s commit worker, which
+ * re-validates and inserts a batch's rows without a live director
+ * subject to re-`@qadi`-check per row (the batch's commit was already
+ * authorized once, when the director requested it — same reasoning as
+ * `Enrollment.ts`'s `insertEnrollment` being callable from
+ * `StudentGuardianImport.ts`'s already-authorized bulk-commit flow).
+ */
+export const insertClassRow = Effect.fn("AcademicTree.insertClassRow")(function*(
+  command: CreateClassCommand
+) {
+  const sql = yield* SqlClient
+  yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId, RowWithId)
+  if (command.trackId !== undefined) {
+    const trackId = yield* Schema.decodeEffect(TrackId)(command.trackId)
+    const levelId = yield* Schema.decodeEffect(LevelId)(command.levelId)
+    yield* requireTrackBelongsToLevel(trackId, levelId, command.schoolId)
+  }
+
+  const repo = yield* classRepo
+  const cls = yield* repo.insert({
+    school_id: command.schoolId,
+    academic_year_id: command.academicYearId,
+    level_id: command.levelId,
+    track_id: command.trackId ?? null,
+    label: command.label,
+    capacity: command.capacity
+  })
+  return cls.id
+})
+
+/**
  * BEH-ZS-052 / REQ-ZS-054: `Class` under a `Level`/`Track`. Every write goes
  * through `@qadi` (a director may only manage their own school's tree) and
  * is scoped by `withSchool`'s RLS session GUC, same pattern as
@@ -273,29 +305,7 @@ export const createClass = Effect.fn("AcademicTree.createClass")(function*(
   const command = yield* Schema.decodeEffect(CreateClassCommand)(rawCommand)
   return yield* authorized(
     command.schoolId,
-    withSchool(
-      command.schoolId,
-      Effect.gen(function*() {
-        const sql = yield* SqlClient
-        yield* requireOwnedRow(sql, "levels", "level", command.levelId, command.schoolId, RowWithId)
-        if (command.trackId !== undefined) {
-          const trackId = yield* Schema.decodeEffect(TrackId)(command.trackId)
-          const levelId = yield* Schema.decodeEffect(LevelId)(command.levelId)
-          yield* requireTrackBelongsToLevel(trackId, levelId, command.schoolId)
-        }
-
-        const repo = yield* classRepo
-        const cls = yield* repo.insert({
-          school_id: command.schoolId,
-          academic_year_id: command.academicYearId,
-          level_id: command.levelId,
-          track_id: command.trackId ?? null,
-          label: command.label,
-          capacity: command.capacity
-        })
-        return cls.id
-      })
-    )
+    withSchool(command.schoolId, insertClassRow(command))
   )
 })
 

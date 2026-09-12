@@ -11,5 +11,13 @@
     "lint": "oxlint .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "effect": "catalog:",
+    "@zschool/domain": "workspace:*",
+    "@aws-sdk/client-sqs": "^3.1131.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:"
   }
 }

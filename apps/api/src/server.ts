@@ -2,6 +2,7 @@ import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { RequirePermissionLive } from "@qadi/http/RequirePermission"
 import { AppSqlLive } from "@zschool/db"
 import { Api } from "@zschool/domain"
+import { SqsImportQueueLive } from "@zschool/infra"
 import * as Layer from "effect/Layer"
 import { HttpApiBuilder, HttpApiScalar } from "effect/unstable/httpapi"
 import { AuthorizationLive } from "./Authorization.ts"
@@ -47,7 +48,8 @@ const RequirePermissionFullyLive = RequirePermissionLive.pipe(
  */
 const ApiHandlersLive = ImportsApiHandlers.pipe(
   Layer.provide(EvaluationServicesNone),
-  Layer.provide(AppSqlLive)
+  Layer.provide(AppSqlLive),
+  Layer.provide(SqsImportQueueLive)
 )
 
 export const ApiLive = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
