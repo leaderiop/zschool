@@ -9,6 +9,7 @@ import { AcademicYearId, EnrollmentId, SchoolId, StudentPersonId } from "./Ids.t
 import { academicYearRepo } from "./InstantiateNationalTemplate.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 import { generatePaymentScheduleForAccount } from "./PaymentSchedule.ts"
+import { recomputeSiblingDiscounts } from "./SiblingDiscount.ts"
 
 /**
  * `Model.Class` for `enrollments` (issue #42), matching migration 0008's
@@ -237,6 +238,16 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
     Effect.catchTag("NoFeeScheduleError", () => Effect.void)
   )
 
+  // Ticket #58 (BEH-ZS-154): a newly-ACTIVE enrollment may be the second (or
+  // later) sibling to become active at this school this year — best-effort,
+  // like the payment-schedule generation just above: a school with no
+  // sibling-discount policy configured yet is a normal, temporary state, not
+  // a reason to refuse the enrollment. A `pre_enrolled` student never
+  // triggers this — nobody's bill changes until they actually activate.
+  if (status === "active") {
+    yield* recomputeSiblingDiscounts(validSchoolId, command.academicYearId, validStudentPersonId, "sibling_activated")
+  }
+
   // `status` (computed above via `computeEnrollmentStatus`), not
   // `enrollment.status` — the latter now decodes against the Model's own
   // widened `"pre_enrolled" | "active" | "completed"` literal (migration
@@ -259,6 +270,78 @@ export const createEnrollment = Effect.fn("Enrollment.createEnrollment")(functio
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "classes", "class", command.classId, schoolId, RowWithId)
         return yield* insertEnrollment(command)
+      })
+    )
+  )
+})
+
+export class EnrollmentNotActiveError
+  extends Schema.TaggedError<EnrollmentNotActiveError>()("EnrollmentNotActiveError", {
+    enrollmentId: Schema.String
+  })
+{}
+
+/**
+ * Ticket #58 (`fr-fin-04-sibling-discount.feature`'s "Youssef's enrollment
+ * closes mid-year"): the first mutation in this codebase that ever moves an
+ * enrollment out of `'active'` mid-year rather than at year-end archival
+ * (`HistoricalGradeImport.ts`'s synthesized `'completed'` rows). Reuses the
+ * existing `'completed'` status rather than adding new literals for
+ * withdrawn/transferred/expelled — ticket #63 (`BEH-ZS-172`/`173` balance
+ * survival) is expected to build on this same transition; distinguishing
+ * WHY an enrollment closed, if ever needed beyond the free-text
+ * `closure_reason` (migration 0017, mirroring `capacity_override_reason`'s
+ * shape), is that ticket's own concern.
+ *
+ * A raw `UPDATE`, not a typed `repo.update` — `Enrollment` carries no
+ * updatable fields at all (every column is `Model.FieldExcept`-free but the
+ * class itself is documented insert-only), the same reasoning
+ * `Class.ts`'s `deactivateClass` gives for mutating `is_active` directly.
+ */
+export const closeEnrollment = Effect.fn("Enrollment.closeEnrollment")(function*(
+  rawSchoolId: string,
+  enrollmentId: string,
+  reason: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorized(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const enrollment = yield* requireOwnedRow(
+          sql,
+          "enrollments",
+          "enrollment",
+          enrollmentId,
+          schoolId,
+          Schema.Struct({
+            status: Schema.String,
+            academic_year_id: Schema.String,
+            student_person_id: Schema.String
+          }),
+          "status, academic_year_id, student_person_id"
+        )
+        if (enrollment.status !== "active") {
+          return yield* Effect.fail(new EnrollmentNotActiveError({ enrollmentId }))
+        }
+
+        yield* sql`
+          UPDATE enrollments SET status = 'completed', closure_reason = ${reason}
+          WHERE id = ${enrollmentId} AND school_id = ${schoolId}
+        `
+
+        // Best-effort, same reasoning as `insertEnrollment`'s own call: a
+        // sibling remaining active loses the discount this closure was
+        // funding, or a lone remaining child simply has nothing left to
+        // recompute — either way, not a reason to fail the closure itself.
+        yield* recomputeSiblingDiscounts(
+          schoolId,
+          enrollment.academic_year_id,
+          enrollment.student_person_id,
+          "sibling_closed"
+        )
       })
     )
   )

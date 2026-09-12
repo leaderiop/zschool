@@ -6,26 +6,14 @@ import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { requireTrackBelongsToLevel } from "./AcademicTree.ts"
+import { FEE_NATURES, type FeeNature } from "./FeeNatures.ts"
 import { FeeItemId, FeeScheduleId, LevelId, SchoolId, TrackId } from "./Ids.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
 
-/** BEH-ZS-151's typed fee-line natures — not an exhaustive closed catalog forever, but the only ones a fee line may carry at MVP. */
-export const FEE_NATURES = [
-  "registration",
-  "re_enrollment",
-  "tuition",
-  "insurance",
-  "transport",
-  "canteen",
-  "activities",
-  "supplies",
-  "textbooks",
-  "uniform"
-] as const
-
-export type FeeNature = (typeof FEE_NATURES)[number]
+/** BEH-ZS-151's typed fee-line natures — split into `FeeNatures.ts` (ticket #58) to avoid a module cycle; re-exported here unchanged so existing `import { FEE_NATURES } from "./FeeSchedule.ts"` call sites need no edits. */
+export { FEE_NATURES, type FeeNature }
 
 export const FEE_FREQUENCIES = ["one_time", "monthly", "quarterly", "annual"] as const
 
