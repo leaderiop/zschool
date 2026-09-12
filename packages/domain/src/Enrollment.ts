@@ -8,6 +8,7 @@ import { ensureFinancialAccount } from "./FinancialAccount.ts"
 import { AcademicYearId, EnrollmentId, SchoolId, StudentPersonId } from "./Ids.ts"
 import { academicYearRepo } from "./InstantiateNationalTemplate.ts"
 import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
+import { generatePaymentScheduleForAccount } from "./PaymentSchedule.ts"
 
 /**
  * `Model.Class` for `enrollments` (issue #42), matching migration 0008's
@@ -222,7 +223,19 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
   // `'completed'` enrollments deliberately go through `enrollmentRepo`
   // directly, not this function, and don't get one: an already-closed
   // archival year has no live financial relationship to track.
-  yield* ensureFinancialAccount(validSchoolId, enrollment.id)
+  const financialAccountId = yield* ensureFinancialAccount(validSchoolId, enrollment.id)
+
+  // ticket #57 (BEH-ZS-153): best-effort — a school onboarding mid-setup
+  // routinely has students enrolling before its director has finished
+  // defining fee schedules for every level/track. Missing one is a normal,
+  // temporary state, not a reason to refuse the enrollment itself; a
+  // director can trigger generation explicitly later via
+  // `PaymentSchedule.ts`'s `triggerPaymentScheduleGeneration` once the
+  // schedule exists. Reuses the `financialAccountId` just resolved above
+  // rather than `generatePaymentSchedule` re-resolving the same account.
+  yield* generatePaymentScheduleForAccount(validSchoolId, enrollment.id, financialAccountId).pipe(
+    Effect.catchTag("NoFeeScheduleError", () => Effect.void)
+  )
 
   // `status` (computed above via `computeEnrollmentStatus`), not
   // `enrollment.status` — the latter now decodes against the Model's own

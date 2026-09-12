@@ -100,3 +100,9 @@ export type FinancialGuardianDesignationId = typeof FinancialGuardianDesignation
 
 export const FinancialAccountPayerId = Schema.String.pipe(Schema.brand("FinancialAccountPayerId"))
 export type FinancialAccountPayerId = typeof FinancialAccountPayerId.Type
+
+export const InstallmentId = Schema.String.pipe(Schema.brand("InstallmentId"))
+export type InstallmentId = typeof InstallmentId.Type
+
+export const InstallmentAdjustmentId = Schema.String.pipe(Schema.brand("InstallmentAdjustmentId"))
+export type InstallmentAdjustmentId = typeof InstallmentAdjustmentId.Type
