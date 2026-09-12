@@ -5,6 +5,7 @@ import {
   attachStudentProfile,
   commitGradeImportBatch,
   createPerson,
+  type GradeAnalysisResult,
   type GradeImportRow,
   type GradeRowResult,
   GradingScales,
@@ -29,7 +30,7 @@ class World extends Context.Service<World, {
   readonly classId: Ref.Ref<string | undefined>
   readonly rows: Ref.Ref<ReadonlyArray<GradeImportRow>>
   readonly commitResult: Ref.Ref<ReadonlyArray<GradeRowResult> | undefined>
-  readonly analysis: Ref.Ref<ReadonlyArray<{ readonly status: string }> | undefined>
+  readonly analysis: Ref.Ref<ReadonlyArray<GradeAnalysisResult> | undefined>
 }>()("World") {
   static readonly layer = Layer.effect(
     this,
@@ -40,7 +41,7 @@ class World extends Context.Service<World, {
         classId: yield* Ref.make<string | undefined>(undefined),
         rows: yield* Ref.make<ReadonlyArray<GradeImportRow>>([]),
         commitResult: yield* Ref.make<ReadonlyArray<GradeRowResult> | undefined>(undefined),
-        analysis: yield* Ref.make<ReadonlyArray<{ readonly status: string }> | undefined>(undefined)
+        analysis: yield* Ref.make<ReadonlyArray<GradeAnalysisResult> | undefined>(undefined)
       })
     })
   )
@@ -127,12 +128,11 @@ describeFeature(
     Then("a Mark is created, attached to the student's Enrollment", function*() {
       const world = yield* World
       const result = yield* Ref.get(world.commitResult)
-      assert.strictEqual(result![0].status, "committed")
-      if (result![0].status !== "committed") throw new Error("unreachable")
+      const [row] = result!
+      assert.strictEqual(row.status, "committed")
+      if (row.status !== "committed") throw new Error("unreachable")
 
-      const count = yield* ownerCount((sql) =>
-        sql`SELECT count(*)::int AS count FROM marks WHERE id = ${result![0].markId}`
-      )
+      const count = yield* ownerCount((sql) => sql`SELECT count(*)::int AS count FROM marks WHERE id = ${row.markId}`)
       assert.strictEqual(count, 1)
     })
 
@@ -149,12 +149,13 @@ describeFeature(
     Then("the stored Mark value is {int}", function*(expectedValue) {
       const world = yield* World
       const result = yield* Ref.get(world.commitResult)
-      assert.strictEqual(result![0].status, "committed")
-      if (result![0].status !== "committed") throw new Error("unreachable")
+      const [row] = result!
+      assert.strictEqual(row.status, "committed")
+      if (row.status !== "committed") throw new Error("unreachable")
 
       const [{ value }] = yield* asOwner(Effect.gen(function*() {
         const sql = yield* SqlClient
-        return yield* sql<{ value: string }>`SELECT value FROM marks WHERE id = ${result![0].markId}`
+        return yield* sql<{ value: string }>`SELECT value FROM marks WHERE id = ${row.markId}`
       }))
       assert.strictEqual(Number(value), expectedValue)
     })
@@ -228,7 +229,7 @@ describeFeature(
       const [row] = analysis!
       assert.strictEqual(row.status, "error")
       if (row.status !== "error") throw new Error("unreachable")
-      assert.include((row as { readonly error: { readonly reason: string } }).error.reason, "DOES-NOT-EXIST")
+      assert.include(row.error.reason, "DOES-NOT-EXIST")
     })
 
     Given("a grade row already committed once", function*() {
