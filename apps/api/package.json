@@ -13,6 +13,15 @@
   "dependencies": {
     "@zschool/domain": "workspace:*",
     "@zschool/db": "workspace:*",
-    "@zschool/clients": "workspace:*"
+    "@zschool/clients": "workspace:*",
+    "effect": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@qadi/core": "catalog:",
+    "@qadi/http": "catalog:",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@qadi/testing": "catalog:"
   }
 }

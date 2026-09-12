@@ -17,19 +17,20 @@
     "prepare": "effect-tsgo patch --typescript --oxlint"
   },
   "devDependencies": {
-    "@effect-cucumber/gherkin": "^0.9.0",
-    "@effect-cucumber/vitest": "^0.9.0",
-    "@effect/platform-node": "4.0.0-rc.113",
+    "@effect-cucumber/gherkin": "catalog:",
+    "@effect-cucumber/vitest": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@effect/tsgo": "0.45.0",
-    "@effect/vitest": "4.0.0-rc.113",
-    "@qadi/core": "0.5.0",
-    "@qadi/testing": "0.5.0",
+    "@effect/vitest": "catalog:",
+    "@qadi/core": "catalog:",
+    "@qadi/http": "catalog:",
+    "@qadi/testing": "catalog:",
     "@testcontainers/postgresql": "^12.1.0",
     "@zschool/db": "workspace:*",
     "@zschool/domain": "workspace:*",
     "dotenv-cli": "^11.0.0",
     "dprint": "^0.57.4",
-    "effect": "4.0.0-rc.113",
+    "effect": "catalog:",
     "oxlint": "1.82.0",
     "oxlint-tsgolint": "7.0.2001",
     "turbo": "^2.10.12",
@@ -38,8 +39,8 @@
   },
   "pnpm": {
     "overrides": {
-      "effect": "4.0.0-rc.113",
-      "@effect/platform-node-shared": "4.0.0-rc.113"
+      "effect": "catalog:",
+      "@effect/platform-node-shared": "catalog:"
     }
   }
 }

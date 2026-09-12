@@ -4,35 +4,65 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@effect-cucumber/gherkin':
+      specifier: 0.10.0
+      version: 0.10.0
+    '@effect-cucumber/vitest':
+      specifier: 0.10.0
+      version: 0.10.0
+    '@effect/platform-node':
+      specifier: 4.0.0-rc.115
+      version: 4.0.0-rc.115
+    '@effect/sql-pg':
+      specifier: 4.0.0-rc.115
+      version: 4.0.0-rc.115
+    '@effect/vitest':
+      specifier: 4.0.0-rc.115
+      version: 4.0.0-rc.115
+    '@qadi/core':
+      specifier: 0.6.2
+      version: 0.6.2
+    '@qadi/http':
+      specifier: 0.6.2
+      version: 0.6.2
+    '@qadi/testing':
+      specifier: 0.6.2
+      version: 0.6.2
+
 overrides:
-  effect: 4.0.0-rc.113
-  '@effect/platform-node-shared': 4.0.0-rc.113
+  effect: 4.0.0-rc.115
+  '@effect/platform-node-shared': 4.0.0-rc.115
 
 importers:
 
   .:
     devDependencies:
       '@effect-cucumber/gherkin':
-        specifier: ^0.9.0
-        version: 0.9.0(effect@4.0.0-rc.113)
+        specifier: 'catalog:'
+        version: 0.10.0(effect@4.0.0-rc.115)
       '@effect-cucumber/vitest':
-        specifier: ^0.9.0
-        version: 0.9.0(@effect/platform-node@4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1))(@effect/vitest@4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))))(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+        specifier: 'catalog:'
+        version: 0.10.0(@effect/platform-node@4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1))(@effect/vitest@4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))))(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
       '@effect/platform-node':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1)
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)
       '@effect/tsgo':
         specifier: 0.45.0
         version: 0.45.0
       '@effect/vitest':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
       '@qadi/core':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 'catalog:'
+        version: 0.6.2
+      '@qadi/http':
+        specifier: 'catalog:'
+        version: 0.6.2
       '@qadi/testing':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 'catalog:'
+        version: 0.6.2
       '@testcontainers/postgresql':
         specifier: ^12.1.0
         version: 12.1.0
@@ -49,8 +79,8 @@ importers:
         specifier: ^0.57.4
         version: 0.57.4
       effect:
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
       oxlint:
         specifier: 1.82.0
         version: 1.82.0(oxlint-tsgolint@7.0.2001)
@@ -69,6 +99,15 @@ importers:
 
   apps/api:
     dependencies:
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)
+      '@qadi/core':
+        specifier: 'catalog:'
+        version: 0.6.2
+      '@qadi/http':
+        specifier: 'catalog:'
+        version: 0.6.2
       '@zschool/clients':
         specifier: workspace:*
         version: link:../../packages/clients
@@ -78,6 +117,19 @@ importers:
       '@zschool/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+      '@qadi/testing':
+        specifier: 'catalog:'
+        version: 0.6.2
 
   apps/web:
     dependencies:
@@ -100,23 +152,30 @@ importers:
         specifier: workspace:*
         version: link:../../packages/infra
 
-  packages/clients: {}
+  packages/clients:
+    dependencies:
+      '@zschool/domain':
+        specifier: workspace:*
+        version: link:../domain
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
 
   packages/db:
     dependencies:
       '@effect/platform-node':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1)
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)
       '@effect/sql-pg':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)
       effect:
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
     devDependencies:
       '@effect/vitest':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
       tsx:
         specifier: ^4.20.6
         version: 4.23.13
@@ -124,18 +183,21 @@ importers:
   packages/domain:
     dependencies:
       '@qadi/core':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 'catalog:'
+        version: 0.6.2
+      '@qadi/http':
+        specifier: 'catalog:'
+        version: 0.6.2
       '@zschool/db':
         specifier: workspace:*
         version: link:../db
       effect:
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
     devDependencies:
       '@effect/vitest':
-        specifier: 4.0.0-rc.113
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
 
   packages/infra: {}
 
@@ -228,38 +290,38 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@effect-cucumber/gherkin@0.9.0':
-    resolution: {integrity: sha512-n71pe1IWuMl69ytbFTEOw061qcNhEikUL+KslzHveozLiTKf0eCseVdyozGpaV/HDEaX4Je88HBr7yPbYngrSA==}
+  '@effect-cucumber/gherkin@0.10.0':
+    resolution: {integrity: sha512-eEzuDkyThWnu7PMg+1es5hw3WM6wkwP6LcUqfbwjPvBXv4dKz+aBAErkr4qcemAJZAD5N399BrlHM7W8HJWN3w==}
     engines: {node: '>=20'}
     peerDependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
-  '@effect-cucumber/vitest@0.9.0':
-    resolution: {integrity: sha512-no4THuEtdMq5lK0fKCzmNpa5jDYW/9W6F/RHHNhnANB5zRSHcQPPAY9zH/uwWnFy82GWOtMzbPqM4tuO6+GONw==}
+  '@effect-cucumber/vitest@0.10.0':
+    resolution: {integrity: sha512-z2ThvOKPqoAWXOvPLfc9jAd2w+R3dQgaO5oB+A+xXhmmR5C02Zm2Ujv70swMC9q8ddHewb89YQYVffnE2GEYPQ==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
-      '@effect/platform-node': ^4.0.0-rc.113
-      '@effect/vitest': ^4.0.0-rc.113
-      effect: 4.0.0-rc.113
+      '@effect/platform-node': ^4.0.0-rc.115
+      '@effect/vitest': ^4.0.0-rc.115
+      effect: 4.0.0-rc.115
       vitest: '>=5.0.0 <6.0.0'
 
-  '@effect/platform-node-shared@4.0.0-rc.113':
-    resolution: {integrity: sha512-EPCfjvKlHmNDgqIlT85P1OcgNUNvRxNtBpTFOz1UGHwNJe6Ap7rP93Rue7kzFUeplQMy6EfoZEH4CJR4N0nJ1g==}
+  '@effect/platform-node-shared@4.0.0-rc.115':
+    resolution: {integrity: sha512-rcBwhDIfb82akJoTv7Vwh8K5x9vC/XfuePS7JjOr+z+dORXzsmKqI1BUQF27ARCN9fTAbDh7I6YvBlWhLjnqNg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
-  '@effect/platform-node@4.0.0-rc.113':
-    resolution: {integrity: sha512-8luSE2JcGVsALQ6cZOWh5jdZu+VgcUKIKPfhN/MjX+ZzIuK/krm3jZBHYZdhqkXjM9s8aYGBxNMHGF0WzF+Gpg==}
+  '@effect/platform-node@4.0.0-rc.115':
+    resolution: {integrity: sha512-mW03Wjq2FiTL5oi9yOkaKpCyUNBaduKgTk7qMHNELvC21Jq2qOAfdsfH+p+s2zmpB9w2RSa+ApODv4WjO9wQfw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
       redis: '>=5.0.0 <7.0.0'
 
-  '@effect/sql-pg@4.0.0-rc.113':
-    resolution: {integrity: sha512-xsAbmxsR5sC6Pc/38nB4/rBi1co4aCC7e4T95sVy8EhWA9NRheimtiN05EyhTKZwX1C0T2gquainQwCuQYuKuA==}
+  '@effect/sql-pg@4.0.0-rc.115':
+    resolution: {integrity: sha512-TLdzqBvGF/HwAKpWTw/5ih7JqVkkakVSb4aD6amzMaavFfFl4vsqqeKjSBijwuzbOMANNN0HqnEt/9fgjTsFEA==}
     peerDependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
   '@effect/tsgo-darwin-arm64@0.45.0':
     resolution: {integrity: sha512-WUoiEVcm8E19QK6fl63lsssM4dkT9IFnULbmqQ6LBfv7H9uRkpE9S3thj8ZtZ+vl/QY8atwfuaTf+3A1m/kGtQ==}
@@ -300,10 +362,10 @@ packages:
     resolution: {integrity: sha512-gPG0ixVHgtYBUe5DbKX9vzHlhqd9+ZEfs4m/XWy0808av0A2XqMzaG3F5rnPBN7EUJRPlo9TluIi8WHx/pBV+A==}
     hasBin: true
 
-  '@effect/vitest@4.0.0-rc.113':
-    resolution: {integrity: sha512-ebuPhtZmumq1967n0vgF0sgAx/8tRHMmNGOdH1Oya1jKzV2Yoqhlv8WCGT0N//PuaV/Pc/zky3mmDvxmW81FiQ==}
+  '@effect/vitest@4.0.0-rc.115':
+    resolution: {integrity: sha512-DJR0hfdr3HNXAkzW8AzfvUz6VmrNFLrKk9tZGDURi33faMyxkc7ZewxELMMZwGpOTGN4mfqYVbX2CXgI+ZJBeQ==}
     peerDependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
       vitest: '>=5.0.0 <6.0.0'
 
   '@esbuild/aix-ppc64@0.28.2':
@@ -674,13 +736,17 @@ packages:
   '@protobufjs/utf8@1.1.2':
     resolution: {integrity: sha512-b1UQwcEZ4yCnMCD8DAL1VlbvBJE9/IX4FTIp7BG1xYpf29SLazLSrqUkj4w7Y5y7cCVP6E5tcqqcI0xemPkHug==}
 
-  '@qadi/core@0.5.0':
-    resolution: {integrity: sha512-XbNz9Cel63SfyrSd+QxtuzQOgXrBAAm1KxPxnPfjdDnCvRrofH7/UqFxp3aorCoV3MZ6HT2O5Io8wruE2JEHkw==}
-    engines: {node: '>=20.19.0'}
+  '@qadi/core@0.6.2':
+    resolution: {integrity: sha512-23I1fTh5DjxCXgyqSizabBPoeeEIsPnnbEmUNybnOVB7EH9WSRe4cnDDI+qrKOTJBy5N6ulje5NqKMJOguJ2Sg==}
+    engines: {node: '>=22.12.0'}
 
-  '@qadi/testing@0.5.0':
-    resolution: {integrity: sha512-vvB50noLgW1BAQKWxvdHSZ+BgVuwtyw/7qHIfgfc6qbHUOtCBnJOq9U0o4vZL4mvAbQyVayU7Lgt0SS6yM6EYw==}
-    engines: {node: '>=20.19.0'}
+  '@qadi/http@0.6.2':
+    resolution: {integrity: sha512-an7DrafkctoDcyUFv157jomzEKPx8OG/zUCk6IfJzste7hFBKz3tMaCa6+Q60d5vchNaI9SwiSDiWId7nYurXg==}
+    engines: {node: '>=22.12.0'}
+
+  '@qadi/testing@0.6.2':
+    resolution: {integrity: sha512-WXs+E39x81l37ozFlMEm9Gl8G8eduznq1AkOYJIVs5HnFk9Y9tJiHRmjtPQGUvEEizitoGft17Mp7/+dK0uieQ==}
+    engines: {node: '>=22.12.0'}
 
   '@redis/bloom@6.2.1':
     resolution: {integrity: sha512-huQgNLaCIZfQ9SeLn4q9124uOUd8HbZDYHwwUzNcRgHqCHiHKl2dDxMqJCeWh8cMqZAoWuHR8XnWbDMIf+o7ag==}
@@ -1224,8 +1290,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  effect@4.0.0-rc.113:
-    resolution: {integrity: sha512-uZ4Bh7KSlw2sdVdNDHPLSNjLGH+MWap7cheIHZoB/1T/ZJ3pvI4KiN3kUp50MpFKXhygOMmReJJOwWMQPwpPAg==}
+  effect@4.0.0-rc.115:
+    resolution: {integrity: sha512-ogYulZ5ffeOzrJqQrG0XOkDO5lKn2s9KNHhoxJy/6wKUkF0i12dlVXWA9TgsgQ+zV/JzizyG0+XMPepZEQX6vw==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -1328,6 +1394,9 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
   lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
@@ -1899,44 +1968,44 @@ snapshots:
   '@dprint/win32-x64@0.57.4':
     optional: true
 
-  '@effect-cucumber/gherkin@0.9.0(effect@4.0.0-rc.113)':
+  '@effect-cucumber/gherkin@0.10.0(effect@4.0.0-rc.115)':
     dependencies:
       '@cucumber/cucumber-expressions': 20.1.0
       '@cucumber/gherkin': 42.0.1
       '@cucumber/messages': 34.2.1
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
-  '@effect-cucumber/vitest@0.9.0(@effect/platform-node@4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1))(@effect/vitest@4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))))(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))':
+  '@effect-cucumber/vitest@0.10.0(@effect/platform-node@4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1))(@effect/vitest@4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))))(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))':
     dependencies:
-      '@effect-cucumber/gherkin': 0.9.0(effect@4.0.0-rc.113)
-      '@effect/platform-node': 4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1)
-      '@effect/vitest': 4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
-      effect: 4.0.0-rc.113
+      '@effect-cucumber/gherkin': 0.10.0(effect@4.0.0-rc.115)
+      '@effect/platform-node': 4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)
+      '@effect/vitest': 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))
+      effect: 4.0.0-rc.115
       tinyglobby: 0.2.17
       vitest: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
 
-  '@effect/platform-node-shared@4.0.0-rc.113(effect@4.0.0-rc.113)':
+  '@effect/platform-node-shared@4.0.0-rc.115(effect@4.0.0-rc.115)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
       ws: 8.21.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-rc.113(effect@4.0.0-rc.113)(redis@6.2.1)':
+  '@effect/platform-node@4.0.0-rc.115(effect@4.0.0-rc.115)(redis@6.2.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.113(effect@4.0.0-rc.113)
-      effect: 4.0.0-rc.113
+      '@effect/platform-node-shared': 4.0.0-rc.115(effect@4.0.0-rc.115)
+      effect: 4.0.0-rc.115
       redis: 6.2.1
       undici: 8.10.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/sql-pg@4.0.0-rc.113(effect@4.0.0-rc.113)':
+  '@effect/sql-pg@4.0.0-rc.115(effect@4.0.0-rc.115)':
     dependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
   '@effect/tsgo-darwin-arm64@0.45.0':
     optional: true
@@ -1969,9 +2038,9 @@ snapshots:
       '@effect/tsgo-win32-arm64': 0.45.0
       '@effect/tsgo-win32-x64': 0.45.0
 
-  '@effect/vitest@4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))':
+  '@effect/vitest@4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)))':
     dependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
       vitest: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
 
   '@esbuild/aix-ppc64@0.28.2':
@@ -2197,14 +2266,19 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
-  '@qadi/core@0.5.0':
+  '@qadi/core@0.6.2':
     dependencies:
-      effect: 4.0.0-rc.113
+      effect: 4.0.0-rc.115
 
-  '@qadi/testing@0.5.0':
+  '@qadi/http@0.6.2':
     dependencies:
-      '@qadi/core': 0.5.0
-      effect: 4.0.0-rc.113
+      '@qadi/core': 0.6.2
+      effect: 4.0.0-rc.115
+
+  '@qadi/testing@0.6.2':
+    dependencies:
+      '@qadi/core': 0.6.2
+      effect: 4.0.0-rc.115
 
   '@redis/bloom@6.2.1(@redis/client@6.2.1)':
     dependencies:
@@ -2642,7 +2716,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  effect@4.0.0-rc.113: {}
+  effect@4.0.0-rc.115: {}
 
   emoji-regex@8.0.0: {}
 
@@ -2749,6 +2823,8 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jose@6.2.12: {}
 
   lazystream@1.0.1:
     dependencies:
