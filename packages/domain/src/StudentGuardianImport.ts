@@ -19,7 +19,7 @@ import {
   recordGuardianRelationship
 } from "./Identity.ts"
 import { GuardianPersonId, SchoolId, StudentPersonId } from "./Ids.ts"
-import { failureReason, ImportRowError } from "./ImportRowError.ts"
+import { failureReason, ImportRowError, ImportRowErrorPublicSchema } from "./ImportRowError.ts"
 import { authorized } from "./Ownership.ts"
 
 /**
@@ -53,12 +53,6 @@ export interface GuardianImportRow {
   readonly confirmedMatchPersonId?: string
 }
 
-export type GuardianRowResult =
-  | { readonly rowId: string; readonly status: "creatable" }
-  | { readonly rowId: string; readonly status: "phone_match_proposed"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "weak_match_alert"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
-
 /**
  * Validates the shape of a guardian row before any matching runs — non-empty
  * name/DOB, a mobile number in the same E.164 shape `Identity.ts`'s
@@ -67,7 +61,7 @@ export type GuardianRowResult =
  * (same pattern as `ClassImportAnalysis.ts`'s `decodeClassImportRow`) so
  * this boundary is unit-testable without a `SqlClient`.
  */
-const GuardianImportRowSchema = Schema.Struct({
+export const GuardianImportRowSchema = Schema.Struct({
   rowId: Schema.NonEmptyString,
   firstName: Schema.NonEmptyString,
   lastName: Schema.NonEmptyString,
@@ -78,6 +72,46 @@ const GuardianImportRowSchema = Schema.Struct({
 
 export const decodeGuardianImportRow = (row: GuardianImportRow): Result.Result<GuardianImportRow, Schema.SchemaError> =>
   Schema.decodeResult(GuardianImportRowSchema)(row)
+
+const guardianRowCreatable = Schema.Struct({ rowId: Schema.String, status: Schema.Literal("creatable") })
+const guardianRowPhoneMatchProposed = Schema.Struct({
+  rowId: Schema.String,
+  status: Schema.Literal("phone_match_proposed"),
+  personId: Schema.String
+})
+const guardianRowWeakMatchAlert = Schema.Struct({
+  rowId: Schema.String,
+  status: Schema.Literal("weak_match_alert"),
+  personId: Schema.String
+})
+
+/**
+ * Issue #38: exported (was private) so the `imports` HttpApi group's
+ * `analyzeGuardians` endpoint validates its request body against this exact
+ * schema — the UI, the server, and this module's own matching logic can
+ * never disagree about what a valid guardian row looks like.
+ */
+export const GuardianRowResultSchema = Schema.Union([
+  guardianRowCreatable,
+  guardianRowPhoneMatchProposed,
+  guardianRowWeakMatchAlert,
+  Schema.Struct({ rowId: Schema.String, status: Schema.Literal("error"), error: ImportRowError })
+])
+
+export type GuardianRowResult = typeof GuardianRowResultSchema.Type
+
+/**
+ * The `analyzeGuardians` endpoint's actual wire contract — everything
+ * `GuardianRowResultSchema` has, except `error` carries
+ * `ImportRowErrorPublicSchema` (no `cause`) instead of the full
+ * `ImportRowError`. See that schema's own doc comment for why.
+ */
+export const GuardianRowResultHttpSchema = Schema.Union([
+  guardianRowCreatable,
+  guardianRowPhoneMatchProposed,
+  guardianRowWeakMatchAlert,
+  Schema.Struct({ rowId: Schema.String, status: Schema.Literal("error"), error: ImportRowErrorPublicSchema })
+])
 
 /**
  * The one place a per-row outcome (a matching lookup, a committed
@@ -172,8 +206,13 @@ export interface StudentImportRow {
   readonly confirmedMatchPersonId?: string
 }
 
-/** Same reasoning as `GuardianImportRowSchema` above, for a student row's own required fields plus its embedded guardian entries. */
-const StudentImportRowSchema = Schema.Struct({
+/**
+ * Same reasoning as `GuardianImportRowSchema` above, for a student row's own
+ * required fields plus its embedded guardian entries. Exported (issue #38)
+ * for the same reason: the `imports` HttpApi group's `analyzeStudents`
+ * endpoint validates against this exact schema.
+ */
+export const StudentImportRowSchema = Schema.Struct({
   rowId: Schema.NonEmptyString,
   firstName: Schema.NonEmptyString,
   lastName: Schema.NonEmptyString,
@@ -236,11 +275,35 @@ const resolveClass = Effect.fn("StudentGuardianImport.resolveClass")(function*(
   return Option.isNone(classOpt) ? undefined : { id: classOpt.value.id }
 })
 
-export type StudentAnalysisResult =
-  | { readonly rowId: string; readonly status: "creatable" }
-  | { readonly rowId: string; readonly status: "strong_match_awaiting_confirmation"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "weak_match_alert"; readonly personId: string }
-  | { readonly rowId: string; readonly status: "error"; readonly error: ImportRowError }
+const studentRowCreatable = Schema.Struct({ rowId: Schema.String, status: Schema.Literal("creatable") })
+const studentRowStrongMatchAwaitingConfirmation = Schema.Struct({
+  rowId: Schema.String,
+  status: Schema.Literal("strong_match_awaiting_confirmation"),
+  personId: Schema.String
+})
+const studentRowWeakMatchAlert = Schema.Struct({
+  rowId: Schema.String,
+  status: Schema.Literal("weak_match_alert"),
+  personId: Schema.String
+})
+
+/** Issue #38: exported for the same reason as `GuardianRowResultSchema` above — the `analyzeStudents` endpoint's response shares this exact schema. */
+export const StudentAnalysisResultSchema = Schema.Union([
+  studentRowCreatable,
+  studentRowStrongMatchAwaitingConfirmation,
+  studentRowWeakMatchAlert,
+  Schema.Struct({ rowId: Schema.String, status: Schema.Literal("error"), error: ImportRowError })
+])
+
+export type StudentAnalysisResult = typeof StudentAnalysisResultSchema.Type
+
+/** The `analyzeStudents` endpoint's actual wire contract — see `GuardianRowResultHttpSchema`'s doc comment for why the `error` branch differs from `StudentAnalysisResultSchema`'s. */
+export const StudentAnalysisResultHttpSchema = Schema.Union([
+  studentRowCreatable,
+  studentRowStrongMatchAwaitingConfirmation,
+  studentRowWeakMatchAlert,
+  Schema.Struct({ rowId: Schema.String, status: Schema.Literal("error"), error: ImportRowErrorPublicSchema })
+])
 
 /**
  * Same DI correction as `resolveClass` above, and the same decode-isolation

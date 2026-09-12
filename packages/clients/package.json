@@ -11,5 +11,9 @@
     "lint": "oxlint .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@zschool/domain": "workspace:*",
+    "effect": "catalog:"
   }
 }

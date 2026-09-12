@@ -13,11 +13,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "effect": "4.0.0-rc.113",
+    "effect": "catalog:",
     "@zschool/db": "workspace:*",
-    "@qadi/core": "0.5.0"
+    "@qadi/core": "catalog:",
+    "@qadi/http": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-rc.113"
+    "@effect/vitest": "catalog:"
   }
 }
