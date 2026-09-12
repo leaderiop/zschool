@@ -1,16 +1,35 @@
 import { describe, expect, it } from "@effect/vitest"
+import { makeSubject } from "@qadi/core/AuthSubject"
+import { currentSubjectLayer } from "@qadi/core/CurrentSubject"
+import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { AppSqlLive, withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import {
+  createClass,
+  createGroup,
+  deactivateClass,
+  deleteClass,
+  EnrollmentsExistError,
   findClassByLevelAndLabel,
   findClassByLevelLabelAndTrack,
   findLevelByCode,
-  findTrackByCode
+  findTrackByCode,
+  levelCapacity,
+  renameClass,
+  renameLevel
 } from "./AcademicTree.ts"
 
 const NIL = "00000000-0000-0000-0000-000000000000"
+
+/** A director's `Qadi.assert` context, scoped to `schoolId` — every command function under test (`createClass`, `renameClass`, ...) is gated by `Ownership.ts`'s `authorized`. */
+const asDirectorOf = (schoolId: string) =>
+  Layer.merge(
+    EvaluationServicesNone,
+    currentSubjectLayer(makeSubject({ id: "director-1", roles: ["director"], attributes: { school_id: schoolId } }))
+  )
 
 /**
  * Seeds one school → academic year → section → cycle → level → track →
@@ -20,7 +39,9 @@ const NIL = "00000000-0000-0000-0000-000000000000"
  * tests below to have a real row to decode.
  */
 const withSeededClass = <A, E, R>(
-  use: (seed: { schoolId: string; levelId: string; trackId: string; classId: string }) => Effect.Effect<A, E, R>
+  use: (
+    seed: { schoolId: string; academicYearId: string; levelId: string; trackId: string; classId: string }
+  ) => Effect.Effect<A, E, R>
 ) =>
   Effect.gen(function*() {
     const sql = yield* SqlClient
@@ -53,7 +74,13 @@ const withSeededClass = <A, E, R>(
           INSERT INTO classes (school_id, academic_year_id, level_id, track_id, label, capacity)
           VALUES (${school.id}, ${year.id}, ${level.id}, ${track.id}, '6AP-1', 30) RETURNING id
         `
-        return yield* use({ schoolId: school.id, levelId: level.id, trackId: track.id, classId: cls.id })
+        return yield* use({
+          schoolId: school.id,
+          academicYearId: year.id,
+          levelId: level.id,
+          trackId: track.id,
+          classId: cls.id
+        })
       })
     )
   }).pipe(Effect.provide(AppSqlLive))
@@ -122,4 +149,148 @@ describe("AcademicTree shared lookups (issue #39)", () => {
       const result = yield* findClassByLevelLabelAndTrack(NIL, NIL, "Unmatched", null)
       expect(Option.isNone(result)).toBe(true)
     }).pipe(Effect.provide(AppSqlLive)))
+})
+
+/**
+ * Ticket #3's own acceptance criteria, exercised end to end against real
+ * seeded rows — until now only the read-only lookup functions above had
+ * regression coverage; `createClass`/`createGroup`/`levelCapacity`/
+ * `renameClass`/`renameLevel`/`deactivateClass`/`deleteClass` (the actual
+ * behaviors the criteria describe) had none.
+ */
+describe("AcademicTree commands (ticket #3)", () => {
+  it.effect("a director can create a Class under a Level with a label and capacity, and a Group within it", () =>
+    withSeededClass(({ academicYearId, levelId, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const director = asDirectorOf(schoolId)
+
+        const classId = yield* createClass({
+          schoolId,
+          academicYearId,
+          levelId,
+          label: "6AP-2",
+          capacity: 25
+        }).pipe(Effect.provide(director))
+
+        const [created] = yield* sql<{ label: string; capacity: number; track_id: string | null }>`
+          SELECT label, capacity, track_id FROM classes WHERE id = ${classId}
+        `
+        expect(created).toEqual({ label: "6AP-2", capacity: 25, track_id: null })
+
+        const groupId = yield* createGroup({
+          schoolId,
+          academicYearId,
+          classId,
+          code: "EN",
+          name: "English",
+          groupType: "language"
+        }).pipe(Effect.provide(director))
+
+        const [group] = yield* sql<{ class_id: string; group_type: string }>`
+          SELECT class_id, group_type FROM groups WHERE id = ${groupId}
+        `
+        expect(group).toEqual({ class_id: classId, group_type: "language" })
+      })
+    ))
+
+  it.effect("a level's capacity is the sum of its active classes' capacities, excluding a deactivated one", () =>
+    withSeededClass(({ academicYearId, classId, levelId, schoolId }) =>
+      Effect.gen(function*() {
+        const director = asDirectorOf(schoolId)
+        // `withSeededClass` already seeded one class of capacity 30.
+        const secondClassId = yield* createClass({
+          schoolId,
+          academicYearId,
+          levelId,
+          label: "6AP-3",
+          capacity: 20
+        }).pipe(Effect.provide(director))
+
+        expect(yield* levelCapacity(schoolId, levelId)).toBe(50)
+
+        yield* deactivateClass(schoolId, classId).pipe(Effect.provide(director))
+        expect(yield* levelCapacity(schoolId, levelId)).toBe(20)
+      })
+    ))
+
+  it.effect("renaming a Class/Level is logged to structure_audit_log and never breaks the row's id", () =>
+    withSeededClass(({ classId, levelId, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const director = asDirectorOf(schoolId)
+
+        yield* renameClass(schoolId, classId, "6AP-1 Renamed").pipe(Effect.provide(director))
+        yield* renameLevel(schoolId, levelId, "Sixième Année Primaire (Renamed)").pipe(Effect.provide(director))
+
+        const [cls] = yield* sql<{ id: string; label: string }>`SELECT id, label FROM classes WHERE id = ${classId}`
+        expect(cls).toEqual({ id: classId, label: "6AP-1 Renamed" })
+
+        const auditRows = yield* sql<{ entity_type: string; entity_id: string; action: string }>`
+          SELECT entity_type, entity_id, action FROM structure_audit_log
+          WHERE school_id = ${schoolId} AND action = 'renamed'
+          ORDER BY entity_type
+        `
+        expect(auditRows).toEqual([
+          { entity_type: "class", entity_id: classId, action: "renamed" },
+          { entity_type: "level", entity_id: levelId, action: "renamed" }
+        ])
+      })
+    ))
+
+  it.effect("deleting a Class rejects with EnrollmentsExistError when it has an active enrollment; deactivation is unaffected", () =>
+    withSeededClass(({ academicYearId, classId, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const director = asDirectorOf(schoolId)
+
+        // No `RETURNING` on the `persons` insert: a brand-new person has no
+        // `Enrollment`/relationship yet, so `person_select`'s RLS policy
+        // can't make a just-inserted row visible for `RETURNING` to return
+        // (same chicken-and-egg `Identity.ts`'s `createPerson` documents) —
+        // a client-generated id sidesteps that instead.
+        const personId = crypto.randomUUID()
+        yield* sql`
+          INSERT INTO persons (id, first_name, last_name, date_of_birth) VALUES (${personId}, 'Occupant', 'Student', '2015-01-01')
+        `
+        yield* sql`
+          INSERT INTO enrollments (school_id, academic_year_id, academic_year_label, student_person_id, class_id, status, effective_date)
+          VALUES (${schoolId}, ${academicYearId}, '2026-2027', ${personId}, ${classId}, 'active', '2026-09-01')
+        `
+
+        const failure = yield* deleteClass(schoolId, classId).pipe(Effect.provide(director), Effect.flip)
+        expect(failure).toBeInstanceOf(EnrollmentsExistError)
+
+        // Deactivation remains the offered alternative, and still works.
+        yield* deactivateClass(schoolId, classId).pipe(Effect.provide(director))
+        const [cls] = yield* sql<{ is_active: boolean }>`SELECT is_active FROM classes WHERE id = ${classId}`
+        expect(cls.is_active).toBe(false)
+      })
+    ))
+
+  it.effect("deleting a Class with no enrollments succeeds and is logged", () =>
+    withSeededClass(({ academicYearId, levelId, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const director = asDirectorOf(schoolId)
+
+        const classId = yield* createClass({
+          schoolId,
+          academicYearId,
+          levelId,
+          label: "Empty Class",
+          capacity: 10
+        }).pipe(Effect.provide(director))
+
+        yield* deleteClass(schoolId, classId).pipe(Effect.provide(director))
+
+        const remaining = yield* sql<{ id: string }>`SELECT id FROM classes WHERE id = ${classId}`
+        expect(remaining).toHaveLength(0)
+
+        const [audit] = yield* sql<{ action: string }>`
+          SELECT action FROM structure_audit_log WHERE entity_id = ${classId} AND action = 'deleted'
+        `
+        expect(audit).toEqual({ action: "deleted" })
+      })
+    ))
 })
