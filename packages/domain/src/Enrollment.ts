@@ -36,6 +36,8 @@ export class Enrollment extends Model.Class<Enrollment>("Enrollment")({
   class_id: Schema.String,
   status: Schema.Literals(["pre_enrolled", "active"]),
   effective_date: Schema.String,
+  /** ADR-ZS-065 / ticket #3 acceptance criterion 6 — see migration 0009. */
+  capacity_override_reason: Schema.NullOr(Schema.String),
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
@@ -52,6 +54,22 @@ export class DuplicateActiveEnrollmentError
   })
 {}
 
+/**
+ * ADR-ZS-065 / ticket #3 acceptance criterion 6: "leadership approval
+ * required to exceed" a class's capacity. Raised when `classId` already has
+ * `capacity` enrollments (any status — a `pre_enrolled` student still holds
+ * a seat) and the caller didn't supply `capacityOverrideReason`; the caller
+ * is a director (`authorized` already enforced that to reach this point),
+ * so resubmitting with a reason IS the documented approval.
+ */
+export class CapacityApprovalRequiredError
+  extends Schema.TaggedError<CapacityApprovalRequiredError>()("CapacityApprovalRequiredError", {
+    classId: Schema.String,
+    capacity: Schema.Int,
+    currentEnrollmentCount: Schema.Int
+  })
+{}
+
 export interface CreateEnrollmentCommand {
   readonly schoolId: string
   readonly academicYearId: string
@@ -60,6 +78,8 @@ export interface CreateEnrollmentCommand {
   readonly effectiveDate: string
   readonly hasLegalGuardian: boolean
   readonly hasFinancialGuardian: boolean
+  /** Required only when the class is already at or over capacity — see `CapacityApprovalRequiredError`. */
+  readonly capacityOverrideReason?: string
 }
 
 export interface EnrollmentResult {
@@ -107,6 +127,26 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
   command: CreateEnrollmentCommand
 ) {
   const sql = yield* SqlClient
+
+  // ADR-ZS-065 / ticket #3 acceptance criterion 6: every enrollment (any
+  // status — a `pre_enrolled` student still occupies a seat) counts against
+  // the class's capacity. The caller already verified `classId` belongs to
+  // `schoolId` (this function's own doc comment), so `capacity` is only
+  // absent here if `classId` itself doesn't exist — a programmer error, not
+  // a condition this function needs to report specially.
+  const [classRow] = yield* sql<{ capacity: number }>`
+    SELECT capacity FROM classes WHERE id = ${command.classId} AND school_id = ${command.schoolId}
+  `
+  const [{ count }] = yield* sql<{ count: string }>`
+    SELECT count(*)::bigint AS count FROM enrollments WHERE class_id = ${command.classId} AND school_id = ${command.schoolId}
+  `
+  const currentEnrollmentCount = Number(count)
+  if (currentEnrollmentCount >= classRow.capacity && command.capacityOverrideReason === undefined) {
+    return yield* Effect.fail(
+      new CapacityApprovalRequiredError({ classId: command.classId, capacity: classRow.capacity, currentEnrollmentCount })
+    )
+  }
+
   const [{ today }] = yield* sql<{ today: string }>`SELECT CURRENT_DATE::text AS today`
   const status = computeEnrollmentStatus({
     effectiveDate: command.effectiveDate,
@@ -153,7 +193,8 @@ export const insertEnrollment = Effect.fn("Enrollment.insertEnrollment")(functio
       student_person_id: validStudentPersonId,
       class_id: command.classId,
       status,
-      effective_date: command.effectiveDate
+      effective_date: command.effectiveDate,
+      capacity_override_reason: command.capacityOverrideReason ?? null
     })
   ).pipe(
     Effect.catchReason("SqlError", "UniqueViolation", () =>
