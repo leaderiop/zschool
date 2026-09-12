@@ -1,11 +1,21 @@
 import { NodeCrypto } from "@effect/platform-node"
 import { describe, expect, it } from "@effect/vitest"
+import { makeSubject } from "@qadi/core/AuthSubject"
+import { currentSubjectLayer } from "@qadi/core/CurrentSubject"
+import { EvaluationServicesNone } from "@qadi/core/EvaluationServicesNone"
 import { AppSqlLive, withSchool } from "@zschool/db"
 import * as Crypto from "effect/Crypto"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
-import { CapacityApprovalRequiredError, insertEnrollment } from "./Enrollment.ts"
+import { CapacityApprovalRequiredError, closeEnrollment, EnrollmentNotActiveError, insertEnrollment } from "./Enrollment.ts"
+
+/** Same `authorized`-gating context as `TeacherImport.test.ts`'s own `asDirectorOf`. */
+const asDirectorOf = (schoolId: string) =>
+  Layer.merge(
+    EvaluationServicesNone,
+    currentSubjectLayer(makeSubject({ id: "director-1", roles: ["director"], attributes: { school_id: schoolId } }))
+  )
 
 /** A seed row's id — via Effect's `Crypto` service, not a bare global, so it's provided (`NodeCrypto.layer` below) like every other dependency. */
 const randomUUID = Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4)
@@ -146,5 +156,61 @@ describe("Enrollment capacity approval (ticket #3 acceptance criterion 6 / ADR-Z
           SELECT capacity_override_reason FROM enrollments WHERE id = ${result.id}
         `
         expect(row.capacity_override_reason).toBe("Director-approved: sibling placement")
+      })))
+})
+
+describe("closeEnrollment (ticket #58 / fr-fin-04-sibling-discount.feature)", () => {
+  it.effect("closing an active enrollment marks it completed and records the reason", () =>
+    withSeededClassAt(2, 0, ({ academicYearId, classId, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const studentPersonId = yield* insertNewStudent("ToWithdraw")
+        const enrollment = yield* insertEnrollment({
+          schoolId,
+          academicYearId,
+          studentPersonId,
+          classId,
+          effectiveDate: "2026-09-01",
+          hasLegalGuardian: true,
+          hasFinancialGuardian: true
+        })
+
+        yield* closeEnrollment(schoolId, enrollment.id, "Withdrawn mid-year").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const [row] = yield* withSchool(
+          schoolId,
+          sql<{ status: string; closure_reason: string | null }>`
+            SELECT status, closure_reason FROM enrollments WHERE id = ${enrollment.id}
+          `
+        )
+        expect(row.status).toBe("completed")
+        expect(row.closure_reason).toBe("Withdrawn mid-year")
+      })))
+
+  it.effect("closing an already-closed enrollment is refused", () =>
+    withSeededClassAt(2, 0, ({ academicYearId, classId, schoolId }) =>
+      Effect.gen(function*() {
+        const studentPersonId = yield* insertNewStudent("AlreadyClosed")
+        const enrollment = yield* insertEnrollment({
+          schoolId,
+          academicYearId,
+          studentPersonId,
+          classId,
+          effectiveDate: "2026-09-01",
+          hasLegalGuardian: true,
+          hasFinancialGuardian: true
+        })
+
+        yield* closeEnrollment(schoolId, enrollment.id, "First closure").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const failure = yield* closeEnrollment(schoolId, enrollment.id, "Second closure attempt").pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(failure).toBeInstanceOf(EnrollmentNotActiveError)
       })))
 })

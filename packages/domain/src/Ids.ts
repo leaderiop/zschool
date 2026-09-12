@@ -106,3 +106,12 @@ export type InstallmentId = typeof InstallmentId.Type
 
 export const InstallmentAdjustmentId = Schema.String.pipe(Schema.brand("InstallmentAdjustmentId"))
 export type InstallmentAdjustmentId = typeof InstallmentAdjustmentId.Type
+
+export const SiblingDiscountPolicyId = Schema.String.pipe(Schema.brand("SiblingDiscountPolicyId"))
+export type SiblingDiscountPolicyId = typeof SiblingDiscountPolicyId.Type
+
+export const SiblingDiscountLineId = Schema.String.pipe(Schema.brand("SiblingDiscountLineId"))
+export type SiblingDiscountLineId = typeof SiblingDiscountLineId.Type
+
+export const SiblingDiscountRecomputationId = Schema.String.pipe(Schema.brand("SiblingDiscountRecomputationId"))
+export type SiblingDiscountRecomputationId = typeof SiblingDiscountRecomputationId.Type
