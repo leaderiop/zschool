@@ -8,9 +8,14 @@ import * as Crypto from "effect/Crypto"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { addFeeItem, createFeeSchedule } from "./FeeSchedule.ts"
-import { insertEnrollment } from "./Enrollment.ts"
+import { closeEnrollment, insertEnrollment } from "./Enrollment.ts"
+import { ensureFinancialAccount, findCurrentFinancialGuardian, designateFinancialGuardian } from "./FinancialAccount.ts"
+import { attachGuardianProfile, createPerson, GuardianQualitiesSchema, recordGuardianRelationship } from "./Identity.ts"
+import { GuardianPersonId, StudentPersonId } from "./Ids.ts"
+import { findInstallments } from "./PaymentSchedule.ts"
 import {
   approveVoid,
   bounceCheque,
@@ -1064,6 +1069,122 @@ describe("Cheque lifecycle (ticket #61 / REQ-ZS-140 / BEH-ZS-162)", () => {
 
         const cheque = yield* findChequeForPayment(schoolId, paymentId).pipe(Effect.orDie)
         expect(Option.isSome(cheque) && cheque.value.id).toBe(chequeId)
+      })
+    ))
+})
+
+/**
+ * Ticket #63 (BEH-ZS-173 / fr-fin-23-balance-survives-closing.feature): none
+ * of `FinancialAccount.ts`/`Payment.ts`/`PaymentSchedule.ts` ever join
+ * through `enrollments.status` — `closeEnrollment` (ticket #58) only ever
+ * flips `enrollments.status`/`closure_reason`, never touches
+ * `financial_accounts`. These tests exist to lock that guarantee in as a
+ * regression, not because a gap was found — `withSeededAccounts` enrolls
+ * with `hasLegalGuardian`/`hasFinancialGuardian` both `false` (so its
+ * enrollment starts `'pre_enrolled'`, not `'active'`), so the raw `UPDATE`
+ * below is test-only setup to reach `closeEnrollment`'s own precondition,
+ * mirroring `SiblingDiscount.test.ts`'s identical direct-`UPDATE` pattern for
+ * reaching a state this file's shared helper doesn't produce on its own.
+ */
+describe("Balance survives enrollment closing (ticket #63 / BEH-ZS-173)", () => {
+  it.effect("a closed enrollment's account stays open; settlement lands on that same account and is traceable", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const [financialAccountId] = financialAccountIds
+        const [{ enrollment_id: enrollmentId }] = yield* withSchool(
+          schoolId,
+          sql<{ enrollment_id: string }>`SELECT enrollment_id FROM financial_accounts WHERE id = ${financialAccountId}`
+        )
+        yield* withSchool(schoolId, sql`UPDATE enrollments SET status = 'active' WHERE id = ${enrollmentId}`)
+
+        yield* closeEnrollment(schoolId, enrollmentId, "Transferred to another school").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const installmentId = yield* firstInstallmentId(financialAccountId)
+        const paymentId = yield* recordBankTransfer({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: "VIR-CLOSED-1"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* confirmPayment(schoolId, paymentId, financialAccountIds).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        expect(yield* installmentStatus(installmentId)).toBe("paid")
+
+        const receipt = yield* findReceiptForPayment(schoolId, paymentId)
+        expect(Option.isSome(receipt)).toBe(true)
+
+        // never a new account — the closed enrollment keeps its original one
+        const [{ count }] = yield* withSchool(
+          schoolId,
+          sql<{ count: string }>`SELECT count(*)::bigint AS count FROM financial_accounts WHERE enrollment_id = ${enrollmentId}`
+        )
+        expect(Number(count)).toBe(1)
+        const resolvedAgain = yield* ensureFinancialAccount(schoolId, enrollmentId)
+        expect(resolvedAgain).toBe(financialAccountId)
+
+        // "logged": the payment row itself carries who collected it and when
+        const payment = yield* findPayment(schoolId, paymentId)
+        expect(Option.isSome(payment) && payment.value.collector_subject_id).toBe("cashier-1")
+      })
+    ))
+
+  it.effect("the financial guardian keeps read access to payment history and balance after closing", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const [financialAccountId] = financialAccountIds
+        const [{ enrollment_id: enrollmentId, student_person_id: studentPersonId }] = yield* withSchool(
+          schoolId,
+          sql<{ enrollment_id: string; student_person_id: string }>`
+            SELECT a.enrollment_id, e.student_person_id
+            FROM financial_accounts a JOIN enrollments e ON e.id = a.enrollment_id
+            WHERE a.id = ${financialAccountId}
+          `
+        )
+
+        const guardianPersonId = yield* createPerson({
+          firstName: "Karim",
+          lastName: "Guardian",
+          dateOfBirth: "1985-01-01"
+        })
+        yield* attachGuardianProfile(guardianPersonId, "+212700000099")
+        const qualities = yield* Schema.decodeEffect(GuardianQualitiesSchema)({
+          relationshipType: "father",
+          isLegalGuardian: true,
+          isFinancialGuardian: true,
+          isCustodialGuardian: true,
+          isEmergencyContact: true,
+          isAuthorizedForPickup: true
+        }).pipe(Effect.orDie)
+        yield* recordGuardianRelationship(
+          GuardianPersonId.make(guardianPersonId),
+          StudentPersonId.make(studentPersonId),
+          qualities
+        )
+        yield* designateFinancialGuardian(schoolId, enrollmentId, guardianPersonId).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        yield* withSchool(schoolId, sql`UPDATE enrollments SET status = 'active' WHERE id = ${enrollmentId}`)
+        yield* closeEnrollment(schoolId, enrollmentId, "Withdrawn").pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const guardian = yield* findCurrentFinancialGuardian(schoolId, enrollmentId)
+        expect(Option.isSome(guardian) && guardian.value.guardian_person_id).toBe(guardianPersonId)
+
+        const installments = yield* findInstallments(schoolId, enrollmentId)
+        expect(installments.some((installment) => installment.status === "paid")).toBe(true)
       })
     ))
 })
