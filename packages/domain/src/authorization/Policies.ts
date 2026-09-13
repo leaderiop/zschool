@@ -99,16 +99,21 @@ const cycleScopedRole = (role: string) =>
   ])
 
 /**
- * A teacher may act on a session/course they're actively assigned to
- * (`TeacherAssignment.ts`), or one they're the declared substitute for
- * (`Session.substitute_teacher_person_id`, ADR-ZS-046) — both resolved by
- * the call site into resource attributes before this policy runs, the same
- * "resolve real facts, then re-check the resource-scoped policy" pattern
- * `Ownership.ts` documents. `someMatch` denies when
+ * A teacher may act on a resource (a `Session`, a grade-entry `Assessment`'s
+ * owning `Course`, ...) they're actively assigned to via `TeacherAssignment`,
+ * or one they're the declared substitute for
+ * (`Session.substitute_teacher_person_id`, ADR-ZS-046 — a session-specific
+ * concept only; call sites for a resource with no substitute notion simply
+ * never populate that attribute, so the branch never matches) — both
+ * resolved by the call site into resource attributes before this policy
+ * runs, the same "resolve real facts, then re-check the resource-scoped
+ * policy" pattern `Ownership.ts` documents. `someMatch` denies when
  * `assigned_teacher_person_ids` is absent or empty, so a teacher with no
- * `TeacherAssignment` for the course is denied by construction.
+ * `TeacherAssignment` for the resource's course is denied by construction.
+ * Generalized (ticket #120) from what was originally a roll-call-only
+ * private helper — resource-attribute-driven, not tied to any one entity.
  */
-const teacherAssignedToSession = P.allOf([
+const teacherAssignedToResource = P.allOf([
   P.hasRole("teacher"),
   P.hasResourceAttribute("school_id", M.eq(M.subject("school_id"))),
   P.anyOf([
@@ -121,8 +126,18 @@ const teacherAssignedToSession = P.allOf([
 export const canTakeRollCall = P.anyOf([
   directorScopedToOwnSchool,
   cycleScopedRole("student_life"),
-  teacherAssignedToSession
+  teacherAssignedToResource
 ])
+
+/**
+ * Ticket #120 (BEH-ZS-113/INV-ZS-091): grade-entry write access belongs to
+ * the course's own assigned teacher alone — the spec's explicit "write: the
+ * course teacher; read: school leadership" split, unlike every other MVP
+ * capability's `directorScopedToOwnSchool`-included default (`canTakeRollCall`
+ * above included). A director's write attempt is deliberately denied here,
+ * not an oversight.
+ */
+export const canEnterGrades = teacherAssignedToResource
 
 /** Front-office and student-life both record justifications on a guardian/parent's behalf (front-desk intake, BEH-ZS-104); director retains the same blanket access every other capability gives it. */
 export const canRecordJustification = P.anyOf([

@@ -43,14 +43,25 @@ export class Assessment extends Model.Class<Assessment>("Assessment")({
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
+/**
+ * Ticket #120: `value`/`marker` are mutually exclusive (table-level CHECK,
+ * migration 0034) — exactly one is ever set, never both, never neither.
+ * `entered_at` is excluded from `insert`/`jsonCreate` so `upsertMark` below
+ * (no client-supplied entry timestamp to give) keeps relying on the
+ * column's own `now()` default; live entry (`GradeEntry.ts`) sets it
+ * explicitly via raw SQL, which isn't bound by this exclusion.
+ */
 export class Mark extends Model.Class<Mark>("Mark")({
   id: Model.Field({ select: MarkId, update: MarkId, json: MarkId, jsonUpdate: MarkId }),
   school_id: SchoolId,
   assessment_id: Schema.String,
   enrollment_id: Schema.String,
-  value: Schema.NumberFromString,
+  value: Schema.NullOr(Schema.NumberFromString),
+  marker: Schema.NullOr(Schema.Literals(["absent_unjustified", "absent_justified", "exempted"])),
   status: Schema.Literals(["draft", "published"]),
   remark: Schema.NullOr(Schema.String),
+  entered_at: Schema.DateTimeUtcFromMillis.pipe(Model.FieldExcept(["insert", "jsonCreate"])),
+  updated_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis),
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
@@ -273,6 +284,7 @@ export const upsertMark = Effect.fn("GradeImport.upsertMark")(function*(
     assessment_id: assessmentId,
     enrollment_id: enrollmentId,
     value,
+    marker: null,
     status: "draft",
     remark: remark ?? null
   })))
