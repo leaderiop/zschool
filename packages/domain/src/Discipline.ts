@@ -5,6 +5,8 @@ import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
+import { NotificationSender } from "./AttendanceNotification.ts"
+import { writeAuditLog, withDisciplinaryAccessLog } from "./AuditLog.ts"
 import {
   canApproveSuspension,
   canManageDiscipline,
@@ -115,7 +117,21 @@ export class Incident extends Model.Class<Incident>("Incident")({
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
-/** Gated by `canReportIncident` — a teacher, student-life member, or director at the school; see that policy's own doc comment for why "in their own class" isn't enforced here. */
+/** ADR-ZS-105's own "repeat-offense" threshold: 2 or more incidents for the same student within a rolling 90-day window — no explicit "period" is defined anywhere else in this spec, so a rolling window is used rather than an arbitrary calendar boundary (a student's 2nd incident on day 89 and day 91 of the same "month" would otherwise be treated inconsistently). */
+const REPEAT_OFFENSE_THRESHOLD = 2
+const REPEAT_OFFENSE_WINDOW_DAYS = 90
+
+/**
+ * Gated by `canReportIncident` — a teacher, student-life member, or director
+ * at the school; see that policy's own doc comment for why "in their own
+ * class" isn't enforced here. Ticket #105 folds in: the `discipline_stats_by_class_period`
+ * rollup (kept in sync transactionally, never recomputed by a slow scan),
+ * an `audit_log` row, and a proactive notification to student-life staff
+ * when this student crosses the repeat-offense threshold — sent directly
+ * via `NotificationSender` (no outbox/retention-window: that machinery
+ * exists for `AttendanceNotification.ts`'s guardian-facing absence flow,
+ * not an internal staff alert).
+ */
 export const reportIncident = Effect.fn("Discipline.reportIncident")(function*(
   rawSchoolId: string,
   studentEnrollmentId: string,
@@ -135,17 +151,80 @@ export const reportIncident = Effect.fn("Discipline.reportIncident")(function*(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const [row] = yield* sql`
-          INSERT INTO incidents (school_id, student_enrollment_id, date, context, severity_level_id, description, witnesses, author_person_id)
-          VALUES (
-            ${schoolId}, ${studentEnrollmentId}, ${date}::date, ${context}, ${severityLevelId}, ${description},
-            ${JSON.stringify(witnesses)}::jsonb, ${authorPersonId}
-          )
-          RETURNING *
+
+        const enrollment = yield* requireOwnedRow(
+          sql,
+          "enrollments",
+          "enrollment",
+          studentEnrollmentId,
+          schoolId,
+          Schema.Struct({ class_id: Schema.String }),
+          "class_id"
+        )
+
+        const incident = yield* sql.withTransaction(Effect.gen(function*() {
+          const [row] = yield* sql`
+            INSERT INTO incidents (school_id, student_enrollment_id, date, context, severity_level_id, description, witnesses, author_person_id)
+            VALUES (
+              ${schoolId}, ${studentEnrollmentId}, ${date}::date, ${context}, ${severityLevelId}, ${description},
+              ${JSON.stringify(witnesses)}::jsonb, ${authorPersonId}
+            )
+            RETURNING *
+          `
+          const created = yield* Schema.decodeUnknownEffect(Incident)(row)
+
+          yield* sql`
+            INSERT INTO discipline_stats_by_class_period (school_id, class_id, period_label, incident_count)
+            VALUES (${schoolId}, ${enrollment.class_id}, to_char(${date}::date, 'YYYY-MM'), 1)
+            ON CONFLICT (school_id, class_id, period_label)
+              DO UPDATE SET incident_count = discipline_stats_by_class_period.incident_count + 1, updated_at = now()
+          `
+
+          yield* writeAuditLog(schoolId, authorPersonId, "report_incident", "incident", created.id, null, created)
+
+          return created
+        }))
+
+        const [{ count }] = yield* sql<{ count: string }>`
+          SELECT count(*)::int AS count FROM incidents
+          WHERE student_enrollment_id = ${studentEnrollmentId} AND date >= (${date}::date - (${REPEAT_OFFENSE_WINDOW_DAYS} || ' days')::interval)
         `
-        return yield* Schema.decodeUnknownEffect(Incident)(row)
+        if (Number(count) >= REPEAT_OFFENSE_THRESHOLD) {
+          const studentLifeStaff = yield* sql<{ person_id: string }>`
+            SELECT person_id FROM school_memberships WHERE school_id = ${schoolId} AND role = 'student_life' AND status = 'active'
+          `
+          const sender = yield* NotificationSender
+          yield* Effect.forEach(
+            studentLifeStaff,
+            (staff) =>
+              sender.send("in_app", staff.person_id, {
+                type: "repeat_offense",
+                studentEnrollmentId,
+                incidentCount: Number(count)
+              }),
+            { discard: true }
+          )
+        }
+
+        return incident
       })
     )
+  )
+})
+
+/** Ticket #105's own demonstrated `withDisciplinaryAccessLog` usage — see that combinator's doc comment for why the other disciplinary reads in this module haven't all been retrofitted in the same pass. */
+export const findIncidentsForStudentAudited = Effect.fn("Discipline.findIncidentsForStudentAudited")(function*(
+  rawSchoolId: string,
+  studentEnrollmentId: string,
+  actorPersonId: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* withDisciplinaryAccessLog(
+    schoolId,
+    actorPersonId,
+    "incident",
+    studentEnrollmentId,
+    findIncidentsForStudent(schoolId, studentEnrollmentId)
   )
 })
 
@@ -166,6 +245,27 @@ export const findIncidentsForStudent = Effect.fn("Discipline.findIncidentsForStu
           SELECT * FROM incidents WHERE student_enrollment_id = ${studentEnrollmentId} ORDER BY date DESC
         `
         return yield* Schema.decodeUnknownEffect(Schema.Array(Incident))(rows)
+      })
+    )
+  )
+})
+
+/** The precomputed rollup `reportIncident` keeps in sync — queryable without a slow aggregate scan (ticket #105's own acceptance criterion). */
+export const findDisciplineStats = Effect.fn("Discipline.findDisciplineStats")(function*(rawSchoolId: string) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizeWith(
+    canManageDiscipline,
+    "manage-discipline",
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        return yield* sql<{ class_id: string; period_label: string; incident_count: number }>`
+          SELECT class_id, period_label, incident_count FROM discipline_stats_by_class_period
+          WHERE school_id = ${schoolId}
+          ORDER BY period_label DESC, class_id ASC
+        `
       })
     )
   )
@@ -240,7 +340,7 @@ export const decideSanction = Effect.fn("Discipline.decideSanction")(function*(
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "incidents", "incident", incidentId, schoolId, Schema.Struct({ id: Schema.String }))
         const repo = yield* sanctionRepo
-        return yield* repo.insert({
+        const sanction = yield* repo.insert({
           school_id: schoolId,
           incident_id: incidentId,
           sanction_type_id: sanctionTypeId,
@@ -249,6 +349,8 @@ export const decideSanction = Effect.fn("Discipline.decideSanction")(function*(
           execution_status: "in_progress",
           decided_by_person_id: decidedByPersonId
         })
+        yield* writeAuditLog(schoolId, decidedByPersonId, "decide_sanction", "sanction", sanction.id, null, sanction)
+        return sanction
       })
     )
   )
@@ -269,7 +371,8 @@ export const executeTemporaryExpulsion = Effect.fn("Discipline.executeTemporaryE
   sanctionId: string,
   studentEnrollmentId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  executedByPersonId: string
 ) {
   const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
   return yield* authorizeWith(
@@ -319,6 +422,16 @@ export const executeTemporaryExpulsion = Effect.fn("Discipline.executeTemporaryE
           `
 
           yield* sql`UPDATE sanctions SET execution_status = 'carried_out' WHERE id = ${sanctionId}`
+
+          yield* writeAuditLog(
+            schoolId,
+            executedByPersonId,
+            "execute_temporary_expulsion",
+            "sanction",
+            sanctionId,
+            null,
+            { studentEnrollmentId, startDate, endDate }
+          )
         }))
       })
     )
@@ -456,6 +569,7 @@ const decideSuspensionProposal = Effect.fn("Discipline.decideSuspensionProposal"
     if (outcome === "approved") {
       yield* sql`UPDATE enrollments SET status = 'suspended' WHERE id = ${proposal.student_enrollment_id}`
     }
+    yield* writeAuditLog(schoolId, decidedByPersonId, `decide_suspension_${outcome}`, "suspension_proposal", proposalId, null, { outcome })
   }))
 })
 

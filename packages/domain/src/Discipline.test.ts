@@ -20,6 +20,7 @@ import {
   proposeSuspension,
   reportIncident
 } from "./Discipline.ts"
+import { StubNotificationSenderLive } from "./AttendanceNotification.ts"
 import { insertEnrollment } from "./Enrollment.ts"
 import { confirmRollCallForSession, findAttendanceRecordStatus, RollCallEntry, sessionKey } from "./RollCall.ts"
 import { createSlot, findOrCreateSessionForRollCall } from "./Session.ts"
@@ -166,7 +167,7 @@ const withDisciplineFixture = Effect.fn(function*<A, E, R>(
       })
     })
   )
-}, Effect.provide(Layer.mergeAll(AppSqlLive, NodeCrypto.layer)))
+}, Effect.provide(Layer.mergeAll(AppSqlLive, NodeCrypto.layer, StubNotificationSenderLive)))
 
 describe("Incident/Sanction (ticket #103)", () => {
   it.effect("a teacher can report an incident in their own school", () =>
@@ -269,8 +270,14 @@ describe("Incident/Sanction (ticket #103)", () => {
             new RollCallEntry({ studentEnrollmentId, status: "present" })
           ]).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
 
-          yield* executeTemporaryExpulsion(schoolId, sanction.id, studentEnrollmentId, "2020-09-07", "2020-09-09")
-            .pipe(Effect.provide(asStudentLifeOf(schoolId, studentLifePersonId)))
+          yield* executeTemporaryExpulsion(
+            schoolId,
+            sanction.id,
+            studentEnrollmentId,
+            "2020-09-07",
+            "2020-09-09",
+            studentLifePersonId
+          ).pipe(Effect.provide(asStudentLifeOf(schoolId, studentLifePersonId)))
 
           const status = yield* findAttendanceRecordStatus(schoolId, sessionKey(sessionId), studentEnrollmentId)
           expect(status).toBe("exclusion")
