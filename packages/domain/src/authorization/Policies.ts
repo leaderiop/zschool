@@ -31,6 +31,28 @@ export const canManageAcademicStructure = directorScopedToOwnSchool
 export const canManageFinance = directorScopedToOwnSchool
 
 /**
+ * Ticket #65: the first SELF-service policy in this codebase — every other
+ * export here gates a STAFF capability (a director acting within their own
+ * school). A financial guardian views their OWN children's financial data,
+ * never a caller-supplied guardian's — so this checks that the RESOURCE's
+ * `guardian_person_id` (the person the caller claims to be looking up) equals
+ * the SUBJECT's own `person_id` attribute, the same "compare a resource
+ * attribute to the caller's own subject attribute" shape
+ * `directorScopedToOwnSchool` already uses for `school_id`, just keyed by
+ * person instead of school. No login flow mints a `financial_guardian`-roled
+ * subject with a `person_id` attribute yet (this codebase has no
+ * guardian-portal auth at all) — this policy is the enforcement boundary
+ * that flow will need to satisfy once it exists, the same "policy exists
+ * ahead of its own UI" precedent `canAnalyzeImports` already set.
+ */
+const financialGuardianViewingOwnData = P.allOf([
+  P.hasRole("financial_guardian"),
+  P.hasResourceAttribute("guardian_person_id", M.eq(M.subject("person_id")))
+])
+
+export const canViewOwnFinancialStatus = financialGuardianViewingOwnData
+
+/**
  * Issue #38: the `imports` `HttpApi`'s `RequirePermission` middleware
  * (`@qadi/http`) evaluates against an empty resource (no `:schoolId` path
  * param is known yet at endpoint-definition time — see `@qadi/http`'s own
