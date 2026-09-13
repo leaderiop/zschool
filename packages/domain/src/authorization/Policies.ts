@@ -170,3 +170,6 @@ export const canApproveSuspension = directorScopedToOwnSchool
 
 /** Ticket #106: identical shape to `canReportIncident` (any staff member at the school, no investigation step) — a distinct export since recording a reward is a different capability from reporting an incident, even though both resolve to the same check today. */
 export const canRecordCommendation = canReportIncident
+
+/** Ticket #104: issuing/tracking a `Summons` and managing a `DisciplinaryCouncil`'s minutes — student-life's/director's own capability, same shape as `canManageDiscipline` (a distinct export for the same "capability, not mechanism" reason). */
+export const canManageCouncil = canManageDiscipline

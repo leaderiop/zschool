@@ -199,3 +199,12 @@ export type CommendationId = typeof CommendationId.Type
 
 export const AuditLogId = Schema.String.pipe(Schema.brand("AuditLogId"))
 export type AuditLogId = typeof AuditLogId.Type
+
+export const SummonsId = Schema.String.pipe(Schema.brand("SummonsId"))
+export type SummonsId = typeof SummonsId.Type
+
+export const DisciplinaryCouncilId = Schema.String.pipe(Schema.brand("DisciplinaryCouncilId"))
+export type DisciplinaryCouncilId = typeof DisciplinaryCouncilId.Type
+
+export const CouncilMinutesRevisionId = Schema.String.pipe(Schema.brand("CouncilMinutesRevisionId"))
+export type CouncilMinutesRevisionId = typeof CouncilMinutesRevisionId.Type
