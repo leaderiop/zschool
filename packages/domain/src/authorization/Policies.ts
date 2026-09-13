@@ -148,3 +148,6 @@ export const canManageAttendanceSchedule = P.anyOf([
   directorScopedToOwnSchool,
   cycleScopedRole("student_life")
 ])
+
+/** Ticket #96: resolving a `RollCallDiscrepancy` is a distinct capability from scheduling (`canManageAttendanceSchedule`), even though both resolve to the same director-or-student-life check today — same "distinct export per capability" precedent `canManageFinance`/`canManageAcademicStructure` already set. */
+export const canArbitrateAttendanceDiscrepancy = canManageAttendanceSchedule

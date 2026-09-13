@@ -151,3 +151,9 @@ export type SlotId = typeof SlotId.Type
 
 export const SessionId = Schema.String.pipe(Schema.brand("SessionId"))
 export type SessionId = typeof SessionId.Type
+
+export const RollCallSubmissionId = Schema.String.pipe(Schema.brand("RollCallSubmissionId"))
+export type RollCallSubmissionId = typeof RollCallSubmissionId.Type
+
+export const RollCallDiscrepancyId = Schema.String.pipe(Schema.brand("RollCallDiscrepancyId"))
+export type RollCallDiscrepancyId = typeof RollCallDiscrepancyId.Type
