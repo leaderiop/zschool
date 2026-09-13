@@ -139,3 +139,9 @@ export type DunningTierId = typeof DunningTierId.Type
 
 export const DunningId = Schema.String.pipe(Schema.brand("DunningId"))
 export type DunningId = typeof DunningId.Type
+
+export const SchoolMembershipCycleId = Schema.String.pipe(Schema.brand("SchoolMembershipCycleId"))
+export type SchoolMembershipCycleId = typeof SchoolMembershipCycleId.Type
+
+export const TeacherAssignmentId = Schema.String.pipe(Schema.brand("TeacherAssignmentId"))
+export type TeacherAssignmentId = typeof TeacherAssignmentId.Type

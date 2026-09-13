@@ -69,3 +69,76 @@ export const canAnalyzeImports = P.hasRole("director")
 
 /** The `Permission` witness `requiresPermission` (`@qadi/http`) attaches to the `imports` group's endpoints — a typed tag, not itself checked against the subject (see `Qadi.guard`'s own doc comment: the decision is made entirely by the `Policy` argument). */
 export const analyzeImportsPermission = permission("imports", "analyze")
+
+/**
+ * Ticket #94 (Attendance role/scoping foundation, wayfinder ticket #83):
+ * generalized cycle-or-whole-school scoping, usable by any role — not
+ * hardcoded to `student_life`. A subject's `cycle_ids` attribute is the
+ * active `school_membership_cycles` rows for their membership
+ * (`SchoolMembership.ts#findActiveCycleIds`): empty means whole-school scope,
+ * one or more means scoped to exactly those cycles.
+ *
+ * `M.size(M.eq(M.literal(0)))` denies an *absent* `cycle_ids` the same way
+ * every other attribute check here fails closed (`Eq`'s own doc comment,
+ * `@qadi/core/Matcher`) — the auth-subject minting flow for `student_life`/
+ * `front_office` (not built yet, no login flow mints either role — same
+ * "policy exists ahead of its own login flow" precedent
+ * `financialGuardianViewingOwnData` already set) must always populate
+ * `cycle_ids`, defaulting to `[]`, never omit it.
+ */
+const wholeSchoolOrAssignedCycle = P.anyOf([
+  P.hasAttribute("cycle_ids", M.size(M.eq(M.literal(0)))),
+  P.hasAttribute("cycle_ids", M.someMatch(M.eq(M.resource("cycle_id"))))
+])
+
+const cycleScopedRole = (role: string) =>
+  P.allOf([
+    P.hasRole(role),
+    P.hasResourceAttribute("school_id", M.eq(M.subject("school_id"))),
+    wholeSchoolOrAssignedCycle
+  ])
+
+/**
+ * A teacher may act on a session/course they're actively assigned to
+ * (`TeacherAssignment.ts`), or one they're the declared substitute for
+ * (`Session.substitute_teacher_person_id`, ADR-ZS-046) — both resolved by
+ * the call site into resource attributes before this policy runs, the same
+ * "resolve real facts, then re-check the resource-scoped policy" pattern
+ * `Ownership.ts` documents. `someMatch` denies when
+ * `assigned_teacher_person_ids` is absent or empty, so a teacher with no
+ * `TeacherAssignment` for the course is denied by construction.
+ */
+const teacherAssignedToSession = P.allOf([
+  P.hasRole("teacher"),
+  P.hasResourceAttribute("school_id", M.eq(M.subject("school_id"))),
+  P.anyOf([
+    P.hasResourceAttribute("assigned_teacher_person_ids", M.someMatch(M.eq(M.subject("person_id")))),
+    P.hasResourceAttribute("substitute_teacher_person_id", M.eq(M.subject("person_id")))
+  ])
+])
+
+/** Director (whole school), student-life scoped to the session's cycle (or whole-school), or the assigned/substitute teacher. */
+export const canTakeRollCall = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life"),
+  teacherAssignedToSession
+])
+
+/** Front-office and student-life both record justifications on a guardian/parent's behalf (front-desk intake, BEH-ZS-104); director retains the same blanket access every other capability gives it. */
+export const canRecordJustification = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("front_office"),
+  cycleScopedRole("student_life")
+])
+
+/** Validating (accepting/refusing) a justification is student-life's own call, not front-office's — front-office only records intake. */
+export const canValidateJustification = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life")
+])
+
+/** The live daily-summary/discrepancy dashboard (SCR-ZS-051) is student-life's own screen, scoped the same way every other student-life capability here is. */
+export const canViewStudentLifeDashboard = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life")
+])
