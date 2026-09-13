@@ -53,11 +53,27 @@ export class GradingScale extends Model.Class<GradingScale>("GradingScale")({
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
+/** `{label, min_average}` — BEH-ZS-119's honors levels, ordered highest threshold first. The label set itself varies by cycle (only the baccalaureate's is spec-given), so this stays a flexible `jsonb` array rather than a fixed column set. Snake-case keys even though this is JSON content, not real columns — matches this file's existing convention everywhere else. */
+export interface HonorsThreshold {
+  readonly label: string
+  readonly min_average: number
+}
+
+/** BEH-ZS-119's baccalaureate defaults: highest distinction from 16, distinction from 14, merit from 12, pass from 10, resit between 8 and 9.99. */
+export const defaultHonorsThresholds: ReadonlyArray<HonorsThreshold> = [
+  { label: "highest_distinction", min_average: 16 },
+  { label: "distinction", min_average: 14 },
+  { label: "merit", min_average: 12 },
+  { label: "pass", min_average: 10 },
+  { label: "resit", min_average: 8 }
+]
+
 /**
- * Matches migration 0005's `computation_rules` table. `is_current`/
- * `effective_from` are `GeneratedByDb`: every insert site (`setComputationRule`,
- * `seedDefaultComputationRules`) already relies on their DB defaults
- * (`true`/`now()`) rather than setting them explicitly.
+ * Matches migration 0005's `computation_rules` table (widened by migration
+ * 0036, ticket #110). `is_current`/`effective_from` are `GeneratedByDb`:
+ * every insert site (`setComputationRule`, `seedDefaultComputationRules`)
+ * already relies on their DB defaults (`true`/`now()`) rather than setting
+ * them explicitly.
  */
 export class ComputationRule extends Model.Class<ComputationRule>("ComputationRule")({
   // A custom variant set (not `GeneratedByDb`): `computation_rules` has no
@@ -80,6 +96,15 @@ export class ComputationRule extends Model.Class<ComputationRule>("ComputationRu
   weight_exam_1: Schema.NumberFromString,
   weight_exam_2: Schema.NumberFromString,
   reference_text: Schema.String,
+  // Ticket #110: BEH-ZS-117's "optional exclusion of the lowest grade beyond
+  // a given number of grades" — null disables it.
+  lowest_grade_exclusion_min_count: Schema.NullOr(Schema.Int),
+  // `honors_thresholds` is a `jsonb` column — @effect/sql-pg decodes it into
+  // a plain JS array already, not a string, so a bare `Schema.Array` decodes
+  // it directly with no `Schema.parseJson` step needed.
+  honors_thresholds: Schema.Array(Schema.Struct({ label: Schema.String, min_average: Schema.Number })),
+  // BEH-ZS-117(a): "an unjustified absence... counts as 0 by default (configurable: 0 or exclusion)".
+  unjustified_absence_counts_as_zero: Schema.Boolean,
   is_current: Model.GeneratedByDb(Schema.Boolean),
   effective_from: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
@@ -138,6 +163,10 @@ export interface SetComputationRuleCommand {
   readonly weightExam1: number
   readonly weightExam2: number
   readonly referenceText: string
+  /** Ticket #110's additions to this command. Omitted fields carry forward the level's current rule (or the seed defaults, if there is none), so a caller that only wants to update the exam weighting doesn't also have to respecify them. */
+  readonly lowestGradeExclusionMinCount?: number | null
+  readonly honorsThresholds?: ReadonlyArray<HonorsThreshold>
+  readonly unjustifiedAbsenceCountsAsZero?: boolean
 }
 
 /**
@@ -161,36 +190,51 @@ const gradingScaleRepo = SqlModel.makeRepository(GradingScale, {
   spanPrefix: "GradingScales",
   idColumn: "section_id"
 })
-const computationRuleRepo = SqlModel.makeRepository(ComputationRule, {
-  tableName: "computation_rules",
-  spanPrefix: "GradingScales",
-  idColumn: "id"
-})
 
-/** Seeds the default computation rules for the levels the ministry publishes them for (6AP, 3AC, 2BAC) — called from `InstantiateNationalTemplate.ts` at year creation, same pattern as `seedCalendarEvents`. Still one batched insert for the whole seed set, not N repository inserts — the row shape is now checked against `ComputationRule.insert` instead of an untyped object literal. */
+/**
+ * Ticket #110: BEH-ZS-117 configures calculation rules "per level and per
+ * track" broadly, not just the three levels the ministry publishes exam
+ * weightings for — so every level gets a seeded `ComputationRule` row now,
+ * not only 6AP/3AC/2BAC. A level absent from `defaultComputationRules` gets
+ * `100/0/0` (100% continuous assessment, no external exam), which still
+ * satisfies migration 0005's `weight_continuous + weight_exam_1 +
+ * weight_exam_2 = 100` CHECK. Every level also gets the BEH-ZS-119
+ * baccalaureate-default `honors_thresholds` (editable per level afterward)
+ * and lowest-grade exclusion disabled (`null`) until a school configures it.
+ *
+ * Called from `InstantiateNationalTemplate.ts` at year creation, same
+ * pattern as `seedCalendarEvents`. No longer a single batched `sql.insert` —
+ * `honors_thresholds` is `jsonb`, and this codebase's established idiom for
+ * any `jsonb` column is a hand-built `INSERT` with an explicit `::jsonb`
+ * cast (`AuditLog.ts`, `Discipline.ts`, `Council.ts`, `ImportBatch.ts`),
+ * since `sql.insert`'s generic column binding sends the JSON string as
+ * `text`, which Postgres does not implicitly cast to `jsonb`. One `INSERT`
+ * per level at year-creation time is a handful of round trips, not a
+ * hot path.
+ */
 const seedDefaultComputationRules = Effect.fn("GradingScales.seedDefaultComputationRules")(function*(
   schoolId: string,
   academicYearId: string,
   levelIdByCode: ReadonlyMap<string, string>
 ) {
   const sql = yield* SqlClient
-  const rows: Array<(typeof ComputationRule)["insert"]["Encoded"]> = defaultComputationRules
-    .filter((rule) => levelIdByCode.has(rule.levelCode))
-    .map((rule) => ({
-      school_id: schoolId,
-      academic_year_id: academicYearId,
-      level_id: levelIdByCode.get(rule.levelCode)!,
-      // Raw sql.insert bypasses Schema encoding, so these are stringified by
-      // hand — ComputationRule's weight_* fields are NumberFromString
-      // (numeric columns round-trip as decimal strings, see the model).
-      weight_continuous: String(rule.weightContinuous),
-      weight_exam_1: String(rule.weightExam1),
-      weight_exam_2: String(rule.weightExam2),
-      reference_text: rule.referenceText
-    }))
+  const defaultsByCode = new Map(defaultComputationRules.map((rule) => [rule.levelCode, rule]))
 
-  if (rows.length > 0) {
-    yield* sql`INSERT INTO computation_rules ${sql.insert(rows)}`
+  for (const [levelCode, levelId] of levelIdByCode) {
+    const ministryDefault = defaultsByCode.get(levelCode)
+    yield* sql`
+      INSERT INTO computation_rules (
+        school_id, academic_year_id, level_id, weight_continuous, weight_exam_1, weight_exam_2,
+        reference_text, lowest_grade_exclusion_min_count, honors_thresholds, unjustified_absence_counts_as_zero
+      )
+      VALUES (
+        ${schoolId}, ${academicYearId}, ${levelId},
+        ${ministryDefault?.weightContinuous ?? 100}, ${ministryDefault?.weightExam1 ?? 0},
+        ${ministryDefault?.weightExam2 ?? 0},
+        ${ministryDefault?.referenceText ?? "No external exam — 100% continuous assessment"},
+        NULL, ${JSON.stringify(defaultHonorsThresholds)}::jsonb, true
+      )
+    `
   }
 })
 
@@ -257,8 +301,17 @@ const updateGradingScale = Effect.fn("GradingScales.updateGradingScale")(functio
  * The "expire the old current row" step stays raw SQL — it's a
  * conditional, non-unique-keyed update (0 or 1 rows, matched by
  * `level_id`/`school_id`/`is_current`, not by a primary key), which the
- * single-row-by-id repository abstraction isn't a good fit for; the insert
- * of the new current row goes through the repository.
+ * single-row-by-id repository abstraction isn't a good fit for.
+ *
+ * Ticket #110: the insert itself is now a hand-built `INSERT` with an
+ * explicit `::jsonb` cast for `honors_thresholds`, not a `SqlModel`
+ * repository's generated `insert()` — its generated insert would hand
+ * `@effect/sql-pg` the raw array parameter directly, which it can't infer a
+ * Postgres type for (same reasoning as `ImportBatch.ts`'s own
+ * `ImportBatchRow.payload` doc comment). Omitted optional fields on the
+ * command carry forward the level's previous current rule, so an existing
+ * caller that only ever set the exam weighting (`fr-ped-05`'s own BDD steps)
+ * doesn't also have to respecify them.
  */
 const setComputationRule = Effect.fn("GradingScales.setComputationRule")(function*(
   command: SetComputationRuleCommand
@@ -277,21 +330,40 @@ const setComputationRule = Effect.fn("GradingScales.setComputationRule")(functio
         const sql = yield* SqlClient
         yield* requireOwnedRow(sql, "levels", "level", command.levelId, schoolId, RowWithId)
 
+        const [previous] = yield* sql<
+          { lowest_grade_exclusion_min_count: number | null; honors_thresholds: unknown; unjustified_absence_counts_as_zero: boolean }
+        >`
+          SELECT lowest_grade_exclusion_min_count, honors_thresholds, unjustified_absence_counts_as_zero
+          FROM computation_rules
+          WHERE level_id = ${command.levelId} AND school_id = ${command.schoolId} AND is_current
+        `
+
         yield* sql`
           UPDATE computation_rules SET is_current = false
           WHERE level_id = ${command.levelId} AND school_id = ${command.schoolId} AND is_current
         `
 
-        const repo = yield* computationRuleRepo
-        const rule = yield* repo.insert({
-          school_id: schoolId,
-          academic_year_id: command.academicYearId,
-          level_id: command.levelId,
-          weight_continuous: command.weightContinuous,
-          weight_exam_1: command.weightExam1,
-          weight_exam_2: command.weightExam2,
-          reference_text: command.referenceText
-        })
+        const lowestGradeExclusionMinCount = command.lowestGradeExclusionMinCount ??
+          previous?.lowest_grade_exclusion_min_count ?? null
+        const honorsThresholds = command.honorsThresholds ??
+          (previous?.honors_thresholds as ReadonlyArray<HonorsThreshold> | undefined) ??
+          defaultHonorsThresholds
+        const unjustifiedAbsenceCountsAsZero = command.unjustifiedAbsenceCountsAsZero ??
+          previous?.unjustified_absence_counts_as_zero ?? true
+
+        const [rule] = yield* sql<{ id: string }>`
+          INSERT INTO computation_rules (
+            school_id, academic_year_id, level_id, weight_continuous, weight_exam_1, weight_exam_2,
+            reference_text, lowest_grade_exclusion_min_count, honors_thresholds, unjustified_absence_counts_as_zero
+          )
+          VALUES (
+            ${schoolId}, ${command.academicYearId}, ${command.levelId}, ${command.weightContinuous},
+            ${command.weightExam1}, ${command.weightExam2}, ${command.referenceText},
+            ${lowestGradeExclusionMinCount}, ${JSON.stringify(honorsThresholds)}::jsonb,
+            ${unjustifiedAbsenceCountsAsZero}
+          )
+          RETURNING id
+        `
         return rule.id
       })
     )

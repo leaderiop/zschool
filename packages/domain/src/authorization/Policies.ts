@@ -188,3 +188,12 @@ export const canRecordCommendation = canReportIncident
 
 /** Ticket #104: issuing/tracking a `Summons` and managing a `DisciplinaryCouncil`'s minutes — student-life's/director's own capability, same shape as `canManageDiscipline` (a distinct export for the same "capability, not mechanism" reason). */
 export const canManageCouncil = canManageDiscipline
+
+/** Ticket #110 (BEH-ZS-098, resolving Attendance's #90): proposing a `ConductGrade` is any teacher actively assigned to the class (`TeacherAssignment.ts#findActiveAssignedTeacherPersonIdsForClass`) — the same missing-homeroom-teacher fallback `canEnterGrades` already uses, just resolved against a class instead of a course's own assessment. */
+export const canProposeConductGrade = teacherAssignedToResource
+
+/** Ticket #110 (BEH-ZS-098): validating a proposed `ConductGrade` is student-life's/director's own capability, per configuration — same shape as `canManageDiscipline`. */
+export const canValidateConductGrade = canManageDiscipline
+
+/** Ticket #110 (BEH-ZS-102, resolving Attendance's #90): setting a `PeriodResult`'s "excluded from rank" flag is the director's own call — BEH-ZS-102's "the director MAY exclude them," not student-life's. */
+export const canSetRankExclusion = directorScopedToOwnSchool

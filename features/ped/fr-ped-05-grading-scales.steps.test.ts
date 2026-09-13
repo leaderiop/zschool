@@ -83,7 +83,11 @@ describeFeature(feature, { shared: DatabaseTestLive, perScenario: World.layer },
         `
       ).pipe(Effect.orDie)
 
-      assert.strictEqual(rows.length, 3)
+      // Ticket #110 widened seeding to every level (BEH-ZS-117 configures
+      // calculation rules "per level and per track" broadly, not just the
+      // three the ministry publishes exam weightings for), so this no
+      // longer asserts an exact row count — only that the three certifying
+      // levels carry the right ministry defaults.
       const sixAP = rows.find((r) => r.code === "6AP")!
       assert.strictEqual(Number(sixAP.weight_continuous), 50)
       assert.strictEqual(Number(sixAP.weight_exam_1), 25)

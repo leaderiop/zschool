@@ -211,3 +211,15 @@ export type DisciplinaryCouncilId = typeof DisciplinaryCouncilId.Type
 
 export const CouncilMinutesRevisionId = Schema.String.pipe(Schema.brand("CouncilMinutesRevisionId"))
 export type CouncilMinutesRevisionId = typeof CouncilMinutesRevisionId.Type
+
+export const PeriodResultId = Schema.String.pipe(Schema.brand("PeriodResultId"))
+export type PeriodResultId = typeof PeriodResultId.Type
+
+export const SubjectResultId = Schema.String.pipe(Schema.brand("SubjectResultId"))
+export type SubjectResultId = typeof SubjectResultId.Type
+
+export const YearResultId = Schema.String.pipe(Schema.brand("YearResultId"))
+export type YearResultId = typeof YearResultId.Type
+
+export const ConductGradeId = Schema.String.pipe(Schema.brand("ConductGradeId"))
+export type ConductGradeId = typeof ConductGradeId.Type
