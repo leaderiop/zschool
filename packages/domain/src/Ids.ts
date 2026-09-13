@@ -133,3 +133,9 @@ export type PaymentVoidId = typeof PaymentVoidId.Type
 
 export const ChequeId = Schema.String.pipe(Schema.brand("ChequeId"))
 export type ChequeId = typeof ChequeId.Type
+
+export const DunningTierId = Schema.String.pipe(Schema.brand("DunningTierId"))
+export type DunningTierId = typeof DunningTierId.Type
+
+export const DunningId = Schema.String.pipe(Schema.brand("DunningId"))
+export type DunningId = typeof DunningId.Type
