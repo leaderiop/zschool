@@ -169,3 +169,27 @@ export type PushSubscriptionId = typeof PushSubscriptionId.Type
 
 export const AttachmentId = Schema.String.pipe(Schema.brand("AttachmentId"))
 export type AttachmentId = typeof AttachmentId.Type
+
+export const DisciplineSeverityLevelId = Schema.String.pipe(Schema.brand("DisciplineSeverityLevelId"))
+export type DisciplineSeverityLevelId = typeof DisciplineSeverityLevelId.Type
+
+export const IncidentId = Schema.String.pipe(Schema.brand("IncidentId"))
+export type IncidentId = typeof IncidentId.Type
+
+export const SanctionTypeId = Schema.String.pipe(Schema.brand("SanctionTypeId"))
+export type SanctionTypeId = typeof SanctionTypeId.Type
+
+export const SanctionId = Schema.String.pipe(Schema.brand("SanctionId"))
+export type SanctionId = typeof SanctionId.Type
+
+export const TemporaryExclusionId = Schema.String.pipe(Schema.brand("TemporaryExclusionId"))
+export type TemporaryExclusionId = typeof TemporaryExclusionId.Type
+
+export const SuspensionProposalId = Schema.String.pipe(Schema.brand("SuspensionProposalId"))
+export type SuspensionProposalId = typeof SuspensionProposalId.Type
+
+export const JustificationReasonCodeId = Schema.String.pipe(Schema.brand("JustificationReasonCodeId"))
+export type JustificationReasonCodeId = typeof JustificationReasonCodeId.Type
+
+export const JustificationId = Schema.String.pipe(Schema.brand("JustificationId"))
+export type JustificationId = typeof JustificationId.Type

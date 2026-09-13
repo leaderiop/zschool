@@ -7,6 +7,7 @@ import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
 import { cancelPendingOutboxForKey, recordAbsenceForNotification, recordCorrectionIfAlreadySent } from "./AttendanceNotification.ts"
 import { canArbitrateAttendanceDiscrepancy, canManageAttendanceSchedule, canTakeRollCall } from "./authorization/Policies.ts"
+import { isStudentTemporarilyExcluded } from "./Discipline.ts"
 import { RollCallDiscrepancyId, RollCallSubmissionId, SchoolId, SessionId } from "./Ids.ts"
 import { authorizeWith, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
 import { findActiveAssignedTeacherPersonIds } from "./TeacherAssignment.ts"
@@ -107,6 +108,13 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
 
   yield* sql.withTransaction(Effect.gen(function*() {
     for (const entry of entries) {
+      // Ticket #103's own wiring for ticket #96's stub: a student inside an
+      // active temporary-exclusion window always gets `exclusion`, never
+      // whatever status a teacher (unaware of the sanction) submitted —
+      // non-editable, and never a notification.
+      const excluded = yield* isStudentTemporarilyExcluded(entry.studentEnrollmentId, notificationDate)
+      const effectiveStatus = excluded ? "exclusion" : entry.status
+
       yield* repo.insertVoid({
         school_id: schoolId,
         session_id: keyColumns.sessionId,
@@ -115,7 +123,7 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
         half_day: keyColumns.halfDay,
         key,
         student_enrollment_id: entry.studentEnrollmentId,
-        status: entry.status,
+        status: effectiveStatus,
         author_person_id: authorPersonId,
         superseded_by_id: null
       })
@@ -127,14 +135,15 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
       if (existing.length === 0) {
         yield* sql`
           INSERT INTO attendance_records (key, student_enrollment_id, school_id, status)
-          VALUES (${key}, ${entry.studentEnrollmentId}, ${schoolId}, ${entry.status})
+          VALUES (${key}, ${entry.studentEnrollmentId}, ${schoolId}, ${effectiveStatus})
         `
         // Ticket #97: a clean (no-conflict) first confirmation of an
         // absence is what schedules the guardian notification — never a
         // second, conflicting submission (that path opens a discrepancy
         // below instead, and #97's own rule is "no notification while a
-        // discrepancy is open for that key/student").
-        if (entry.status === "absent") {
+        // discrepancy is open for that key/student") — and never an
+        // exclusion (ticket #103's own "no notification" requirement).
+        if (effectiveStatus === "absent") {
           yield* recordAbsenceForNotification(schoolId, key, entry.studentEnrollmentId, notificationDate)
         }
         continue

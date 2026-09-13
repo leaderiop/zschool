@@ -151,3 +151,19 @@ export const canManageAttendanceSchedule = P.anyOf([
 
 /** Ticket #96: resolving a `RollCallDiscrepancy` is a distinct capability from scheduling (`canManageAttendanceSchedule`), even though both resolve to the same director-or-student-life check today — same "distinct export per capability" precedent `canManageFinance`/`canManageAcademicStructure` already set. */
 export const canArbitrateAttendanceDiscrepancy = canManageAttendanceSchedule
+
+/** Ticket #103: any staff member (teacher, student-life, or director) may report a `Incident` at their own school — "in their own class" (BEH-ZS-081) is a UI-level filter on which courses a teacher's client offers, not an auth-layer restriction, the same scope decision `confirmRollCallForHalfDay`'s doc comment makes about homeroom-teacher assignment not existing yet. */
+export const canReportIncident = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life"),
+  P.allOf([P.hasRole("teacher"), P.hasResourceAttribute("school_id", M.eq(M.subject("school_id")))])
+])
+
+/** Ticket #103: deciding a `Sanction`, executing a temporary expulsion, and proposing a suspension are student-life's/director's own capability — a teacher may report an incident (`canReportIncident`) but not decide its outcome. */
+export const canManageDiscipline = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life")
+])
+
+/** ADR-ZS-057: approving (or dismissing) a `SuspensionProposal` — actually setting `Enrollment.status` to `suspended` — is reserved to the director, never student-life, even though student-life can propose one via `canManageDiscipline`. */
+export const canApproveSuspension = directorScopedToOwnSchool

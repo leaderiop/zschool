@@ -38,9 +38,12 @@ export class Enrollment extends Model.Class<Enrollment>("Enrollment")({
   student_person_id: StudentPersonId,
   class_id: Schema.String,
   // "completed" (migration 0013) is only ever written by
-  // `HistoricalGradeImport.ts`'s synthesized enrollment (ADR-ZS-113) — every
+  // `HistoricalGradeImport.ts`'s synthesized enrollment (ADR-ZS-113); every
   // path in this file still only ever produces "pre_enrolled"/"active".
-  status: Schema.Literals(["pre_enrolled", "active", "completed"]),
+  // "suspended" (migration 0029, ticket #103, ADR-ZS-057) is only ever
+  // written by `Discipline.ts#approveSuspension` — never automatically by a
+  // `Sanction` proposing one.
+  status: Schema.Literals(["pre_enrolled", "active", "completed", "suspended"]),
   effective_date: Schema.String,
   /** ADR-ZS-065 / ticket #3 acceptance criterion 6 — see migration 0009. */
   capacity_override_reason: Schema.NullOr(Schema.String),
