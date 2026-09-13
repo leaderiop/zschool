@@ -1,6 +1,7 @@
 export * from "./AcademicTree.ts"
 export * from "./api/Api.ts"
 export * from "./api/Imports.ts"
+export * from "./AssessmentType.ts"
 export * from "./Attachment.ts"
 export * from "./AttachmentStorage.ts"
 export * from "./AttendanceHistoryImport.ts"

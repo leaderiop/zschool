@@ -1,5 +1,4 @@
 import { withSchool } from "@zschool/db"
-import * as Qadi from "@qadi/core/Qadi"
 import * as Effect from "effect/Effect"
 import * as Result from "effect/Result"
 import * as Schema from "effect/Schema"
@@ -7,7 +6,7 @@ import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { canEnterGrades } from "./authorization/Policies.ts"
 import { failureReason } from "./ImportRowError.ts"
 import { AssessmentId, SchoolId } from "./Ids.ts"
-import { findActiveAssignedTeacherPersonIds } from "./TeacherAssignment.ts"
+import { assertTeacherAssignedToCourse } from "./TeacherAssignment.ts"
 
 /**
  * Ticket #120 (EVA: batch grade entry with offline conflict resolution —
@@ -121,14 +120,12 @@ const resolveCourseForAssessment = Effect.fn("GradeEntry.resolveCourseForAssessm
 
 /**
  * Shared by every grade-write function below — resolves the assessment's
- * owning course, its actively-assigned teacher(s), and asserts
- * `canEnterGrades` against them, so a change to the resource shape or the
- * `substitute_teacher_person_id: null` fail-closed convention
- * (`Session.ts#rollCallResourceFor`'s own precedent) only needs updating in
- * one place — the same "factor out the resource-resolution block" precedent
- * `Session.ts` itself already set. Returns the assessment's `classId` since
- * `enterGrades` (not `publishAssessment`) needs it for its own
- * enrollment-class check.
+ * owning course and asserts `canEnterGrades` against its actively-assigned
+ * teacher(s) (`TeacherAssignment.ts#assertTeacherAssignedToCourse`, ticket
+ * #109 — also reused by `AssessmentType.ts#createAssessment`, so the
+ * resource-resolution shape lives in exactly one place). Returns the
+ * assessment's `classId` since `enterGrades` (not `publishAssessment`)
+ * needs it for its own enrollment-class check.
  */
 const authorizeGradeWrite = Effect.fn("GradeEntry.authorizeGradeWrite")(function*(
   schoolId: SchoolId,
@@ -136,20 +133,7 @@ const authorizeGradeWrite = Effect.fn("GradeEntry.authorizeGradeWrite")(function
   action: string
 ) {
   const { classId, courseId } = yield* resolveCourseForAssessment(schoolId, assessmentId)
-  const assignedTeacherPersonIds = yield* findActiveAssignedTeacherPersonIds(courseId)
-  yield* Qadi.assert(canEnterGrades, {
-    // `substitute_teacher_person_id` has no meaning for grade entry (a
-    // `Session`-only, ADR-ZS-046 concept) — set to `null` explicitly,
-    // matching `Session.ts#rollCallResourceFor`'s own convention, so the
-    // shared policy's second `anyOf` branch fails closed rather than
-    // relying on the attribute being merely absent.
-    resource: {
-      school_id: schoolId,
-      assigned_teacher_person_ids: assignedTeacherPersonIds,
-      substitute_teacher_person_id: null
-    },
-    action
-  })
+  yield* assertTeacherAssignedToCourse(canEnterGrades, schoolId, courseId, action)
   return { classId }
 })
 

@@ -86,6 +86,9 @@ export type AssessmentId = typeof AssessmentId.Type
 export const MarkId = Schema.String.pipe(Schema.brand("MarkId"))
 export type MarkId = typeof MarkId.Type
 
+export const AssessmentTypeId = Schema.String.pipe(Schema.brand("AssessmentTypeId"))
+export type AssessmentTypeId = typeof AssessmentTypeId.Type
+
 export const FeeScheduleId = Schema.String.pipe(Schema.brand("FeeScheduleId"))
 export type FeeScheduleId = typeof FeeScheduleId.Type
 
