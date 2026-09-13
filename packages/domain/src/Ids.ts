@@ -130,3 +130,6 @@ export type FinancialAccountCreditId = typeof FinancialAccountCreditId.Type
 
 export const PaymentVoidId = Schema.String.pipe(Schema.brand("PaymentVoidId"))
 export type PaymentVoidId = typeof PaymentVoidId.Type
+
+export const ChequeId = Schema.String.pipe(Schema.brand("ChequeId"))
+export type ChequeId = typeof ChequeId.Type
