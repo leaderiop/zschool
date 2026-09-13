@@ -120,6 +120,40 @@ const resolveCourseForAssessment = Effect.fn("GradeEntry.resolveCourseForAssessm
 })
 
 /**
+ * Shared by every grade-write function below — resolves the assessment's
+ * owning course, its actively-assigned teacher(s), and asserts
+ * `canEnterGrades` against them, so a change to the resource shape or the
+ * `substitute_teacher_person_id: null` fail-closed convention
+ * (`Session.ts#rollCallResourceFor`'s own precedent) only needs updating in
+ * one place — the same "factor out the resource-resolution block" precedent
+ * `Session.ts` itself already set. Returns the assessment's `classId` since
+ * `enterGrades` (not `publishAssessment`) needs it for its own
+ * enrollment-class check.
+ */
+const authorizeGradeWrite = Effect.fn("GradeEntry.authorizeGradeWrite")(function*(
+  schoolId: SchoolId,
+  assessmentId: AssessmentId,
+  action: string
+) {
+  const { classId, courseId } = yield* resolveCourseForAssessment(schoolId, assessmentId)
+  const assignedTeacherPersonIds = yield* findActiveAssignedTeacherPersonIds(courseId)
+  yield* Qadi.assert(canEnterGrades, {
+    // `substitute_teacher_person_id` has no meaning for grade entry (a
+    // `Session`-only, ADR-ZS-046 concept) — set to `null` explicitly,
+    // matching `Session.ts#rollCallResourceFor`'s own convention, so the
+    // shared policy's second `anyOf` branch fails closed rather than
+    // relying on the attribute being merely absent.
+    resource: {
+      school_id: schoolId,
+      assigned_teacher_person_ids: assignedTeacherPersonIds,
+      substitute_teacher_person_id: null
+    },
+    action
+  })
+  return { classId }
+})
+
+/**
  * Batch grade entry for one `Assessment`, gated by `canEnterGrades` (the
  * assessment's actively-assigned teacher only — no director override,
  * `Policies.ts`'s own doc comment on why). Each entry is fully independent —
@@ -155,21 +189,7 @@ export const enterGrades = Effect.fn("GradeEntry.enterGrades")(function*(
     schoolId,
     Effect.gen(function*() {
       const sql = yield* SqlClient
-      const { classId, courseId } = yield* resolveCourseForAssessment(schoolId, assessmentId)
-      const assignedTeacherPersonIds = yield* findActiveAssignedTeacherPersonIds(courseId)
-      yield* Qadi.assert(canEnterGrades, {
-        // `substitute_teacher_person_id` has no meaning for grade entry (a
-        // `Session`-only, ADR-ZS-046 concept) — set to `null` explicitly,
-        // matching `Session.ts#rollCallResourceFor`'s own convention, so the
-        // shared policy's second `anyOf` branch fails closed rather than
-        // relying on the attribute being merely absent.
-        resource: {
-          school_id: schoolId,
-          assigned_teacher_person_ids: assignedTeacherPersonIds,
-          substitute_teacher_person_id: null
-        },
-        action: "enter-grades"
-      })
+      const { classId } = yield* authorizeGradeWrite(schoolId, assessmentId, "enter-grades")
 
       const results: Array<GradeEntryResult> = []
 
@@ -227,6 +247,39 @@ export const enterGrades = Effect.fn("GradeEntry.enterGrades")(function*(
       }
 
       return results
+    })
+  )
+})
+
+/**
+ * Ticket #121: flips every `Mark` under one `Assessment` from `draft` to
+ * `published` in a single statement — the same unit BEH-ZS-129's
+ * progressive-publication ticket (#116) and a teacher's "finish entry"
+ * action both need. Gated by the exact same `canEnterGrades` policy
+ * `enterGrades` uses (no director override — school leadership is
+ * read-only on grades). Scoped by `assessment_id` alone, so it never
+ * touches a Mark under any other Assessment; scoped by `status = 'draft'`
+ * alone, so a second call (or an assessment with zero Marks at all) is a
+ * safe no-op rather than an error — there is nothing here for it to fail
+ * on. A `published` Mark is never reverted to `draft` by this function.
+ */
+export const publishAssessment = Effect.fn("GradeEntry.publishAssessment")(function*(
+  rawSchoolId: string,
+  rawAssessmentId: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  const assessmentId = yield* Schema.decodeEffect(AssessmentId)(rawAssessmentId)
+
+  return yield* withSchool(
+    schoolId,
+    Effect.gen(function*() {
+      const sql = yield* SqlClient
+      yield* authorizeGradeWrite(schoolId, assessmentId, "publish-assessment")
+
+      yield* sql`
+        UPDATE marks SET status = 'published', updated_at = now()
+        WHERE assessment_id = ${assessmentId} AND status = 'draft'
+      `
     })
   )
 })

@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { assignTeacherToCourse } from "./TeacherAssignment.ts"
-import { enterGrades, type GradeEntry } from "./GradeEntry.ts"
+import { enterGrades, type GradeEntry, publishAssessment } from "./GradeEntry.ts"
 
 const randomUUID = Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4)
 
@@ -45,6 +45,8 @@ const withAssessmentFixture = Effect.fn(function*<A, E, R>(
     schoolId: string
     classId: string
     academicYearId: string
+    sectionId: string
+    subjectId: string
     assessmentId: string
     courseId: string
     teacherPersonId: string
@@ -122,6 +124,8 @@ const withAssessmentFixture = Effect.fn(function*<A, E, R>(
         schoolId: school.id,
         classId: cls.id,
         academicYearId: year.id,
+        sectionId: section.id,
+        subjectId: subject.id,
         assessmentId: assessment.id,
         courseId: course.id,
         teacherPersonId,
@@ -351,6 +355,90 @@ describe("GradeEntry (ticket #120)", () => {
           { enrollmentId, value: 12, enteredAt: "2027-01-10T09:00:00.000Z" }
         ]
         const error = yield* enterGrades(schoolId, assessmentId, entries).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(error).toBeInstanceOf(AccessDenied)
+      })
+    ))
+})
+
+describe("publishAssessment (ticket #121)", () => {
+  it.effect("publishing flips every Mark under the assessment and none outside it", () =>
+    withAssessmentFixture(
+      ({ academicYearId, assessmentId, classId, enrollmentId, schoolId, sectionId, subjectId, teacherPersonId }) =>
+        Effect.gen(function*() {
+          const sql = yield* SqlClient
+          yield* enterGrades(schoolId, assessmentId, [
+            { enrollmentId, value: 12, enteredAt: "2027-01-10T09:00:00.000Z" }
+          ]).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+
+          // A second Assessment (a different period, same class/subject) with its own Mark — must stay untouched.
+          const [otherPeriod] = yield* sql<{ id: string }>`
+            INSERT INTO evaluation_periods (school_id, academic_year_id, section_id, code, name, sequence)
+            VALUES (${schoolId}, ${academicYearId}, ${sectionId}, 'S2', 'Semester 2', 2) RETURNING id
+          `
+          const [otherAssessment] = yield* sql<{ id: string }>`
+            INSERT INTO assessments (school_id, academic_year_id, evaluation_period_id, subject_id, class_id, type, is_import_synthesized)
+            VALUES (${schoolId}, ${academicYearId}, ${otherPeriod.id}, ${subjectId}, ${classId}, 'imported', false)
+            RETURNING id
+          `
+          yield* enterGrades(schoolId, otherAssessment.id, [
+            { enrollmentId, value: 15, enteredAt: "2027-01-10T09:00:00.000Z" }
+          ]).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+
+          yield* publishAssessment(schoolId, assessmentId).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+
+          const [firstMark] = yield* sql<{ status: string }>`
+            SELECT status FROM marks WHERE assessment_id = ${assessmentId} AND enrollment_id = ${enrollmentId}
+          `
+          const [otherMark] = yield* sql<{ status: string }>`
+            SELECT status FROM marks WHERE assessment_id = ${otherAssessment.id} AND enrollment_id = ${enrollmentId}
+          `
+          expect(firstMark.status).toBe("published")
+          expect(otherMark.status).toBe("draft")
+        })
+    ))
+
+  it.effect("a second publish call on an already-published assessment is a safe no-op", () =>
+    withAssessmentFixture(({ assessmentId, enrollmentId, schoolId, teacherPersonId }) =>
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        yield* enterGrades(schoolId, assessmentId, [
+          { enrollmentId, value: 12, enteredAt: "2027-01-10T09:00:00.000Z" }
+        ]).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+
+        yield* publishAssessment(schoolId, assessmentId).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+        yield* publishAssessment(schoolId, assessmentId).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+
+        const [mark] = yield* sql<{ status: string }>`
+          SELECT status FROM marks WHERE assessment_id = ${assessmentId} AND enrollment_id = ${enrollmentId}
+        `
+        expect(mark.status).toBe("published")
+      })
+    ))
+
+  it.effect("publishing an assessment with zero Marks is a safe no-op", () =>
+    withAssessmentFixture(({ assessmentId, schoolId, teacherPersonId }) =>
+      publishAssessment(schoolId, assessmentId).pipe(Effect.provide(asTeacher(schoolId, teacherPersonId)))
+    ))
+
+  it.effect("a teacher with no active assignment for the course is denied", () =>
+    withAssessmentFixture(({ assessmentId, schoolId }) =>
+      Effect.gen(function*() {
+        const unassignedTeacherPersonId = yield* randomUUID
+        const error = yield* publishAssessment(schoolId, assessmentId).pipe(
+          Effect.provide(asTeacher(schoolId, unassignedTeacherPersonId)),
+          Effect.flip
+        )
+        expect(error).toBeInstanceOf(AccessDenied)
+      })
+    ))
+
+  it.effect("a director's attempt to publish is denied — publishing is teacher-only", () =>
+    withAssessmentFixture(({ assessmentId, schoolId }) =>
+      Effect.gen(function*() {
+        const error = yield* publishAssessment(schoolId, assessmentId).pipe(
           Effect.provide(asDirectorOf(schoolId)),
           Effect.flip
         )
