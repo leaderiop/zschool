@@ -13,9 +13,11 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "effect": "catalog:",
+    "@aws-sdk/client-s3": "^3.1131.0",
+    "@aws-sdk/client-sqs": "^3.1131.0",
+    "@aws-sdk/s3-request-presigner": "^3.1131.0",
     "@zschool/domain": "workspace:*",
-    "@aws-sdk/client-sqs": "^3.1131.0"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:"

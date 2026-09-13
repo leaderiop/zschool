@@ -166,3 +166,6 @@ export type DeliveryLogId = typeof DeliveryLogId.Type
 
 export const PushSubscriptionId = Schema.String.pipe(Schema.brand("PushSubscriptionId"))
 export type PushSubscriptionId = typeof PushSubscriptionId.Type
+
+export const AttachmentId = Schema.String.pipe(Schema.brand("AttachmentId"))
+export type AttachmentId = typeof AttachmentId.Type
