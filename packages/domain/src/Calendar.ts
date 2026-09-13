@@ -62,7 +62,13 @@ export class EvaluationPeriod extends Model.Class<EvaluationPeriod>("EvaluationP
   // existing `repo.update({id, start_date, end_date})` call keeps working
   // without also having to touch these two unrelated fields.
   massar_semester: optionalOnUpdate(Schema.NullOr(Schema.Literals(["S1", "S2"]))),
-  massar_semester_2_starts_at: optionalOnUpdate(Schema.NullOr(Schema.String))
+  massar_semester_2_starts_at: optionalOnUpdate(Schema.NullOr(Schema.String)),
+  // Ticket #110 (BEH-ZS-119, migration 0036): this period's relative weight
+  // in the annual average — `null` means equal weighting among the
+  // section's periods, normalized at computation time
+  // (`PeriodResult.ts#recomputeYearResult`). `optionalOnUpdate` for the same
+  // reason as the two Massar fields above.
+  weight: optionalOnUpdate(Schema.NullOr(Schema.NumberFromString))
 }) {}
 
 /** `evaluation_sub_periods` is insert-only from this file's perspective — no update path exists for it, unchanged by this ticket — but its repository's `idColumn` is still `"id"`, so it needs the same custom `Model.Field` treatment as `EvaluationPeriod.id` above. */
@@ -248,6 +254,31 @@ export const setMassarSemesterMapping = Effect.fn("Calendar.setMassarSemesterMap
           SET massar_semester = ${massarSemester}, massar_semester_2_starts_at = ${massarSemester2StartsAt}
           WHERE id = ${periodId} AND school_id = ${schoolId}
         `
+      })
+    )
+  )
+})
+
+/**
+ * Ticket #110 (BEH-ZS-119): sets one period's relative weight for the
+ * annual average. `null` resets it to equal weighting. Same "raw SQL, not
+ * `evaluationPeriodRepo.update`" reasoning as `setMassarSemesterMapping`
+ * above.
+ */
+export const setPeriodWeight = Effect.fn("Calendar.setPeriodWeight")(function*(
+  rawSchoolId: string,
+  periodId: string,
+  weight: number | null
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorized(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        yield* requireOwnedRow(sql, "evaluation_periods", "evaluation_period", periodId, schoolId, RowWithId)
+        yield* sql`UPDATE evaluation_periods SET weight = ${weight} WHERE id = ${periodId} AND school_id = ${schoolId}`
       })
     )
   )

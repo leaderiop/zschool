@@ -120,6 +120,31 @@ export const findActiveAssignedTeacherPersonIds = Effect.fn(
 })
 
 /**
+ * Ticket #110: the `person_id`s actively assigned to ANY course in
+ * `classId` — `ConductGrade.ts#proposeConductGrade`'s own resource
+ * attribute, since BEH-ZS-098's "proposed by the homeroom teacher" (a role
+ * that doesn't exist in this codebase, see `RollCall.ts`'s own doc comment
+ * on the same gap) falls back to "any teacher actively assigned to the
+ * class," not one specific course the way grade entry's own
+ * `findActiveAssignedTeacherPersonIds` is scoped.
+ */
+export const findActiveAssignedTeacherPersonIdsForClass = Effect.fn(
+  "TeacherAssignment.findActiveAssignedTeacherPersonIdsForClass"
+)(function*(classId: string) {
+  const sql = yield* SqlClient
+  return yield* SqlSchema.findAll({
+    Request: Schema.Struct({ classId: Schema.String }),
+    Result: Schema.Struct({ teacher_person_id: Schema.String }),
+    execute: (req) =>
+      sql`
+        SELECT DISTINCT ta.teacher_person_id FROM teacher_assignments ta
+        JOIN courses c ON c.id = ta.course_id
+        WHERE c.class_id = ${req.classId} AND ta.unassigned_at IS NULL
+      `
+  })({ classId }).pipe(Effect.map((rows) => rows.map((row) => row.teacher_person_id)))
+})
+
+/**
  * Ticket #109: the resource-resolution-then-assert shape `GradeEntry.ts`'s
  * `authorizeGradeWrite` and `AssessmentType.ts`'s `createAssessment` both
  * need — resolves `courseId`'s actively-assigned teachers and asserts
