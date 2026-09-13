@@ -1,6 +1,7 @@
 export * from "./AcademicTree.ts"
 export * from "./api/Api.ts"
 export * from "./api/Imports.ts"
+export * from "./AttendanceNotification.ts"
 export * from "./Calendar.ts"
 export * from "./CalendarTemplate.ts"
 export * from "./ClassImportAnalysis.ts"

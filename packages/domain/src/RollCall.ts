@@ -5,6 +5,7 @@ import * as Schema from "effect/Schema"
 import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
+import { cancelPendingOutboxForKey, recordAbsenceForNotification, recordCorrectionIfAlreadySent } from "./AttendanceNotification.ts"
 import { canArbitrateAttendanceDiscrepancy, canManageAttendanceSchedule, canTakeRollCall } from "./authorization/Policies.ts"
 import { RollCallDiscrepancyId, RollCallSubmissionId, SchoolId, SessionId } from "./Ids.ts"
 import { authorizeWith, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
@@ -97,6 +98,7 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
     halfDay: "morning" | "afternoon" | null
   },
   key: string,
+  notificationDate: string,
   authorPersonId: string,
   entries: ReadonlyArray<RollCallEntry>
 ) {
@@ -127,6 +129,14 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
           INSERT INTO attendance_records (key, student_enrollment_id, school_id, status)
           VALUES (${key}, ${entry.studentEnrollmentId}, ${schoolId}, ${entry.status})
         `
+        // Ticket #97: a clean (no-conflict) first confirmation of an
+        // absence is what schedules the guardian notification — never a
+        // second, conflicting submission (that path opens a discrepancy
+        // below instead, and #97's own rule is "no notification while a
+        // discrepancy is open for that key/student").
+        if (entry.status === "absent") {
+          yield* recordAbsenceForNotification(schoolId, key, entry.studentEnrollmentId, notificationDate)
+        }
         continue
       }
 
@@ -139,6 +149,11 @@ const writeRollCall = Effect.fn("RollCall.writeRollCall")(function*(
           INSERT INTO roll_call_discrepancies (school_id, key, student_enrollment_id)
           VALUES (${schoolId}, ${key}, ${entry.studentEnrollmentId})
         `
+        // Ticket #97: "a correction cancels the still-pending row with no
+        // send" — a conflicting second submission means the first
+        // confirmation's own notification (if still within its 3-minute
+        // retention window) must not go out unreviewed.
+        yield* cancelPendingOutboxForKey(schoolId, key, entry.studentEnrollmentId)
       }
       // An already-open discrepancy just gets another recorded submission
       // (above) — no second `RollCallDiscrepancy` row (the partial unique
@@ -172,8 +187,12 @@ export const confirmRollCallForSession = Effect.fn("RollCall.confirmRollCallForS
         "session",
         sessionId,
         schoolId,
-        Schema.Struct({ course_id: Schema.String, substitute_teacher_person_id: Schema.NullOr(Schema.String) }),
-        "course_id, substitute_teacher_person_id"
+        Schema.Struct({
+          course_id: Schema.String,
+          substitute_teacher_person_id: Schema.NullOr(Schema.String),
+          date: Schema.String
+        }),
+        "course_id, substitute_teacher_person_id, date"
       )
       const assignedTeacherPersonIds = yield* findActiveAssignedTeacherPersonIds(session.course_id)
       yield* Qadi.assert(canTakeRollCall, {
@@ -189,6 +208,7 @@ export const confirmRollCallForSession = Effect.fn("RollCall.confirmRollCallForS
         schoolId,
         { sessionId, classId: null, date: null, halfDay: null },
         sessionKey(sessionId),
+        session.date,
         authorPersonId,
         entries
       )
@@ -229,6 +249,7 @@ export const confirmRollCallForHalfDay = Effect.fn("RollCall.confirmRollCallForH
           schoolId,
           { sessionId: null, classId, date, halfDay },
           halfDayKey(classId, date, halfDay),
+          date,
           authorPersonId,
           entries
         )
@@ -321,6 +342,8 @@ export const arbitrateRollCallDiscrepancy = Effect.fn("RollCall.arbitrateRollCal
           `
 
           yield* sql`UPDATE roll_call_discrepancies SET resolved_at = now() WHERE id = ${discrepancyId}`
+
+          yield* recordCorrectionIfAlreadySent(schoolId, discrepancy.key, discrepancy.student_enrollment_id, resolvingStatus)
         }))
       })
     )

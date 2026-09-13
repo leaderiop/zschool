@@ -157,3 +157,12 @@ export type RollCallSubmissionId = typeof RollCallSubmissionId.Type
 
 export const RollCallDiscrepancyId = Schema.String.pipe(Schema.brand("RollCallDiscrepancyId"))
 export type RollCallDiscrepancyId = typeof RollCallDiscrepancyId.Type
+
+export const AttendanceNotificationOutboxId = Schema.String.pipe(Schema.brand("AttendanceNotificationOutboxId"))
+export type AttendanceNotificationOutboxId = typeof AttendanceNotificationOutboxId.Type
+
+export const DeliveryLogId = Schema.String.pipe(Schema.brand("DeliveryLogId"))
+export type DeliveryLogId = typeof DeliveryLogId.Type
+
+export const PushSubscriptionId = Schema.String.pipe(Schema.brand("PushSubscriptionId"))
+export type PushSubscriptionId = typeof PushSubscriptionId.Type
