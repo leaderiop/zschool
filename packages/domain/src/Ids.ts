@@ -127,3 +127,6 @@ export type ReceiptId = typeof ReceiptId.Type
 
 export const FinancialAccountCreditId = Schema.String.pipe(Schema.brand("FinancialAccountCreditId"))
 export type FinancialAccountCreditId = typeof FinancialAccountCreditId.Type
+
+export const PaymentVoidId = Schema.String.pipe(Schema.brand("PaymentVoidId"))
+export type PaymentVoidId = typeof PaymentVoidId.Type

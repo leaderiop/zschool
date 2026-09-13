@@ -12,15 +12,23 @@ import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { addFeeItem, createFeeSchedule } from "./FeeSchedule.ts"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
+  approveVoid,
   confirmPayment,
+  configureVoidApprovalPolicy,
   findAccountCreditBalance,
   findPayment,
   findPaymentAllocations,
   findReceiptForPayment,
+  findVoidForPayment,
+  findVoidReceiptForPayment,
   InvalidPaymentError,
   PaymentNotPendingError,
+  PaymentNotVoidableError,
   recordBankTransfer,
-  recordPayment
+  recordPayment,
+  requestVoid,
+  VoidAlreadyRequestedError,
+  VoidNotPendingError
 } from "./Payment.ts"
 import { EntityNotFoundError } from "./Ownership.ts"
 
@@ -113,6 +121,19 @@ const firstInstallmentId = Effect.fn(function*(financialAccountId: string) {
     SELECT id FROM installments WHERE financial_account_id = ${financialAccountId} ORDER BY due_date ASC LIMIT 1
   `
   return row.id
+})
+
+/** The actual calendar day a payment's `created_at` (`clock_timestamp()`) fell on — tests compare `requestVoid`'s `voidDate` against this rather than a hand-picked constant, since the payment is inserted at real wall-clock time. */
+const paymentCreatedDay = Effect.fn(function*(paymentId: string) {
+  const sql = yield* SqlClient
+  const [row] = yield* sql<{ day: string }>`SELECT created_at::date::text AS day FROM payments WHERE id = ${paymentId}`
+  return row.day
+})
+
+const installmentStatus = Effect.fn(function*(installmentId: string) {
+  const sql = yield* SqlClient
+  const [row] = yield* sql<{ status: string }>`SELECT status FROM installments WHERE id = ${installmentId}`
+  return row.status
 })
 
 describe("Payment (ticket #59 / BEH-ZS-157/160/163/167/180)", () => {
@@ -364,6 +385,300 @@ describe("Payment (ticket #59 / BEH-ZS-157/160/163/167/180)", () => {
         const firstSeq = Number(first.receiptNumber.split("-")[1])
         const secondSeq = Number(second.receiptNumber.split("-")[1])
         expect(secondSeq).toBe(firstSeq + 1)
+      })
+    ))
+})
+
+describe("Payment void/reversing entries (ticket #60 / BEH-ZS-179)", () => {
+  it.effect("voiding a same-day payment reverts its installment, issues a void receipt in the same sequence, and flags the original", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId, receiptNumber } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        expect(yield* installmentStatus(installmentId)).toBe("paid")
+        const sameDay = yield* paymentCreatedDay(paymentId)
+
+        const result = yield* requestVoid({
+          schoolId,
+          paymentId,
+          reason: "wrong student",
+          voidDate: sameDay
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(result.status).toBe("finalized")
+        expect(result.receiptNumber).toBeDefined()
+
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+
+        const originalReceipt = yield* findReceiptForPayment(schoolId, paymentId)
+        expect(Option.isSome(originalReceipt)).toBe(true)
+        if (Option.isSome(originalReceipt)) {
+          expect(originalReceipt.value.receipt_number).toBe(receiptNumber)
+          expect(originalReceipt.value.voided).toBe(true)
+        }
+
+        const voidReceipt = yield* findVoidReceiptForPayment(schoolId, paymentId)
+        expect(Option.isSome(voidReceipt)).toBe(true)
+        if (Option.isSome(voidReceipt)) {
+          const originalSeq = Number(receiptNumber.split("-")[1])
+          const voidSeq = Number(voidReceipt.value.split("-")[1])
+          expect(voidSeq).toBe(originalSeq + 1)
+        }
+      })
+    ))
+
+  it.effect("voiding reverses a surplus credit the voided payment created", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1500,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(yield* findAccountCreditBalance(schoolId, financialAccountIds[0])).toBe(300)
+        const sameDay = yield* paymentCreatedDay(paymentId)
+
+        yield* requestVoid({ schoolId, paymentId, reason: "duplicate", voidDate: sameDay }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        expect(yield* findAccountCreditBalance(schoolId, financialAccountIds[0])).toBe(0)
+      })
+    ))
+
+  it.effect("voiding outside the entry's own day stays pending until approved, tracing reason and author", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+
+        const result = yield* requestVoid({
+          schoolId,
+          paymentId,
+          reason: "recorded three days late",
+          voidDate: "2099-01-01"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(result.status).toBe("pending_approval")
+        expect(result.receiptNumber).toBeUndefined()
+
+        // Nothing reverted yet — the void hasn't taken effect.
+        expect(yield* installmentStatus(installmentId)).toBe("paid")
+        const receiptBeforeApproval = yield* findVoidReceiptForPayment(schoolId, paymentId)
+        expect(Option.isNone(receiptBeforeApproval)).toBe(true)
+
+        const pendingVoid = yield* findVoidForPayment(schoolId, paymentId)
+        expect(Option.isSome(pendingVoid)).toBe(true)
+        if (Option.isSome(pendingVoid)) {
+          expect(pendingVoid.value.reason).toBe("recorded three days late")
+          expect(pendingVoid.value.requested_by_subject_id).toBe("cashier-1")
+          expect(pendingVoid.value.status).toBe("pending_approval")
+        }
+
+        yield* approveVoid(schoolId, paymentId).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+        const receiptAfterApproval = yield* findVoidReceiptForPayment(schoolId, paymentId)
+        expect(Option.isSome(receiptAfterApproval)).toBe(true)
+      })
+    ))
+
+  it.effect("approving a void that isn't pending is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* approveVoid(schoolId, paymentId).pipe(Effect.provide(asDirectorOf(schoolId)), Effect.flip)
+        expect(result).toBeInstanceOf(VoidNotPendingError)
+      })
+    ))
+
+  it.effect("voiding a payment above the school's configured amount threshold requires approval even same-day", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        yield* configureVoidApprovalPolicy({ schoolId, amountThresholdMad: 1000 }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const sameDay = yield* paymentCreatedDay(paymentId)
+
+        const result = yield* requestVoid({
+          schoolId,
+          paymentId,
+          reason: "over threshold",
+          voidDate: sameDay
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(result.status).toBe("pending_approval")
+      })
+    ))
+
+  it.effect("voiding a payment under the school's configured amount threshold, same-day, needs no approval", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        yield* configureVoidApprovalPolicy({ schoolId, amountThresholdMad: 5000 }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const sameDay = yield* paymentCreatedDay(paymentId)
+
+        const result = yield* requestVoid({
+          schoolId,
+          paymentId,
+          reason: "under threshold",
+          voidDate: sameDay
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(result.status).toBe("finalized")
+      })
+    ))
+
+  it.effect("voiding an already-voided payment is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const sameDay = yield* paymentCreatedDay(paymentId)
+        yield* requestVoid({ schoolId, paymentId, reason: "first void", voidDate: sameDay }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const result = yield* requestVoid({ schoolId, paymentId, reason: "second attempt", voidDate: sameDay }).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(PaymentNotVoidableError)
+      })
+    ))
+
+  it.effect("requesting a second void while the first is still pending approval is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* requestVoid({ schoolId, paymentId, reason: "first", voidDate: "2099-01-01" }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        // Still `confirmed` (the first void is only `pending_approval`), so
+        // this reaches the `UNIQUE (payment_id)` guard, not the
+        // already-`voided` status check above.
+        const result = yield* requestVoid({ schoolId, paymentId, reason: "second", voidDate: "2099-01-01" }).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(VoidAlreadyRequestedError)
+      })
+    ))
+
+  it.effect("voiding a still-pending bank transfer (never confirmed) is rejected", () =>
+    withSeededAccounts(1)(({ schoolId }) =>
+      Effect.gen(function*() {
+        const paymentId = yield* recordBankTransfer({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: "REF"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* requestVoid({
+          schoolId,
+          paymentId,
+          reason: "wrong",
+          voidDate: "2026-09-05"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)), Effect.flip)
+        expect(result).toBeInstanceOf(PaymentNotVoidableError)
+      })
+    ))
+
+  it.effect("a void with an empty reason is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* requestVoid({ schoolId, paymentId, reason: "   ", voidDate: "2026-09-05" }).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(InvalidPaymentError)
+      })
+    ))
+
+  it.effect("a family payment split across two siblings' installments reverts every covered installment on void", () =>
+    withSeededAccounts(2)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { paymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 2400,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const firstChildInstallment = yield* firstInstallmentId(financialAccountIds[0])
+        const secondChildInstallment = yield* firstInstallmentId(financialAccountIds[1])
+        expect(yield* installmentStatus(firstChildInstallment)).toBe("paid")
+        expect(yield* installmentStatus(secondChildInstallment)).toBe("paid")
+        const sameDay = yield* paymentCreatedDay(paymentId)
+
+        yield* requestVoid({ schoolId, paymentId, reason: "family payment error", voidDate: sameDay }).pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        expect(yield* installmentStatus(firstChildInstallment)).toBe("due")
+        expect(yield* installmentStatus(secondChildInstallment)).toBe("due")
       })
     ))
 })
