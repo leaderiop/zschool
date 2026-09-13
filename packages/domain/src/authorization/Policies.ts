@@ -167,3 +167,6 @@ export const canManageDiscipline = P.anyOf([
 
 /** ADR-ZS-057: approving (or dismissing) a `SuspensionProposal` — actually setting `Enrollment.status` to `suspended` — is reserved to the director, never student-life, even though student-life can propose one via `canManageDiscipline`. */
 export const canApproveSuspension = directorScopedToOwnSchool
+
+/** Ticket #106: identical shape to `canReportIncident` (any staff member at the school, no investigation step) — a distinct export since recording a reward is a different capability from reporting an incident, even though both resolve to the same check today. */
+export const canRecordCommendation = canReportIncident

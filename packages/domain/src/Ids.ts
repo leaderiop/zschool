@@ -193,3 +193,6 @@ export type JustificationReasonCodeId = typeof JustificationReasonCodeId.Type
 
 export const JustificationId = Schema.String.pipe(Schema.brand("JustificationId"))
 export type JustificationId = typeof JustificationId.Type
+
+export const CommendationId = Schema.String.pipe(Schema.brand("CommendationId"))
+export type CommendationId = typeof CommendationId.Type
