@@ -177,7 +177,8 @@ const REQUIRED_UNIFIED_TESTS = 1
  * exam years") only needs to know the same three level codes that already
  * drive the certifying weightings.
  */
-const CERTIFYING_LEVEL_CODES: ReadonlySet<string> = new Set(["6AP", "3AC", "2BAC"])
+/** Exported (ticket #111) so `ExamGrade.ts`'s own per-level external-slot lookup keys off the same three codes, rather than a third independently-maintained copy (`GradingScales.ts`'s `defaultComputationRules` is the second). */
+export const CERTIFYING_LEVEL_CODES: ReadonlySet<string> = new Set(["6AP", "3AC", "2BAC"])
 
 /**
  * BEH-ZS-116: an informational-only (MVP), per-`(subject, class)` view of

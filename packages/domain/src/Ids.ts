@@ -223,3 +223,6 @@ export type YearResultId = typeof YearResultId.Type
 
 export const ConductGradeId = Schema.String.pipe(Schema.brand("ConductGradeId"))
 export type ConductGradeId = typeof ConductGradeId.Type
+
+export const ExamGradeId = Schema.String.pipe(Schema.brand("ExamGradeId"))
+export type ExamGradeId = typeof ExamGradeId.Type

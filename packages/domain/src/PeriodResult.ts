@@ -3,8 +3,10 @@ import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
 import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { CERTIFYING_LEVEL_CODES } from "./AssessmentType.ts"
 import { writeAuditLog } from "./AuditLog.ts"
 import { canSetRankExclusion } from "./authorization/Policies.ts"
+import { EXTERNAL_EXAM_SLOTS_BY_LEVEL_CODE } from "./ExamGrade.ts"
 import { defaultHonorsThresholds, type HonorsThreshold } from "./GradingScales.ts"
 import { AcademicYearId, ClassId, EvaluationPeriodId, PeriodResultId, SchoolId, SubjectResultId, YearResultId } from "./Ids.ts"
 import { authorized, authorizeWith, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
@@ -103,6 +105,8 @@ interface MarkRow {
   readonly coefficient: string
   readonly value: string | null
   readonly marker: string | null
+  /** Ticket #111: an assessment whose `AssessmentType.counts_as_unified_test` is true — the "local unified exam" (BEH-ZS-118/120), which certifying levels weight separately from ordinary continuous assessment, not lumped in with it. */
+  readonly is_unified_test: boolean
 }
 
 interface SubjectRosterRow {
@@ -147,6 +151,16 @@ const computeSubjectAverage = (
   return weighted / weightSum
 }
 
+/** Same coefficient-weighted-average shape as `computeSubjectAverage`'s own final reduction, reused for the exam_1/exam_2 buckets below (which have no marker/exclusion logic of their own — a `null` entry just drops out of both sums, same "NG excluded, not zeroed" treatment `computeSubjectAverage` gives a subject with no marks at all). */
+const weightedSubjectAverage = (entries: ReadonlyArray<{ coefficient: number; value: number | null }>): number | null => {
+  const included = entries.filter((e): e is typeof e & { value: number } => e.value !== null)
+  if (included.length === 0) return null
+  const weightSum = included.reduce((sum, e) => sum + e.coefficient, 0)
+  if (weightSum === 0) return null
+  const weighted = included.reduce((sum, e) => sum + e.value * e.coefficient, 0)
+  return weighted / weightSum
+}
+
 /**
  * Ticket #110: computes and overwrites `PeriodResult`/`SubjectResult` for
  * every active enrollment in `classId`, for `evaluationPeriodId`. On-demand
@@ -154,16 +168,24 @@ const computeSubjectAverage = (
  * wiring this into the actual "when do results become final" moment, and
  * freezing it at closing, is #112's job.
  *
- * BEH-ZS-118's certifying weighting is applied via
- * `ComputationRule.weight_continuous` (non-certifying levels are seeded at
- * `100`, per `GradingScales.ts#seedDefaultComputationRules`, so this is a
- * no-op multiplication for them). `weight_exam_1`/`weight_exam_2` are NOT
- * yet applied: no external-exam grade model exists until #111, so there is
- * nothing to weight in — the continuous portion is scaled by its own share
- * alone, exactly as if the still-unentered exams contributed `0`. This is a
- * disclosed interim state: a certifying level's live `PeriodResult` reads
- * low relative to its eventual full weighted total until #111 supplies real
- * exam grades, mirroring what "no exam sat yet" actually means numerically.
+ * BEH-ZS-118's certifying weighting: `ComputationRule.weight_continuous`
+ * (non-certifying levels are seeded at `100`, so this is a no-op
+ * multiplication for them) plus, for the three certifying levels
+ * (`AssessmentType.ts#CERTIFYING_LEVEL_CODES`), `weight_exam_1`/
+ * `weight_exam_2` (ticket #111). Per subject, each exam slot's value comes
+ * from an `ExamGrade` row if one exists, else — for whichever slot isn't
+ * external for this level (`ExamGrade.ts#EXTERNAL_EXAM_SLOTS_BY_LEVEL_CODE`;
+ * 6AP/3AC's slot 1 is the internal "local unified exam") — from that
+ * subject's own `counts_as_unified_test` marks, which are excluded from the
+ * continuous bucket entirely for these three levels so they're never
+ * double-counted. A slot with no value at all (neither an `ExamGrade` nor
+ * applicable marks) contributes `0` to the final weighted sum, not an
+ * excluded term — the same "an unsat exam reads as 0, not NG" numeric
+ * meaning ticket #110's own interim version already established, now just
+ * populated by real data once it exists instead of always being empty.
+ * `SubjectResult.average` stores only the continuous-assessment subject
+ * average (unaffected by this ticket) — a report card's own per-subject
+ * exam breakdown is a future ticket's concern, not persisted here.
  */
 export const recomputePeriodResult = Effect.fn("PeriodResult.recomputePeriodResult")(function*(
   rawSchoolId: string,
@@ -181,13 +203,17 @@ export const recomputePeriodResult = Effect.fn("PeriodResult.recomputePeriodResu
       Effect.gen(function*() {
         const sql = yield* SqlClient
 
-        const classRows = yield* sql<{ level_id: string }>`
-          SELECT level_id FROM classes WHERE id = ${classId} AND school_id = ${schoolId}
+        const classRows = yield* sql<{ level_id: string; level_code: string }>`
+          SELECT c.level_id, lv.code AS level_code FROM classes c
+          JOIN levels lv ON lv.id = c.level_id
+          WHERE c.id = ${classId} AND c.school_id = ${schoolId}
         `
         const classRow = classRows[0]
         if (classRow === undefined) {
           return yield* new EntityNotFoundError({ entityType: "class", entityId: classId })
         }
+        const isCertifyingLevel = CERTIFYING_LEVEL_CODES.has(classRow.level_code)
+        const externalSlots = EXTERNAL_EXAM_SLOTS_BY_LEVEL_CODE.get(classRow.level_code) ?? new Set<number>()
 
         yield* requireOwnedRow(
           sql,
@@ -203,9 +229,12 @@ export const recomputePeriodResult = Effect.fn("PeriodResult.recomputePeriodResu
           honors_thresholds: ReadonlyArray<HonorsThreshold>
           unjustified_absence_counts_as_zero: boolean
           weight_continuous: string
+          weight_exam_1: string
+          weight_exam_2: string
         }>`
           SELECT lowest_grade_exclusion_min_count, honors_thresholds, unjustified_absence_counts_as_zero,
-            weight_continuous::text AS weight_continuous
+            weight_continuous::text AS weight_continuous, weight_exam_1::text AS weight_exam_1,
+            weight_exam_2::text AS weight_exam_2
           FROM computation_rules
           WHERE school_id = ${schoolId} AND level_id = ${classRow.level_id} AND is_current
         `
@@ -234,18 +263,44 @@ export const recomputePeriodResult = Effect.fn("PeriodResult.recomputePeriodResu
 
         for (const enrollment of enrollments) {
           const marks = yield* sql<MarkRow>`
-            SELECT a.subject_id, a.coefficient::text AS coefficient, m.value::text AS value, m.marker
+            SELECT a.subject_id, a.coefficient::text AS coefficient, m.value::text AS value, m.marker,
+              COALESCE(at.counts_as_unified_test, false) AS is_unified_test
             FROM marks m
             JOIN assessments a ON a.id = m.assessment_id
+            LEFT JOIN assessment_types at ON at.id = a.assessment_type_id
             WHERE m.enrollment_id = ${enrollment.id}
               AND a.evaluation_period_id = ${evaluationPeriodId}
               AND m.status = 'published'
           `
+          // Certifying levels pull `counts_as_unified_test` marks out of the
+          // continuous bucket entirely (they weight separately, as slot 1's
+          // internal fallback below) — every other level keeps them lumped
+          // in with ordinary continuous marks, unchanged from before #111.
+          const continuousMarks = isCertifyingLevel ? marks.filter((m) => !m.is_unified_test) : marks
+          const unifiedMarks = isCertifyingLevel ? marks.filter((m) => m.is_unified_test) : []
+
           const marksBySubject = new Map<string, Array<MarkRow>>()
-          for (const mark of marks) {
+          for (const mark of continuousMarks) {
             const list = marksBySubject.get(mark.subject_id) ?? []
             list.push(mark)
             marksBySubject.set(mark.subject_id, list)
+          }
+          const unifiedMarksBySubject = new Map<string, Array<MarkRow>>()
+          for (const mark of unifiedMarks) {
+            const list = unifiedMarksBySubject.get(mark.subject_id) ?? []
+            list.push(mark)
+            unifiedMarksBySubject.set(mark.subject_id, list)
+          }
+
+          const examGradesBySubjectSlot = new Map<string, number>()
+          if (isCertifyingLevel) {
+            const examGrades = yield* sql<{ subject_id: string; exam_slot: number; value: string }>`
+              SELECT subject_id, exam_slot, value::text AS value FROM exam_grades
+              WHERE enrollment_id = ${enrollment.id} AND evaluation_period_id = ${evaluationPeriodId}
+            `
+            for (const grade of examGrades) {
+              examGradesBySubjectSlot.set(`${grade.subject_id}:${grade.exam_slot}`, Number(grade.value))
+            }
           }
 
           const subjectAverages = roster.map((subject) => ({
@@ -279,9 +334,36 @@ export const recomputePeriodResult = Effect.fn("PeriodResult.recomputePeriodResu
           }
 
           const rawOverallAverage = weightSum === 0 ? null : weighted / weightSum
-          const overallAverage = rawOverallAverage === null
-            ? null
-            : roundToDecimals(rawOverallAverage * (Number(rule.weight_continuous) / 100), 2)
+
+          let overallAverage: number | null = null
+          if (rawOverallAverage !== null) {
+            if (isCertifyingLevel) {
+              const examSlotValue = (slot: 1 | 2) =>
+                roster.map((subject) => {
+                  const fromExamGrade = examGradesBySubjectSlot.get(`${subject.subject_id}:${slot}`)
+                  const value = fromExamGrade ?? (
+                    !externalSlots.has(slot)
+                      ? computeSubjectAverage(
+                        unifiedMarksBySubject.get(subject.subject_id) ?? [],
+                        rule.unjustified_absence_counts_as_zero,
+                        rule.lowest_grade_exclusion_min_count
+                      )
+                      : null
+                  )
+                  return { coefficient: Number(subject.coefficient), value: value ?? null }
+                })
+
+              const exam1Overall = weightedSubjectAverage(examSlotValue(1))
+              const exam2Overall = weightedSubjectAverage(examSlotValue(2))
+
+              const combined = rawOverallAverage * (Number(rule.weight_continuous) / 100) +
+                (exam1Overall ?? 0) * (Number(rule.weight_exam_1) / 100) +
+                (exam2Overall ?? 0) * (Number(rule.weight_exam_2) / 100)
+              overallAverage = roundToDecimals(combined, 2)
+            } else {
+              overallAverage = roundToDecimals(rawOverallAverage * (Number(rule.weight_continuous) / 100), 2)
+            }
+          }
           perEnrollment.push({ enrollmentId: enrollment.id, average: overallAverage })
 
           const [periodResult] = yield* sql<{ id: string; excluded_from_rank: boolean }>`

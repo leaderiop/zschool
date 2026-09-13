@@ -197,3 +197,6 @@ export const canValidateConductGrade = canManageDiscipline
 
 /** Ticket #110 (BEH-ZS-102, resolving Attendance's #90): setting a `PeriodResult`'s "excluded from rank" flag is the director's own call — BEH-ZS-102's "the director MAY exclude them," not student-life's. */
 export const canSetRankExclusion = directorScopedToOwnSchool
+
+/** Ticket #111 (BEH-ZS-120/121): recording or importing a certifying-level external-exam grade is a school-leadership capability, not a teacher one — an external exam isn't tied to any one teacher's course. Same `directorScopedToOwnSchool` check as `canManageAcademicStructure`, a distinct export for the same "capability, not mechanism" reason. */
+export const canManageExamGrades = directorScopedToOwnSchool

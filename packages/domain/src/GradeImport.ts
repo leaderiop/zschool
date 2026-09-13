@@ -79,7 +79,8 @@ const markRepo = SqlModel.makeRepository(Mark, { tableName: "marks", spanPrefix:
 /** ADR-ZS-058: any scale other than /20 is normalized to /20 before weighting. Only the normalized value is ever persisted — a row's own `scale` is a commit-time input, never stored. */
 export const normalizeToTwenty = (value: number, scale: number): number => (value * 20) / scale
 
-const EnrollmentTarget = Schema.Struct({
+/** Exported (ticket #111) so `ExamGrade.ts`'s own name+DOB fallback matcher decodes the same `{enrollment_id, class_id}` shape as `findEnrollmentByMassarCode` below, rather than redeclaring an identical schema. */
+export const EnrollmentTarget = Schema.Struct({
   enrollmentId: Schema.String,
   classId: Schema.String
 }).pipe(Schema.encodeKeys({ enrollmentId: "enrollment_id", classId: "class_id" }))
