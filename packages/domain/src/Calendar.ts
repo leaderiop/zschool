@@ -7,7 +7,8 @@ import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
 import { fixedHolidayDatesForYear, movableReligiousHolidays, publishedBreaksByYear } from "./CalendarTemplate.ts"
 import { CalendarEventId, EvaluationPeriodId, EvaluationSubPeriodId, SchoolId } from "./Ids.ts"
-import { authorized, EntityNotFoundError, requireOwnedRow } from "./Ownership.ts"
+import { optionalOnUpdate } from "./ModelVariants.ts"
+import { authorized, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export class PeriodOverlapError extends Schema.TaggedError<PeriodOverlapError>()("PeriodOverlapError", {
   periodId: Schema.String,
@@ -49,7 +50,19 @@ export class EvaluationPeriod extends Model.Class<EvaluationPeriod>("EvaluationP
   sequence: Schema.Int.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
   status: Schema.Literals(["upcoming", "in_progress", "closed"]).pipe(Model.FieldExcept(["update", "jsonUpdate"])),
   start_date: Schema.NullOr(Schema.String),
-  end_date: Schema.NullOr(Schema.String)
+  end_date: Schema.NullOr(Schema.String),
+  // Ticket #109 (BEH-ZS-112, migration 0035): a semester-based section sets
+  // `massar_semester` directly on each of its own periods (no split ever
+  // needed). A trimester section's T2 is the one period that can actually
+  // split mid-way — `massar_semester_2_starts_at` carries that threshold
+  // date only there; every other period leaves it null. Resolving a given
+  // grade's date against this mapping is Massar export's own job (#118,
+  // unbuilt) — this ticket only stores the mapping's shape. `optionalOnUpdate`
+  // (not plain, unlike `start_date`/`end_date`) so `setEvaluationPeriodDates`'s
+  // existing `repo.update({id, start_date, end_date})` call keeps working
+  // without also having to touch these two unrelated fields.
+  massar_semester: optionalOnUpdate(Schema.NullOr(Schema.Literals(["S1", "S2"]))),
+  massar_semester_2_starts_at: optionalOnUpdate(Schema.NullOr(Schema.String))
 }) {}
 
 /** `evaluation_sub_periods` is insert-only from this file's perspective — no update path exists for it, unchanged by this ticket — but its repository's `idColumn` is still `"id"`, so it needs the same custom `Model.Field` treatment as `EvaluationPeriod.id` above. */
@@ -197,6 +210,44 @@ export const setEvaluationPeriodDates = Effect.fn("Calendar.setEvaluationPeriodD
 
         const repo = yield* evaluationPeriodRepo
         yield* repo.update({ id: validPeriodId, start_date: command.startDate, end_date: command.endDate })
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-112: sets one period's Massar-semester mapping — the default
+ * one-to-one case (a semester-based section's own periods, or a trimester
+ * section's T1/T3) leaves `massarSemester2StartsAt` null; T2, the one
+ * period that actually splits mid-way, sets it to the ministry's own
+ * semester-1 end date. Only the mapping's shape is stored here — resolving
+ * a specific grade's date against it is Massar export's own job (#118).
+ */
+export const setMassarSemesterMapping = Effect.fn("Calendar.setMassarSemesterMapping")(function*(
+  rawSchoolId: string,
+  periodId: string,
+  massarSemester: "S1" | "S2",
+  massarSemester2StartsAt: string | null
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorized(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        yield* requireOwnedRow(sql, "evaluation_periods", "evaluation_period", periodId, schoolId, RowWithId)
+
+        // Raw SQL, not `evaluationPeriodRepo.update` — that repository's
+        // `update` type requires every non-excluded field (`start_date`/
+        // `end_date` included, per `SqlModel.makeRepository`'s single-row
+        // update semantics), and this function only ever touches the two
+        // Massar-mapping columns.
+        yield* sql`
+          UPDATE evaluation_periods
+          SET massar_semester = ${massarSemester}, massar_semester_2_starts_at = ${massarSemester2StartsAt}
+          WHERE id = ${periodId} AND school_id = ${schoolId}
+        `
       })
     )
   )

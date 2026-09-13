@@ -1,3 +1,5 @@
+import * as Qadi from "@qadi/core/Qadi"
+import type { Policy } from "@qadi/core/Policy"
 import { withSchool } from "@zschool/db"
 import * as Effect from "effect/Effect"
 import * as Schema from "effect/Schema"
@@ -115,4 +117,30 @@ export const findActiveAssignedTeacherPersonIds = Effect.fn(
         WHERE course_id = ${req.courseId} AND unassigned_at IS NULL
       `
   })({ courseId }).pipe(Effect.map((rows) => rows.map((row) => row.teacher_person_id)))
+})
+
+/**
+ * Ticket #109: the resource-resolution-then-assert shape `GradeEntry.ts`'s
+ * `authorizeGradeWrite` and `AssessmentType.ts`'s `createAssessment` both
+ * need — resolves `courseId`'s actively-assigned teachers and asserts
+ * `policy` against them in one place, so a change to the resource shape or
+ * the `substitute_teacher_person_id: null` fail-closed convention
+ * (`Session.ts#rollCallResourceFor`'s own precedent) only needs updating
+ * here, not in every grade-write call site.
+ */
+export const assertTeacherAssignedToCourse = Effect.fn("TeacherAssignment.assertTeacherAssignedToCourse")(function*(
+  policy: Policy,
+  schoolId: SchoolId,
+  courseId: string,
+  action: string
+) {
+  const assignedTeacherPersonIds = yield* findActiveAssignedTeacherPersonIds(courseId)
+  yield* Qadi.assert(policy, {
+    resource: {
+      school_id: schoolId,
+      assigned_teacher_person_ids: assignedTeacherPersonIds,
+      substitute_teacher_person_id: null
+    },
+    action
+  })
 })

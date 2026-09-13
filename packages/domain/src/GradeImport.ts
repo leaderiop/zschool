@@ -35,7 +35,11 @@ export class Assessment extends Model.Class<Assessment>("Assessment")({
   evaluation_period_id: Schema.String,
   subject_id: Schema.String,
   class_id: Schema.String,
-  type: Schema.Literals(["imported"]),
+  // Widened to `'live'` by ticket #109's migration 0035, once a real,
+  // teacher-created Assessment (`AssessmentType.ts#createAssessment`)
+  // existed to need it — every decode through this Model (not just this
+  // file's own `type = 'imported'`-filtered queries) must accept both.
+  type: Schema.Literals(["imported", "live"]),
   // Postgres `numeric` round-trips as a decimal string (avoiding float
   // precision loss) — same reasoning as `GradingScale.max_score`.
   coefficient: Schema.NumberFromString,
