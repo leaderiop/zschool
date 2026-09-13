@@ -8,7 +8,7 @@ import { Model } from "effect/unstable/schema"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import * as SqlModel from "effect/unstable/sql/SqlModel"
 import * as SqlSchema from "effect/unstable/sql/SqlSchema"
-import { PaymentAllocationId, PaymentId, PaymentVoidId, SchoolId } from "./Ids.ts"
+import { ChequeId, PaymentAllocationId, PaymentId, PaymentVoidId, SchoolId } from "./Ids.ts"
 import { authorizedFinance, EntityNotFoundError, requireOwnedRow, RowWithId } from "./Ownership.ts"
 
 export { EntityNotFoundError }
@@ -16,8 +16,18 @@ export { EntityNotFoundError }
 export const PAYMENT_METHODS = ["cash", "cheque", "bank_transfer"] as const
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]
 
-/** `recordPayment` only ever inserts these two — `bank_transfer` always goes through `recordBankTransfer`/`confirmPayment` instead, since it starts `pending_confirmation` (BEH-ZS-163). */
-export const IMMEDIATE_PAYMENT_METHODS = ["cash", "cheque"] as const
+/**
+ * `recordPayment` only ever inserts `'cash'` — `bank_transfer` always goes
+ * through `recordBankTransfer`/`confirmPayment` instead, since it starts
+ * `pending_confirmation` (BEH-ZS-163). Ticket #61 moves `'cheque'` out of
+ * this list too: every cheque, not only a post-dated one, now goes through
+ * `recordCheque`/`clearCheque` instead, for the same "starts pending, no
+ * balance effect until confirmed" reasoning (BEH-ZS-162) — see the ticket
+ * #61 doc comment on migration `0020_cheques.ts` for why deferring ALL
+ * cheques (rather than branching on `cheque_date`) is the simpler, strictly
+ * safer choice.
+ */
+export const IMMEDIATE_PAYMENT_METHODS = ["cash"] as const
 export type ImmediatePaymentMethod = (typeof IMMEDIATE_PAYMENT_METHODS)[number]
 
 export const PAYMENT_STATUSES = ["pending_confirmation", "confirmed", "voided"] as const
@@ -47,6 +57,12 @@ export class VoidAlreadyRequestedError extends Schema.TaggedError<VoidAlreadyReq
 export class VoidNotPendingError extends Schema.TaggedError<VoidNotPendingError>()("VoidNotPendingError", {
   paymentId: Schema.String
 }) {}
+
+/** A cheque-lifecycle transition was attempted from a status that doesn't allow it (e.g. clearing a cheque that isn't `'deposited'`, or bouncing one already `'cleared'`) — every transition function re-checks its own precondition with an atomic guarded `UPDATE`, so this also covers a concurrent transition winning the race. */
+export class InvalidChequeTransitionError extends Schema.TaggedError<InvalidChequeTransitionError>()(
+  "InvalidChequeTransitionError",
+  { chequeId: Schema.String, currentStatus: Schema.String, attempted: Schema.String }
+) {}
 
 /**
  * `Model.Class` for `payments` (ticket #59, migration 0018). `status`/
@@ -117,6 +133,93 @@ export class PaymentVoid extends Model.Class<PaymentVoid>("PaymentVoid")({
   created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
 }) {}
 
+export const CHEQUE_STATUSES = [
+  "handed_over",
+  "deposited",
+  "cleared",
+  "bounced",
+  "regularized",
+  "litigation"
+] as const
+export type ChequeStatus = (typeof CHEQUE_STATUSES)[number]
+
+/**
+ * `Model.Class` for `cheques` (ticket #61, migration 0020). Every
+ * status-machine timestamp (`deposited_at`/`cleared_at`/`bounced_at`/
+ * `regularized_at`/`litigation_at`) plus `status`/`bounce_reason`/
+ * `bounce_notice_reference`/`regularizing_payment_id` is `GeneratedByDb` —
+ * they only ever change through the raw `UPDATE`s the transition functions
+ * below issue, the same read-only-through-the-Model shape `Payment.status`/
+ * `PaymentVoid.status` already established.
+ */
+export class Cheque extends Model.Class<Cheque>("Cheque")({
+  id: Model.Field({ select: ChequeId, update: ChequeId, json: ChequeId, jsonUpdate: ChequeId }),
+  school_id: SchoolId.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  payment_id: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  cheque_number: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  bank: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  cheque_date: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  financial_account_ids: Schema.Array(Schema.String).pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  deposit_batch_reference: Schema.NullOr(Schema.String).pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  status: Model.GeneratedByDb(Schema.Literals(CHEQUE_STATUSES)),
+  deposited_at: Model.GeneratedByDb(Schema.NullOr(Schema.DateTimeUtcFromMillis)),
+  cleared_at: Model.GeneratedByDb(Schema.NullOr(Schema.DateTimeUtcFromMillis)),
+  bounce_reason: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  bounce_notice_reference: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  bounced_at: Model.GeneratedByDb(Schema.NullOr(Schema.DateTimeUtcFromMillis)),
+  bounced_by_subject_id: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  regularizing_payment_id: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  regularized_at: Model.GeneratedByDb(Schema.NullOr(Schema.DateTimeUtcFromMillis)),
+  regularized_by_subject_id: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  litigation_at: Model.GeneratedByDb(Schema.NullOr(Schema.DateTimeUtcFromMillis)),
+  litigation_by_subject_id: Model.GeneratedByDb(Schema.NullOr(Schema.String)),
+  recorded_by_subject_id: Schema.String.pipe(Model.FieldExcept(["update", "jsonUpdate"])),
+  created_at: Model.GeneratedByDb(Schema.DateTimeUtcFromMillis)
+}) {}
+
+export class RecordChequeCommand extends Schema.Class<RecordChequeCommand>("RecordChequeCommand")({
+  schoolId: SchoolId,
+  amountMad: Schema.Finite,
+  valueDate: Schema.String,
+  reference: Schema.NullOr(Schema.String),
+  chequeNumber: Schema.NonEmptyString,
+  bank: Schema.NonEmptyString,
+  chequeDate: Schema.String,
+  financialAccountIds: Schema.Array(Schema.String)
+}) {}
+
+/**
+ * Ticket #61's mid-year-import escape hatch (BEH-ZS-162: "a cheque already in
+ * hand ... can be recorded directly at its current status, without replaying
+ * earlier states"). `initialStatus` of `'cleared'` confirms the payment and
+ * allocates immediately, same as `clearCheque`; every other status leaves it
+ * `pending_confirmation` forever, same as a normal
+ * handed-over/deposited/bounced/regularized/litigation cheque would.
+ * `bounceReason`/`bounceNoticeReference` are REQUIRED when `initialStatus` is
+ * `'bounced'` (or a state reachable only via a bounce — `'regularized'`,
+ * `'litigation'`) — a cheque imported already in one of those states still
+ * needs the trace `bounceCheque` would otherwise have written, the same
+ * invariant migration 0020's own doc comment establishes for the normal
+ * (non-import) path. `regularizingPaymentId`, similarly, is required when
+ * `initialStatus` is `'regularized'`.
+ */
+export class RecordChequeAtStatusCommand extends Schema.Class<RecordChequeAtStatusCommand>(
+  "RecordChequeAtStatusCommand"
+)({
+  schoolId: SchoolId,
+  amountMad: Schema.Finite,
+  valueDate: Schema.String,
+  reference: Schema.NullOr(Schema.String),
+  chequeNumber: Schema.NonEmptyString,
+  bank: Schema.NonEmptyString,
+  chequeDate: Schema.String,
+  financialAccountIds: Schema.Array(Schema.String),
+  initialStatus: Schema.Literals(CHEQUE_STATUSES),
+  bounceReason: Schema.optional(Schema.NonEmptyString),
+  bounceNoticeReference: Schema.optional(Schema.NonEmptyString),
+  regularizingPaymentId: Schema.optional(Schema.NonEmptyString)
+}) {}
+
 export class RecordPaymentCommand extends Schema.Class<RecordPaymentCommand>("RecordPaymentCommand")({
   schoolId: SchoolId,
   method: Schema.Literals(IMMEDIATE_PAYMENT_METHODS),
@@ -170,6 +273,12 @@ const paymentAllocationRepo = SqlModel.makeRepository(PaymentAllocation, {
 
 const paymentVoidRepo = SqlModel.makeRepository(PaymentVoid, {
   tableName: "payment_voids",
+  spanPrefix: "Payment",
+  idColumn: "id"
+})
+
+const chequeRepo = SqlModel.makeRepository(Cheque, {
+  tableName: "cheques",
   spanPrefix: "Payment",
   idColumn: "id"
 })
@@ -513,6 +622,58 @@ export const recordBankTransfer = Effect.fn("Payment.recordBankTransfer")(functi
 })
 
 /**
+ * The core of "reconcile a `pending_confirmation` payment against the
+ * installment(s) it actually settles" — shared by `confirmPayment`
+ * (bank_transfer) and `clearCheque` (ticket #61), which each wrap it in
+ * their OWN `authorizedFinance`/`withTransaction` so a cheque's own status
+ * transition and this confirmation commit or roll back together atomically.
+ */
+const confirmPendingPayment = Effect.fn("Payment.confirmPendingPayment")(function*(
+  sql: SqlClient,
+  schoolId: SchoolId,
+  paymentId: string,
+  financialAccountIds: ReadonlyArray<string>,
+  allocations: ReadonlyArray<AllocationInput> | undefined,
+  creditFinancialAccountId: string | undefined
+) {
+  const before = yield* requireOwnedRow(
+    sql,
+    "payments",
+    "payment",
+    paymentId,
+    schoolId,
+    Schema.Struct({ status: Schema.String, amount_mad: Schema.FiniteFromString, value_date: Schema.String }),
+    "status, amount_mad, value_date"
+  )
+  if (before.status !== "pending_confirmation") {
+    return yield* Effect.fail(new PaymentNotPendingError({ paymentId }))
+  }
+  const [updated] = yield* sql`
+    UPDATE payments SET status = 'confirmed', confirmed_at = clock_timestamp()
+    WHERE id = ${paymentId} AND school_id = ${schoolId} AND status = 'pending_confirmation'
+    RETURNING id
+  `
+  // Guards against a concurrent double-confirmation racing this same
+  // check-then-act sequence — the `before` read above is advisory, this
+  // `UPDATE ... WHERE status = 'pending_confirmation'` is the actual, atomic
+  // guard.
+  if (updated === undefined) {
+    return yield* Effect.fail(new PaymentNotPendingError({ paymentId }))
+  }
+  const receiptNumber = yield* applyConfirmation(
+    sql,
+    schoolId,
+    paymentId,
+    before.amount_mad,
+    before.value_date,
+    financialAccountIds,
+    allocations,
+    creditFinancialAccountId
+  )
+  return { receiptNumber }
+})
+
+/**
  * BEH-ZS-163: a human reconciling a `pending_confirmation` payment against
  * the installment(s) it actually settles — the same allocation/receipt/credit
  * machinery `recordPayment` runs, just deferred to this later, explicit step
@@ -532,44 +693,9 @@ export const confirmPayment = Effect.fn("Payment.confirmPayment")(function*(
       schoolId,
       Effect.gen(function*() {
         const sql = yield* SqlClient
-        const before = yield* requireOwnedRow(
-          sql,
-          "payments",
-          "payment",
-          paymentId,
-          schoolId,
-          Schema.Struct({ status: Schema.String, amount_mad: Schema.FiniteFromString, value_date: Schema.String }),
-          "status, amount_mad, value_date"
+        return yield* sql.withTransaction(
+          confirmPendingPayment(sql, schoolId, paymentId, financialAccountIds, allocations, creditFinancialAccountId)
         )
-        if (before.status !== "pending_confirmation") {
-          return yield* Effect.fail(new PaymentNotPendingError({ paymentId }))
-        }
-
-        return yield* sql.withTransaction(Effect.gen(function*() {
-          const [updated] = yield* sql`
-            UPDATE payments SET status = 'confirmed', confirmed_at = clock_timestamp()
-            WHERE id = ${paymentId} AND school_id = ${schoolId} AND status = 'pending_confirmation'
-            RETURNING id
-          `
-          // Guards against a concurrent double-confirmation racing this same
-          // check-then-act sequence — the `before` read above is advisory,
-          // this `UPDATE ... WHERE status = 'pending_confirmation'` is the
-          // actual, atomic guard.
-          if (updated === undefined) {
-            return yield* Effect.fail(new PaymentNotPendingError({ paymentId }))
-          }
-          const receiptNumber = yield* applyConfirmation(
-            sql,
-            schoolId,
-            paymentId,
-            before.amount_mad,
-            before.value_date,
-            financialAccountIds,
-            allocations,
-            creditFinancialAccountId
-          )
-          return { receiptNumber }
-        }))
       })
     )
   )
@@ -768,6 +894,458 @@ export const approveVoid = Effect.fn("Payment.approveVoid")(function*(rawSchoolI
         }))
       })
     )
+  )
+})
+
+/**
+ * BEH-ZS-162: hands over a cheque — inserts its `payments` row
+ * `'pending_confirmation'` (same as `recordBankTransfer`) and a `cheques` row
+ * `'handed_over'`, capturing `financialAccountIds` now (the installment(s)
+ * this physical cheque is meant to settle, staff already know this at
+ * hand-over time) so `clearCheque` later needs no separate allocation input.
+ */
+export const recordCheque = Effect.fn("Payment.recordCheque")(function*(
+  rawCommand: (typeof RecordChequeCommand)["Encoded"]
+) {
+  const command = yield* Schema.decodeEffect(RecordChequeCommand)(rawCommand)
+  return yield* authorizedFinance(
+    command.schoolId,
+    withSchool(
+      command.schoolId,
+      Effect.gen(function*() {
+        if (command.amountMad <= 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "payment amount must be positive" }))
+        }
+        if (command.financialAccountIds.length === 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "at least one financial account is required" }))
+        }
+        const sql = yield* SqlClient
+        const subject = yield* CurrentSubject
+        for (const financialAccountId of command.financialAccountIds) {
+          yield* requireOwnedRow(sql, "financial_accounts", "financial_account", financialAccountId, command.schoolId, RowWithId)
+        }
+
+        const paymentRepoRef = yield* paymentRepo
+        const chequeRepoRef = yield* chequeRepo
+        return yield* sql.withTransaction(Effect.gen(function*() {
+          const payment = yield* paymentRepoRef.insert({
+            school_id: command.schoolId,
+            method: "cheque",
+            amount_mad: command.amountMad,
+            value_date: command.valueDate,
+            reference: command.reference,
+            collector_subject_id: subject.id
+          })
+          const cheque = yield* chequeRepoRef.insert({
+            school_id: command.schoolId,
+            payment_id: payment.id,
+            cheque_number: command.chequeNumber,
+            bank: command.bank,
+            cheque_date: command.chequeDate,
+            financial_account_ids: command.financialAccountIds,
+            deposit_batch_reference: null,
+            recorded_by_subject_id: subject.id
+          })
+          return { paymentId: payment.id, chequeId: cheque.id }
+        }))
+      })
+    )
+  )
+})
+
+/** BEH-ZS-162: `handed_over` → `deposited`, individually or (when `depositBatchReference` is given) as part of a dated batch shared by however many cheques were physically deposited together. */
+export const depositCheque = Effect.fn("Payment.depositCheque")(function*(
+  rawSchoolId: string,
+  chequeId: string,
+  depositBatchReference: string | null
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizedFinance(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const [updated] = yield* sql<{ id: string }>`
+          UPDATE cheques SET status = 'deposited', deposited_at = clock_timestamp(), deposit_batch_reference = ${depositBatchReference}
+          WHERE id = ${chequeId} AND school_id = ${schoolId} AND status = 'handed_over'
+          RETURNING id
+        `
+        if (updated === undefined) {
+          const current = yield* requireOwnedRow(
+            sql,
+            "cheques",
+            "cheque",
+            chequeId,
+            schoolId,
+            Schema.Struct({ status: Schema.String }),
+            "status"
+          )
+          return yield* Effect.fail(
+            new InvalidChequeTransitionError({ chequeId, currentStatus: current.status, attempted: "deposited" })
+          )
+        }
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-162: `deposited` → `cleared` — the ONLY point at which a cheque's
+ * covered installments are ever marked paid, running the exact same
+ * confirmation core `confirmPayment` (bank_transfer) uses, atomically with
+ * the cheque's own status transition (one rolls back if the other fails).
+ */
+export const clearCheque = Effect.fn("Payment.clearCheque")(function*(rawSchoolId: string, chequeId: string) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizedFinance(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const cheque = yield* requireOwnedRow(
+          sql,
+          "cheques",
+          "cheque",
+          chequeId,
+          schoolId,
+          Schema.Struct({ payment_id: Schema.String, status: Schema.String, financial_account_ids: Schema.Array(Schema.String) }),
+          "payment_id, status, financial_account_ids"
+        )
+        if (cheque.status !== "deposited") {
+          return yield* Effect.fail(
+            new InvalidChequeTransitionError({ chequeId, currentStatus: cheque.status, attempted: "cleared" })
+          )
+        }
+        return yield* sql.withTransaction(Effect.gen(function*() {
+          const [updated] = yield* sql`
+            UPDATE cheques SET status = 'cleared', cleared_at = clock_timestamp()
+            WHERE id = ${chequeId} AND school_id = ${schoolId} AND status = 'deposited'
+            RETURNING id
+          `
+          if (updated === undefined) {
+            return yield* Effect.fail(
+              new InvalidChequeTransitionError({ chequeId, currentStatus: "deposited", attempted: "cleared" })
+            )
+          }
+          return yield* confirmPendingPayment(
+            sql,
+            schoolId,
+            cheque.payment_id,
+            cheque.financial_account_ids,
+            undefined,
+            undefined
+          )
+        }))
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-162: `deposited` → `bounced`, with a reason, date and bounce-notice
+ * reference. Only reachable from `'deposited'` (never `'cleared'`) — a
+ * bounced cheque's payment was therefore always still `'pending_confirmation'`
+ * with no `payment_allocations` of its own, so there is nothing to revert:
+ * "reverts to unpaid" and "re-includes the amount in the guardian's balance"
+ * both already hold, since neither was ever removed in the first place.
+ */
+export const bounceCheque = Effect.fn("Payment.bounceCheque")(function*(
+  rawSchoolId: string,
+  chequeId: string,
+  reason: string,
+  bounceNoticeReference: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizedFinance(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        if (reason.trim().length === 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "a bounce reason is required" }))
+        }
+        if (bounceNoticeReference.trim().length === 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "a bounce-notice reference is required" }))
+        }
+        const sql = yield* SqlClient
+        const subject = yield* CurrentSubject
+        const [updated] = yield* sql<{ id: string }>`
+          UPDATE cheques SET status = 'bounced', bounce_reason = ${reason},
+            bounce_notice_reference = ${bounceNoticeReference}, bounced_at = clock_timestamp(),
+            bounced_by_subject_id = ${subject.id}
+          WHERE id = ${chequeId} AND school_id = ${schoolId} AND status = 'deposited'
+          RETURNING id
+        `
+        if (updated === undefined) {
+          const current = yield* requireOwnedRow(
+            sql,
+            "cheques",
+            "cheque",
+            chequeId,
+            schoolId,
+            Schema.Struct({ status: Schema.String }),
+            "status"
+          )
+          return yield* Effect.fail(
+            new InvalidChequeTransitionError({ chequeId, currentStatus: current.status, attempted: "bounced" })
+          )
+        }
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-162: `bounced` → `regularized`, an explicit human-initiated
+ * transition tracing "both attempts" — the original bounced cheque (this
+ * row, forever unconfirmed) and `regularizingPaymentId`, a SEPARATE, already
+ * confirmed `recordPayment` (cash) the school records for the compensating
+ * amount, which is what actually settles the installment and issues its own
+ * receipt.
+ */
+export const regularizeCheque = Effect.fn("Payment.regularizeCheque")(function*(
+  rawSchoolId: string,
+  chequeId: string,
+  regularizingPaymentId: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizedFinance(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const subject = yield* CurrentSubject
+        const regularizingPayment = yield* requireOwnedRow(
+          sql,
+          "payments",
+          "payment",
+          regularizingPaymentId,
+          schoolId,
+          Schema.Struct({ status: Schema.String }),
+          "status"
+        )
+        // The compensating payment must have actually settled something —
+        // referencing a still-pending or already-voided payment would trace
+        // "both attempts" to an attempt that never really happened.
+        if (regularizingPayment.status !== "confirmed") {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "the regularizing payment must be confirmed" }))
+        }
+        const [updated] = yield* sql<{ id: string }>`
+          UPDATE cheques SET status = 'regularized', regularizing_payment_id = ${regularizingPaymentId},
+            regularized_at = clock_timestamp(), regularized_by_subject_id = ${subject.id}
+          WHERE id = ${chequeId} AND school_id = ${schoolId} AND status = 'bounced'
+          RETURNING id
+        `
+        if (updated === undefined) {
+          const current = yield* requireOwnedRow(
+            sql,
+            "cheques",
+            "cheque",
+            chequeId,
+            schoolId,
+            Schema.Struct({ status: Schema.String }),
+            "status"
+          )
+          return yield* Effect.fail(
+            new InvalidChequeTransitionError({ chequeId, currentStatus: current.status, attempted: "regularized" })
+          )
+        }
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-162: `bounced` → `litigation`, the other explicit human-initiated
+ * terminal transition. Automatic reminders stopping and documents being
+ * archived into the file are both out of scope — no dunning/reminder engine
+ * (ticket #64) or document-archival module exists yet in this codebase.
+ */
+export const escalateToLitigation = Effect.fn("Payment.escalateToLitigation")(function*(
+  rawSchoolId: string,
+  chequeId: string
+) {
+  const schoolId = yield* Schema.decodeEffect(SchoolId)(rawSchoolId)
+  return yield* authorizedFinance(
+    schoolId,
+    withSchool(
+      schoolId,
+      Effect.gen(function*() {
+        const sql = yield* SqlClient
+        const subject = yield* CurrentSubject
+        const [updated] = yield* sql<{ id: string }>`
+          UPDATE cheques SET status = 'litigation', litigation_at = clock_timestamp(), litigation_by_subject_id = ${subject.id}
+          WHERE id = ${chequeId} AND school_id = ${schoolId} AND status = 'bounced'
+          RETURNING id
+        `
+        if (updated === undefined) {
+          const current = yield* requireOwnedRow(
+            sql,
+            "cheques",
+            "cheque",
+            chequeId,
+            schoolId,
+            Schema.Struct({ status: Schema.String }),
+            "status"
+          )
+          return yield* Effect.fail(
+            new InvalidChequeTransitionError({ chequeId, currentStatus: current.status, attempted: "litigation" })
+          )
+        }
+      })
+    )
+  )
+})
+
+/**
+ * BEH-ZS-162: "a cheque already in hand at a mid-year import can be recorded
+ * directly at its current status, without replaying earlier states" —
+ * inserts the `payments`/`cheques` rows straight at `initialStatus`, running
+ * the same confirmation core `clearCheque` uses when (and only when)
+ * `initialStatus` is `'cleared'`; every other status leaves the payment
+ * `pending_confirmation` forever, same as reaching that status through the
+ * normal step-by-step transitions would.
+ */
+export const recordChequeAtStatus = Effect.fn("Payment.recordChequeAtStatus")(function*(
+  rawCommand: (typeof RecordChequeAtStatusCommand)["Encoded"]
+) {
+  const command = yield* Schema.decodeEffect(RecordChequeAtStatusCommand)(rawCommand)
+  return yield* authorizedFinance(
+    command.schoolId,
+    withSchool(
+      command.schoolId,
+      Effect.gen(function*() {
+        if (command.amountMad <= 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "payment amount must be positive" }))
+        }
+        if (command.financialAccountIds.length === 0) {
+          return yield* Effect.fail(new InvalidPaymentError({ reason: "at least one financial account is required" }))
+        }
+        // A cheque imported already `'bounced'` (or a status only reachable
+        // through one — `'regularized'`/`'litigation'`) must still carry the
+        // trace `bounceCheque` would otherwise have written; without this
+        // check `recordChequeAtStatus` could silently produce a `'bounced'`
+        // row with no reason/notice reference, breaking the invariant every
+        // other path in this ticket maintains.
+        const bounceStates: ReadonlyArray<ChequeStatus> = ["bounced", "regularized", "litigation"]
+        if (
+          bounceStates.includes(command.initialStatus) &&
+          (command.bounceReason === undefined || command.bounceNoticeReference === undefined)
+        ) {
+          return yield* Effect.fail(
+            new InvalidPaymentError({
+              reason: `a bounce reason and notice reference are required to import a cheque already ${command.initialStatus}`
+            })
+          )
+        }
+        if (command.initialStatus === "regularized" && command.regularizingPaymentId === undefined) {
+          return yield* Effect.fail(
+            new InvalidPaymentError({ reason: "a regularizing payment id is required to import an already-regularized cheque" })
+          )
+        }
+        const sql = yield* SqlClient
+        const subject = yield* CurrentSubject
+        for (const financialAccountId of command.financialAccountIds) {
+          yield* requireOwnedRow(sql, "financial_accounts", "financial_account", financialAccountId, command.schoolId, RowWithId)
+        }
+        if (command.regularizingPaymentId !== undefined) {
+          yield* requireOwnedRow(sql, "payments", "payment", command.regularizingPaymentId, command.schoolId, RowWithId)
+        }
+
+        const paymentRepoRef = yield* paymentRepo
+        const chequeRepoRef = yield* chequeRepo
+        return yield* sql.withTransaction(Effect.gen(function*() {
+          const payment = yield* paymentRepoRef.insert({
+            school_id: command.schoolId,
+            method: "cheque",
+            amount_mad: command.amountMad,
+            value_date: command.valueDate,
+            reference: command.reference,
+            collector_subject_id: subject.id
+          })
+          const cheque = yield* chequeRepoRef.insert({
+            school_id: command.schoolId,
+            payment_id: payment.id,
+            cheque_number: command.chequeNumber,
+            bank: command.bank,
+            cheque_date: command.chequeDate,
+            financial_account_ids: command.financialAccountIds,
+            deposit_batch_reference: null,
+            recorded_by_subject_id: subject.id
+          })
+          yield* sql`UPDATE cheques SET status = ${command.initialStatus} WHERE id = ${cheque.id}`
+          if (command.initialStatus === "cleared") {
+            yield* sql`UPDATE cheques SET cleared_at = clock_timestamp() WHERE id = ${cheque.id}`
+            yield* confirmPendingPayment(
+              sql,
+              command.schoolId,
+              payment.id,
+              command.financialAccountIds,
+              undefined,
+              undefined
+            )
+          }
+          if (bounceStates.includes(command.initialStatus)) {
+            yield* sql`
+              UPDATE cheques SET bounce_reason = ${command.bounceReason!},
+                bounce_notice_reference = ${command.bounceNoticeReference!}, bounced_at = clock_timestamp(),
+                bounced_by_subject_id = ${subject.id}
+              WHERE id = ${cheque.id}
+            `
+          }
+          if (command.initialStatus === "regularized") {
+            yield* sql`
+              UPDATE cheques SET regularizing_payment_id = ${command.regularizingPaymentId!},
+                regularized_at = clock_timestamp(), regularized_by_subject_id = ${subject.id}
+              WHERE id = ${cheque.id}
+            `
+          }
+          if (command.initialStatus === "litigation") {
+            yield* sql`
+              UPDATE cheques SET litigation_at = clock_timestamp(), litigation_by_subject_id = ${subject.id}
+              WHERE id = ${cheque.id}
+            `
+          }
+          return { paymentId: payment.id, chequeId: cheque.id }
+        }))
+      })
+    )
+  )
+})
+
+/** One cheque's own row, decoded, for BDD/UI display of its current status. */
+export const findCheque = Effect.fn("Payment.findCheque")(function*(schoolId: string, chequeId: string) {
+  return yield* withSchool(
+    schoolId,
+    Effect.gen(function*() {
+      const sql = yield* SqlClient
+      return yield* SqlSchema.findOneOption({
+        Request: Schema.Struct({ schoolId: Schema.String, chequeId: Schema.String }),
+        Result: Cheque,
+        execute: (req) => sql`SELECT * FROM cheques WHERE school_id = ${req.schoolId} AND id = ${req.chequeId}`
+      })({ schoolId, chequeId })
+    })
+  )
+})
+
+/** The cheque tied to one payment, if the payment was a cheque at all. */
+export const findChequeForPayment = Effect.fn("Payment.findChequeForPayment")(function*(
+  schoolId: string,
+  paymentId: string
+) {
+  return yield* withSchool(
+    schoolId,
+    Effect.gen(function*() {
+      const sql = yield* SqlClient
+      return yield* SqlSchema.findOneOption({
+        Request: Schema.Struct({ schoolId: Schema.String, paymentId: Schema.String }),
+        Result: Cheque,
+        execute: (req) => sql`SELECT * FROM cheques WHERE school_id = ${req.schoolId} AND payment_id = ${req.paymentId}`
+      })({ schoolId, paymentId })
+    })
   )
 })
 

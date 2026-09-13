@@ -13,19 +13,29 @@ import { addFeeItem, createFeeSchedule } from "./FeeSchedule.ts"
 import { insertEnrollment } from "./Enrollment.ts"
 import {
   approveVoid,
+  bounceCheque,
+  clearCheque,
   confirmPayment,
   configureVoidApprovalPolicy,
+  depositCheque,
+  escalateToLitigation,
   findAccountCreditBalance,
+  findCheque,
+  findChequeForPayment,
   findPayment,
   findPaymentAllocations,
   findReceiptForPayment,
   findVoidForPayment,
   findVoidReceiptForPayment,
+  InvalidChequeTransitionError,
   InvalidPaymentError,
   PaymentNotPendingError,
   PaymentNotVoidableError,
   recordBankTransfer,
+  recordCheque,
+  recordChequeAtStatus,
   recordPayment,
+  regularizeCheque,
   requestVoid,
   VoidAlreadyRequestedError,
   VoidNotPendingError
@@ -679,6 +689,381 @@ describe("Payment void/reversing entries (ticket #60 / BEH-ZS-179)", () => {
 
         expect(yield* installmentStatus(firstChildInstallment)).toBe("due")
         expect(yield* installmentStatus(secondChildInstallment)).toBe("due")
+      })
+    ))
+})
+
+describe("Cheque lifecycle (ticket #61 / REQ-ZS-140 / BEH-ZS-162)", () => {
+  it.effect("a cheque stays pending and its installment unpaid until it clears", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        const { chequeId, paymentId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-001",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+        const payment = yield* findPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(payment) && payment.value.status).toBe("pending_confirmation")
+
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("handed_over")
+      })
+    ))
+
+  it.effect("depositing then clearing a cheque settles its installment and issues a receipt", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        const { chequeId, paymentId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-002",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        yield* depositCheque(schoolId, chequeId, "batch-1").pipe(Effect.provide(asDirectorOf(schoolId)))
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+
+        yield* clearCheque(schoolId, chequeId).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        expect(yield* installmentStatus(installmentId)).toBe("paid")
+        const payment = yield* findPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(payment) && payment.value.status).toBe("confirmed")
+        const receipt = yield* findReceiptForPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(receipt)).toBe(true)
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("cleared")
+      })
+    ))
+
+  it.effect("clearing a cheque that hasn't been deposited is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-003",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* clearCheque(schoolId, chequeId).pipe(Effect.provide(asDirectorOf(schoolId)), Effect.flip)
+        expect(result).toBeInstanceOf(InvalidChequeTransitionError)
+      })
+    ))
+
+  it.effect("a bounced cheque never marked its installment paid, and the amount stays in arrears", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        const { chequeId, paymentId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-004",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* depositCheque(schoolId, chequeId, null).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        yield* bounceCheque(schoolId, chequeId, "insufficient funds", "NOTICE-77").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("bounced")
+        expect(Option.isSome(cheque) && cheque.value.bounce_reason).toBe("insufficient funds")
+        expect(Option.isSome(cheque) && cheque.value.bounce_notice_reference).toBe("NOTICE-77")
+        expect(Option.isSome(cheque) && (cheque.value.bounced_by_subject_id?.length ?? 0) > 0).toBe(true)
+
+        // Never confirmed, so nothing to revert — "stays unpaid" and "the
+        // amount stays in arrears" both already hold.
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+        const payment = yield* findPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(payment) && payment.value.status).toBe("pending_confirmation")
+        const balance = yield* findAccountCreditBalance(schoolId, financialAccountIds[0]).pipe(Effect.orDie)
+        expect(balance).toBe(0)
+      })
+    ))
+
+  it.effect("bouncing a cheque that hasn't been deposited is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-005",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* bounceCheque(schoolId, chequeId, "reason", "ref").pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(InvalidChequeTransitionError)
+      })
+    ))
+
+  it.effect(
+    "regularizing a bounced cheque with a compensating payment settles the installment and traces both attempts",
+    () =>
+      withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+        Effect.gen(function*() {
+          const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+          const { chequeId } = yield* recordCheque({
+            schoolId,
+            amountMad: 1200,
+            valueDate: "2026-09-05",
+            reference: null,
+            chequeNumber: "CHQ-006",
+            bank: "BMCE",
+            chequeDate: "2026-09-05",
+            financialAccountIds
+          }).pipe(Effect.provide(asDirectorOf(schoolId)))
+          yield* depositCheque(schoolId, chequeId, null).pipe(Effect.provide(asDirectorOf(schoolId)))
+          yield* bounceCheque(schoolId, chequeId, "insufficient funds", "NOTICE-1").pipe(
+            Effect.provide(asDirectorOf(schoolId))
+          )
+
+          const { paymentId: compensatingPaymentId } = yield* recordPayment({
+            schoolId,
+            method: "cash",
+            amountMad: 1200,
+            valueDate: "2026-09-10",
+            reference: null,
+            financialAccountIds
+          }).pipe(Effect.provide(asDirectorOf(schoolId)))
+          expect(yield* installmentStatus(installmentId)).toBe("paid")
+
+          yield* regularizeCheque(schoolId, chequeId, compensatingPaymentId).pipe(
+            Effect.provide(asDirectorOf(schoolId))
+          )
+
+          const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+          expect(Option.isSome(cheque) && cheque.value.status).toBe("regularized")
+          expect(Option.isSome(cheque) && cheque.value.regularizing_payment_id).toBe(compensatingPaymentId)
+        })
+      )
+  )
+
+  it.effect("regularizing a cheque that isn't bounced is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-007",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        const { paymentId: otherPaymentId } = yield* recordPayment({
+          schoolId,
+          method: "cash",
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* regularizeCheque(schoolId, chequeId, otherPaymentId).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(InvalidChequeTransitionError)
+      })
+    ))
+
+  it.effect("a bounced cheque can be escalated to litigation, an explicit human-initiated transition", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-008",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* depositCheque(schoolId, chequeId, null).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* bounceCheque(schoolId, chequeId, "insufficient funds", "NOTICE-2").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        yield* escalateToLitigation(schoolId, chequeId).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("litigation")
+      })
+    ))
+
+  it.effect("escalating a cheque that isn't bounced is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-009",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* escalateToLitigation(schoolId, chequeId).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(InvalidChequeTransitionError)
+      })
+    ))
+
+  it.effect("a mid-year import can record a cheque already cleared, without replaying earlier states", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        const { chequeId, paymentId } = yield* recordChequeAtStatus({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-010",
+          bank: "BMCE",
+          chequeDate: "2026-08-01",
+          financialAccountIds,
+          initialStatus: "cleared"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        expect(yield* installmentStatus(installmentId)).toBe("paid")
+        const payment = yield* findPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(payment) && payment.value.status).toBe("confirmed")
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("cleared")
+        const receipt = yield* findReceiptForPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(receipt)).toBe(true)
+      })
+    ))
+
+  it.effect("a mid-year import can record a cheque already bounced, without ever confirming it", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const installmentId = yield* firstInstallmentId(financialAccountIds[0])
+        const { chequeId, paymentId } = yield* recordChequeAtStatus({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-011",
+          bank: "BMCE",
+          chequeDate: "2026-08-01",
+          financialAccountIds,
+          initialStatus: "bounced",
+          bounceReason: "insufficient funds",
+          bounceNoticeReference: "NOTICE-IMPORT-1"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        expect(yield* installmentStatus(installmentId)).toBe("due")
+        const payment = yield* findPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(payment) && payment.value.status).toBe("pending_confirmation")
+        const cheque = yield* findCheque(schoolId, chequeId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.status).toBe("bounced")
+        expect(Option.isSome(cheque) && cheque.value.bounce_reason).toBe("insufficient funds")
+      })
+    ))
+
+  it.effect("importing a cheque already bounced without a reason/notice reference is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const result = yield* recordChequeAtStatus({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-013",
+          bank: "BMCE",
+          chequeDate: "2026-08-01",
+          financialAccountIds,
+          initialStatus: "bounced"
+        }).pipe(Effect.provide(asDirectorOf(schoolId)), Effect.flip)
+        expect(result).toBeInstanceOf(InvalidPaymentError)
+      })
+    ))
+
+  it.effect("regularizing a bounced cheque with a still-pending payment is rejected", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-014",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* depositCheque(schoolId, chequeId, null).pipe(Effect.provide(asDirectorOf(schoolId)))
+        yield* bounceCheque(schoolId, chequeId, "insufficient funds", "NOTICE-3").pipe(
+          Effect.provide(asDirectorOf(schoolId))
+        )
+
+        const pendingPaymentId = yield* recordBankTransfer({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-10",
+          reference: null
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const result = yield* regularizeCheque(schoolId, chequeId, pendingPaymentId).pipe(
+          Effect.provide(asDirectorOf(schoolId)),
+          Effect.flip
+        )
+        expect(result).toBeInstanceOf(InvalidPaymentError)
+      })
+    ))
+
+  it.effect("findChequeForPayment resolves the cheque tied to a payment", () =>
+    withSeededAccounts(1)(({ financialAccountIds, schoolId }) =>
+      Effect.gen(function*() {
+        const { chequeId, paymentId } = yield* recordCheque({
+          schoolId,
+          amountMad: 1200,
+          valueDate: "2026-09-05",
+          reference: null,
+          chequeNumber: "CHQ-012",
+          bank: "BMCE",
+          chequeDate: "2026-09-05",
+          financialAccountIds
+        }).pipe(Effect.provide(asDirectorOf(schoolId)))
+
+        const cheque = yield* findChequeForPayment(schoolId, paymentId).pipe(Effect.orDie)
+        expect(Option.isSome(cheque) && cheque.value.id).toBe(chequeId)
       })
     ))
 })
