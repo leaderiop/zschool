@@ -142,3 +142,9 @@ export const canViewStudentLifeDashboard = P.anyOf([
   directorScopedToOwnSchool,
   cycleScopedRole("student_life")
 ])
+
+/** Ticket #95: declaring/bulk-declaring `Slot`/`Session` rows, and marking a `Session` uncovered/substituted (ADR-ZS-046) — student-life's own scheduling capability, same cycle-or-whole-school scoping as `canViewStudentLifeDashboard`. */
+export const canManageAttendanceSchedule = P.anyOf([
+  directorScopedToOwnSchool,
+  cycleScopedRole("student_life")
+])

@@ -145,3 +145,9 @@ export type SchoolMembershipCycleId = typeof SchoolMembershipCycleId.Type
 
 export const TeacherAssignmentId = Schema.String.pipe(Schema.brand("TeacherAssignmentId"))
 export type TeacherAssignmentId = typeof TeacherAssignmentId.Type
+
+export const SlotId = Schema.String.pipe(Schema.brand("SlotId"))
+export type SlotId = typeof SlotId.Type
+
+export const SessionId = Schema.String.pipe(Schema.brand("SessionId"))
+export type SessionId = typeof SessionId.Type
