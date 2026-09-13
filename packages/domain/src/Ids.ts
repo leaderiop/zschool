@@ -115,3 +115,15 @@ export type SiblingDiscountLineId = typeof SiblingDiscountLineId.Type
 
 export const SiblingDiscountRecomputationId = Schema.String.pipe(Schema.brand("SiblingDiscountRecomputationId"))
 export type SiblingDiscountRecomputationId = typeof SiblingDiscountRecomputationId.Type
+
+export const PaymentId = Schema.String.pipe(Schema.brand("PaymentId"))
+export type PaymentId = typeof PaymentId.Type
+
+export const PaymentAllocationId = Schema.String.pipe(Schema.brand("PaymentAllocationId"))
+export type PaymentAllocationId = typeof PaymentAllocationId.Type
+
+export const ReceiptId = Schema.String.pipe(Schema.brand("ReceiptId"))
+export type ReceiptId = typeof ReceiptId.Type
+
+export const FinancialAccountCreditId = Schema.String.pipe(Schema.brand("FinancialAccountCreditId"))
+export type FinancialAccountCreditId = typeof FinancialAccountCreditId.Type
